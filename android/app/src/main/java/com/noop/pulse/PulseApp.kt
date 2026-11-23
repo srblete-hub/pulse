@@ -42,7 +42,7 @@ import com.noop.ui.AppRoot
 import com.noop.ui.AppViewModel
 import com.noop.ui.BackupSyncScreen
 import com.noop.ui.CoachOrb
-import com.noop.ui.CoachScreen
+import com.noop.pulse.coach.CoachAction
 import com.noop.ui.DataSourcesScreen
 import com.noop.ui.DevicesScreen
 import com.noop.ui.HealthScreen
@@ -82,7 +82,7 @@ object PulseRoute {
     const val dataImport = "noop/data"
     const val backup = "noop/backup"
     const val alarms = "noop/alarms"
-    const val coach = "noop/coach"
+    const val coach = "coach"
     const val live = "noop/live"
     const val trends = "noop/trends"
     const val monitor = "noop/health"
@@ -189,7 +189,7 @@ fun PulseApp(vm: AppViewModel) {
                     listOf(
                         "Pulse guarda todo en una base de datos local del teléfono.",
                         "No envía métricas a ningún servidor. Las copias de seguridad las guardas tú donde quieras.",
-                        "El coach con IA solo se activa si tú lo configuras y das tu consentimiento.",
+                        "El coach funciona con reglas dentro del teléfono: no usa inteligencia artificial ni internet.",
                     ),
                     back,
                 )
@@ -210,7 +210,28 @@ fun PulseApp(vm: AppViewModel) {
             legacy(PulseRoute.dataImport, "Importar datos", back) { DataSourcesScreen(vm) }
             legacy(PulseRoute.backup, "Copia y restauración", back) { BackupSyncScreen() }
             legacy(PulseRoute.alarms, "Horario de sueño", back) { SmartAlarmScreen(vm) }
-            legacy(PulseRoute.coach, "Coach", back) { CoachScreen() }
+            composable(PulseRoute.coach) {
+                PulseCoachScreen(vm, back) { action ->
+                    nav.navigate(
+                        when (action) {
+                            CoachAction.Sleep -> PulseRoute.sleep
+                            CoachAction.Recovery -> PulseRoute.recovery
+                            CoachAction.Effort -> PulseRoute.effort
+                            CoachAction.Stress -> PulseRoute.stress
+                            CoachAction.Age -> PulseRoute.age
+                            CoachAction.Alarms -> PulseRoute.alarms
+                            CoachAction.Live -> PulseRoute.live
+                            CoachAction.Strap -> PulseRoute.strap
+                            CoachAction.Import -> PulseRoute.dataImport
+                            CoachAction.Backup -> PulseRoute.backup
+                            CoachAction.Journal -> PulseRoute.journal
+                            CoachAction.Calibration -> PulseRoute.calibration
+                            CoachAction.Trends -> PulseRoute.trends
+                            CoachAction.Profile -> PulseRoute.profile
+                        },
+                    ) { launchSingleTop = true }
+                }
+            }
             legacy(PulseRoute.live, "Actividad", back) { LiveScreen(vm, onManageDevices = { nav.navigate(PulseRoute.strap) }) }
             legacy(PulseRoute.trends, "Tendencias", back) { TrendsScreen(vm) }
             legacy(PulseRoute.monitor, "Monitor de salud", back) { HealthScreen(vm, onOpenSettings = { nav.navigate(PulseRoute.advanced) }) }
@@ -259,7 +280,7 @@ private fun settingsGroups(go: (String) -> () -> Unit): List<Pair<String?, List<
         SettingsItem("Copia y restauración", "Guarda o recupera una copia completa de Pulse (.noopbak)", go(PulseRoute.backup)),
     ),
     "Más" to listOf(
-        SettingsItem("Coach IA", onClick = go(PulseRoute.coach)),
+        SettingsItem("Coach", "Sin inteligencia artificial, todo en tu teléfono", go(PulseRoute.coach)),
         SettingsItem("Privacidad", onClick = go(PulseRoute.privacy)),
         SettingsItem("Cómo funciona", onClick = go(PulseRoute.help)),
         SettingsItem("Ajustes avanzados", "Todas las opciones del motor NOOP", go(PulseRoute.advanced)),
