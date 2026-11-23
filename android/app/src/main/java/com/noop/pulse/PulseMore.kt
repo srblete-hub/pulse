@@ -298,7 +298,7 @@ private data class Milestone(val title: String, val nights: Int, val verb: Strin
 fun PulseCalibrationScreen(vm: AppViewModel, onBack: () -> Unit, onHealth: () -> Unit) {
     val days by vm.recentDays.collectAsStateWithLifecycle()
     val nights = PulseData.nightsWithSleep(days)
-    var info by remember { mutableStateOf(false) }
+    var info by remember { mutableStateOf<Milestone?>(null) }
     val milestones = listOf(
         Milestone("Análisis del sueño", 1, "desbloquear", Icons.Outlined.Bedtime),
         Milestone("Recuperación personal", 4, "calibrar", Icons.AutoMirrored.Outlined.TrendingUp),
@@ -311,36 +311,36 @@ fun PulseCalibrationScreen(vm: AppViewModel, onBack: () -> Unit, onHealth: () ->
         Milestone("Edad física", 14, "desbloquear", Icons.AutoMirrored.Outlined.TrendingUp),
         Milestone("Tendencias de 90 días", 21, "desbloquear", Icons.Outlined.BarChart),
     )
-    Box(Modifier.fillMaxSize().background(PulseColors.screenBrush)) {
-        Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).statusBarsPadding().navigationBarsPadding()) {
-            Row(Modifier.fillMaxWidth().padding(start = 10.dp, end = 10.dp, top = 18.dp), verticalAlignment = Alignment.CenterVertically) {
-                Box(Modifier.size(44.dp).pulseClick(onBack), contentAlignment = Alignment.Center) { Icon(Icons.AutoMirrored.Outlined.ArrowBack, "Volver", tint = PulseColors.text, modifier = Modifier.size(22.dp)) }
-                Text("CALIBRACIÓN", style = PulseText.tabTitle, color = PulseColors.text, textAlign = TextAlign.Center, modifier = Modifier.weight(1f))
-                Spacer(Modifier.width(44.dp))
-            }
-            Row(Modifier.padding(start = 20.dp, end = 20.dp, top = 24.dp), verticalAlignment = Alignment.CenterVertically) {
-                Column(Modifier.weight(1f)) {
-                    Text("Desbloquea tus hitos", style = PulseText.headline.copy(fontSize = 22.sp, fontWeight = FontWeight.SemiBold), color = PulseColors.text)
-                    Spacer(Modifier.height(8.dp))
-                    Text("Cada noche cuenta. Duerme con la pulsera y Pulse irá conociendo tu cuerpo.", style = PulseText.body, color = PulseColors.textSecondary)
+    Box(Modifier.fillMaxSize().background(PulseColors.base)) {
+        Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
+            Column(
+                Modifier.fillMaxWidth().background(Brush.verticalGradient(listOf(Color(0xFF4A2A66), Color(0xFF2A2036), PulseColors.base)))
+                    .statusBarsPadding().padding(bottom = 30.dp),
+            ) {
+                Row(Modifier.fillMaxWidth().padding(start = 10.dp, end = 10.dp, top = 18.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Box(Modifier.size(44.dp).pulseClick(onBack), contentAlignment = Alignment.Center) { Icon(Icons.Outlined.Close, "Cerrar", tint = PulseColors.text, modifier = Modifier.size(24.dp)) }
+                    Text("CALIBRACIÓN", style = PulseText.tabTitle.copy(fontSize = 12.sp), color = PulseColors.text, textAlign = TextAlign.Center, modifier = Modifier.weight(1f))
+                    Spacer(Modifier.width(44.dp))
                 }
-                Spacer(Modifier.width(16.dp))
-                Box(contentAlignment = Alignment.Center) {
-                    DashedProgressRing(nights.coerceAtMost(7), 7, 96.dp)
-                    Text("NOCHES", style = PulseText.overline.copy(fontSize = 8.sp), color = PulseColors.textSecondary, modifier = Modifier.padding(top = 36.dp))
+                Row(Modifier.padding(start = 22.dp, end = 16.dp, top = 40.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Column(Modifier.weight(1f)) {
+                        Text("Desbloquea tus hitos", style = PulseText.headline.copy(fontSize = 24.sp, fontWeight = FontWeight.SemiBold), color = PulseColors.text)
+                        Spacer(Modifier.height(10.dp))
+                        Text("Cada noche cuenta. Duerme con la pulsera y Pulse irá desbloqueando funciones y consejos más precisos.", style = PulseText.bodyLg, color = PulseColors.textQuiet)
+                    }
+                    Spacer(Modifier.width(12.dp))
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        DashedProgressRing(nights.coerceAtMost(7), 7, 96.dp)
+                        Spacer(Modifier.height(12.dp))
+                        Text("NOCHES\nREGISTRADAS", style = PulseText.overline.copy(lineHeight = 14.sp), color = PulseColors.textSecondary, textAlign = TextAlign.Center)
+                    }
                 }
             }
-            Row(Modifier.padding(start = 20.dp, end = 16.dp, top = 30.dp, bottom = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-                Text("Tus hitos", style = PulseText.sectionTitle, color = PulseColors.text, modifier = Modifier.weight(1f))
-                Box(Modifier.size(22.dp).border(1.2.dp, PulseColors.textSecondary, RoundedCornerShape(11.dp)).pulseClick { info = !info }, contentAlignment = Alignment.Center) {
-                    Text("i", style = PulseText.overline, color = PulseColors.textSecondary)
-                }
+            Text("Tus hitos", style = PulseText.sectionTitle.copy(fontSize = 20.sp), color = PulseColors.text, modifier = Modifier.padding(start = 22.dp, top = 6.dp, bottom = 14.dp))
+            Column(Modifier.padding(horizontal = 18.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                milestones.forEach { m -> MilestoneCard(m, nights, bars = true) { info = m } }
             }
-            if (info) Text("Con 4 noches Pulse ya calcula tu recuperación; con 7, tu línea base queda completa.", style = PulseText.body, color = PulseColors.textSecondary, modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 10.dp))
-            Column(Modifier.padding(horizontal = 15.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                milestones.forEach { MilestoneRow(it, nights, bars = true) }
-            }
-            AccentCard(Modifier.padding(start = 15.dp, end = 15.dp, top = 24.dp), onClick = onHealth) {
+            AccentCard(Modifier.padding(start = 18.dp, end = 18.dp, top = 26.dp), onClick = onHealth) {
                 Text("MIENTRAS TANTO", style = PulseText.overline, color = PulseColors.textSecondary)
                 Spacer(Modifier.height(6.dp))
                 Text("¿Cómo está tu salud?", style = PulseText.cardTitleLg, color = PulseColors.text)
@@ -349,29 +349,56 @@ fun PulseCalibrationScreen(vm: AppViewModel, onBack: () -> Unit, onHealth: () ->
                 Spacer(Modifier.height(6.dp))
                 CtaLink("Ir a salud", onClick = onHealth)
             }
-            Text("Más allá de la primera semana", style = PulseText.sectionTitle, color = PulseColors.text, modifier = Modifier.padding(start = 20.dp, top = 30.dp, bottom = 12.dp))
-            Column(Modifier.padding(horizontal = 15.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                later.forEach { MilestoneRow(it, days.size, bars = false) }
+            Text("Más allá de la primera semana", style = PulseText.sectionTitle.copy(fontSize = 20.sp), color = PulseColors.text, modifier = Modifier.padding(start = 22.dp, top = 30.dp, bottom = 14.dp))
+            Column(Modifier.padding(horizontal = 18.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                later.forEach { m -> MilestoneCard(m, days.size, bars = false) { info = m } }
             }
             Spacer(Modifier.height(40.dp))
+            Spacer(Modifier.navigationBarsPadding())
+        }
+        info?.let { m ->
+            FirstVisitTip(m.title, milestoneInfo(m.title)) { info = null }
         }
     }
 }
 
+private fun milestoneInfo(title: String) = when (title) {
+    "Análisis del sueño" -> "Tras tu primera noche verás cuánto has dormido, tus fases y tu rendimiento del sueño."
+    "Recuperación personal" -> "Con 4 noches Pulse conoce tu VFC y tu pulso en reposo normales y puede decirte cada mañana cómo de recuperado estás."
+    "Objetivo de esfuerzo" -> "Con tu recuperación calibrada, Pulse te propone cada día cuánto esfuerzo te conviene."
+    "Nivel de estrés" -> "Con 4 noches Pulse sabe cuál es tu estado de reposo y puede medir lo activado que estás durante el día."
+    "Monitor de salud" -> "Con 7 noches Pulse conoce el rango habitual de tu respiración, oxígeno, pulso, VFC y temperatura."
+    "Resumen semanal" -> "Al completar tu primera semana recibirás un resumen con tus tendencias."
+    "Edad física" -> "Con 2 semanas de datos Pulse empieza a estimar tu forma física."
+    else -> "Con 3 semanas de datos podrás comparar tu evolución mes a mes."
+}
+
 @Composable
-private fun MilestoneRow(m: Milestone, have: Int, bars: Boolean) {
+private fun MilestoneCard(m: Milestone, have: Int, bars: Boolean, onInfo: () -> Unit) {
     val done = have >= m.nights
-    Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(13.dp)).background(PulseColors.overlay).padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-        Box(Modifier.size(38.dp).clip(RoundedCornerShape(19.dp)).background(if (done) PulseColors.accentFillTop else PulseColors.inset), contentAlignment = Alignment.Center) {
-            Icon(m.icon, null, tint = if (done) PulseColors.accent else PulseColors.textSecondary, modifier = Modifier.size(18.dp))
+    Box(Modifier.fillMaxWidth().clip(RoundedCornerShape(18.dp)).border(1.5.dp, PulseColors.overlay, RoundedCornerShape(18.dp)).padding(start = 18.dp, end = 18.dp, top = 22.dp, bottom = 26.dp)) {
+        Box(Modifier.align(Alignment.TopEnd).offset(y = (-8).dp).size(26.dp).border(1.3.dp, PulseColors.textSecondary, RoundedCornerShape(13.dp)).pulseClick(onInfo), contentAlignment = Alignment.Center) {
+            Text("i", style = PulseText.overline.copy(fontSize = 12.sp), color = PulseColors.textSecondary)
         }
-        Spacer(Modifier.width(14.dp))
-        Column(Modifier.weight(1f)) {
-            Text(m.title, style = PulseText.cardTitle, color = PulseColors.text)
-            Text(if (done) "Desbloqueado" else "${m.nights} ${if (m.nights == 1) "noche" else "noches"} para ${m.verb}", style = PulseText.body.copy(fontSize = 12.sp), color = if (done) PulseColors.accent else PulseColors.textSecondary)
-            if (bars) {
-                Row(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(3.dp)) {
-                    repeat(m.nights) { k -> Box(Modifier.width(18.dp).height(3.dp).clip(RoundedCornerShape(2.dp)).background(if (k < have) PulseColors.accent else PulseColors.hairlineStrong)) }
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Box(
+                Modifier.size(84.dp).clip(RoundedCornerShape(26.dp))
+                    .background(Brush.radialGradient(listOf(if (done) PulseColors.accent.copy(alpha = 0.35f) else Color(0xFF353C43), Color(0xFF1B1F23)))),
+                contentAlignment = Alignment.Center,
+            ) { Icon(m.icon, null, tint = if (done) PulseColors.accent else PulseColors.textTertiary, modifier = Modifier.size(38.dp)) }
+            Spacer(Modifier.width(20.dp))
+            Column(Modifier.weight(1f).padding(end = 10.dp)) {
+                Text(m.title, style = PulseText.cardTitleLg.copy(fontSize = 16.sp), color = PulseColors.text)
+                Spacer(Modifier.height(6.dp))
+                Text(
+                    if (done) "Desbloqueado" else "${m.nights} ${if (m.nights == 1) "noche" else "noches"} para ${m.verb}",
+                    style = PulseText.bodyLg, color = if (done) PulseColors.accent else PulseColors.textSecondary,
+                )
+                if (bars) {
+                    Spacer(Modifier.height(14.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+                        repeat(m.nights) { k -> Box(Modifier.weight(1f).height(4.dp).clip(RoundedCornerShape(2.dp)).background(if (k < have) PulseColors.accent else PulseColors.hairline)) }
+                    }
                 }
             }
         }

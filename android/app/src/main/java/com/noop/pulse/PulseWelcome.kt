@@ -25,7 +25,11 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.ime
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.union
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -115,6 +119,8 @@ object PulseProfile {
     }
     fun imperial(c: Context): Boolean = prefs(c).getBoolean("imperial", false)
     fun setImperial(c: Context, v: Boolean) = prefs(c).edit().putBoolean("imperial", v).apply()
+    fun firstSyncAt(c: Context): Long? = prefs(c).getLong("first_sync", 0L).takeIf { it > 0 }
+    fun markFirstSync(c: Context) { if (firstSyncAt(c) == null) prefs(c).edit().putLong("first_sync", System.currentTimeMillis()).apply() }
     fun joinedDay(c: Context): String? = prefs(c).getString("joined", null)
     fun markJoined(c: Context) {
         if (joinedDay(c) == null) prefs(c).edit().putString("joined", LocalDate.now().toString()).apply()
@@ -224,7 +230,7 @@ fun PulseWelcome(vm: AppViewModel, onFinished: () -> Unit) {
     val labels = listOf("EMPEZAR", "SIGUIENTE", "SIGUIENTE", "SIGUIENTE", "CONECTAR", if (live.bonded) "SIGUIENTE" else "EMPAREJAR", "ACEPTAR", "ACTIVAR", "TERMINAR")
     val enabled = step != 6 || checks.all { it }
 
-    Box(Modifier.fillMaxSize().background(welcomeBrush).statusBarsPadding().navigationBarsPadding().imePadding()) {
+    Box(Modifier.fillMaxSize().background(welcomeBrush).statusBarsPadding().windowInsetsPadding(androidx.compose.foundation.layout.WindowInsets.ime.union(androidx.compose.foundation.layout.WindowInsets.navigationBars).only(androidx.compose.foundation.layout.WindowInsetsSides.Bottom))) {
         when (step) {
             0 -> WelcomeHero()
             1 -> StepBody(Icons.Outlined.Person, "¿Cómo te llamas?", "Lo usamos para saludarte y en tu perfil.") {

@@ -21,6 +21,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material.icons.outlined.Alarm
 import androidx.compose.material.icons.outlined.Battery5Bar
 import androidx.compose.material.icons.outlined.Bedtime
 import androidx.compose.material.icons.outlined.ChevronLeft
@@ -130,7 +132,26 @@ fun PulseHomeScreen(vm: AppViewModel, showLiveHr: Boolean = false, actions: Home
             RingTile("ESFUERZO", eff?.let { (it / 21).toFloat() }, PulseColors.strain, PulseData.oneDecimal(eff ?: 0.0), Modifier.weight(1f), actions.openEffort, large = true)
         }
 
-        if (nights < PulseData.calibrationNights) {
+        val ctx = androidx.compose.ui.platform.LocalContext.current
+        // Re-read on every return to Home so a step opened elsewhere, or a schedule just saved, shows at once.
+        var stepsTick by remember { mutableStateOf(0) }
+        val hasSchedule = SleepSchedules.load(ctx).isNotEmpty()
+        val tonight = SleepSchedules.tonight(ctx)
+        if (tonight != null) {
+            TonightCard(tonight, Modifier.padding(start = PulseMetrics.gutter, end = PulseMetrics.gutter, top = 26.dp), actions.openSleepSchedule)
+        }
+        fun open(key: String, go: () -> Unit) = { PulseTips.markSeen(ctx, "step_$key"); stepsTick++; go() }
+        // Getting started is for brand-new users: it goes once the strap has sent ~2 h of data or after the first night.
+        val firstSync = PulseProfile.firstSyncAt(ctx)
+        LaunchedEffect(live.lastSyncAt) { if (live.lastSyncAt != null && firstSync == null) PulseProfile.markFirstSync(ctx) }
+        val beginner = nights == 0 && (firstSync == null || System.currentTimeMillis() - firstSync < 2 * 3600_000L)
+        val steps = if (!beginner) emptyList() else listOfNotNull(
+            Triple("goals", "Define tus objetivos", actions.openGoals).takeIf { !PulseTips.seen(ctx, "step_goals") },
+            Triple("charging", "Cómo cargar la pulsera", actions.openCharging).takeIf { !PulseTips.seen(ctx, "step_charging") },
+            Triple("schedule", "Configura tu horario de sueño", actions.openSleepSchedule).takeIf { !PulseTips.seen(ctx, "step_schedule") && !hasSchedule },
+        )
+        @Suppress("UNUSED_EXPRESSION") stepsTick
+        if (steps.isNotEmpty()) {
             SectionTitle("Primeros pasos", trailing = {
                 Box(
                     Modifier.size(34.dp).clip(RoundedCornerShape(9.dp)).background(PulseColors.text).pulseClick(actions.openStartActivity),
@@ -138,23 +159,29 @@ fun PulseHomeScreen(vm: AppViewModel, showLiveHr: Boolean = false, actions: Home
                 ) { Icon(Icons.Outlined.Add, "Iniciar actividad", tint = PulseColors.onAccent, modifier = Modifier.size(18.dp)) }
             })
             Column(Modifier.padding(horizontal = PulseMetrics.gutter), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                StepCard(
-                    "Define tus objetivos",
-                    "Responde unas preguntas y adaptamos los consejos diarios a lo que quieres mejorar.",
-                    "Empezar", Icons.Outlined.TrackChanges, highlighted = true, onClick = actions.openGoals,
-                )
-                StepCard(
-                    "Cómo cargar la pulsera",
-                    "Llega con batería suficiente para registrar tu primer día y tu primera noche.",
-                    "Ver consejos", Icons.Outlined.Battery5Bar, onClick = actions.openCharging,
-                )
-                StepCard(
-                    "Configura tu horario de sueño",
-                    "Te avisamos para desconectar y la pulsera te despierta con vibración suave.",
-                    "Crear horario", Icons.Outlined.Bedtime, onClick = actions.openSleepSchedule,
-                )
+                steps.forEachIndexed { idx, (key, _, go) ->
+                    when (key) {
+                        "goals" -> StepCard(
+                            "Define tus objetivos",
+                            "Responde unas preguntas y adaptamos los consejos diarios a lo que quieres mejorar.",
+                            "Empezar", Icons.Outlined.TrackChanges, highlighted = idx == 0, onClick = open(key, go),
+                        )
+                        "charging" -> StepCard(
+                            "Cómo cargar la pulsera",
+                            "Llega con batería suficiente para registrar tu primer día y tu primera noche.",
+                            "Ver consejos", Icons.Outlined.Battery5Bar, highlighted = idx == 0, onClick = open(key, go),
+                        )
+                        else -> StepCard(
+                            "Configura tu horario de sueño",
+                            "Te avisamos para desconectar y la pulsera te despierta con vibración suave.",
+                            "Crear horario", Icons.Outlined.Bedtime, highlighted = idx == 0, onClick = open(key, go),
+                        )
+                    }
+                }
             }
+        }
 
+        if (nights < PulseData.calibrationNights) {
             SectionTitle("Lo que viene")
             PulseCard(Modifier.padding(horizontal = PulseMetrics.gutter), onClick = actions.openCalibration) {
                 CardHeader("Calibración")
@@ -167,18 +194,11 @@ fun PulseHomeScreen(vm: AppViewModel, showLiveHr: Boolean = false, actions: Home
                     DashedProgressRing(nights.coerceAtMost(PulseData.calibrationNights), PulseData.calibrationNights)
                 }
             }
-        } else {
-            SectionTitle("Primeros pasos", trailing = {
-                Box(
-                    Modifier.size(34.dp).clip(RoundedCornerShape(9.dp)).background(PulseColors.text).pulseClick(actions.openStartActivity),
-                    contentAlignment = Alignment.Center,
-                ) { Icon(Icons.Outlined.Add, "Iniciar actividad", tint = PulseColors.onAccent, modifier = Modifier.size(18.dp)) }
-            })
         }
 
         SectionTitle("Mi panel")
         Column(Modifier.padding(horizontal = PulseMetrics.gutter), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            if (nights < PulseData.calibrationNights) {
+            if (nights < 5) {
                 Row(
                     Modifier.fillMaxWidth().clip(RoundedCornerShape(PulseMetrics.cardRadius))
                         .border(1.dp, PulseColors.hairline, RoundedCornerShape(PulseMetrics.cardRadius)).padding(18.dp),
@@ -500,6 +520,49 @@ fun EffortRecoveryChart(days: List<com.noop.data.DailyMetric>, modifier: Modifie
                     if (!isToday) Text(PulseData.dayOfMonth(k), style = PulseText.chartAxis, color = PulseColors.textSecondary)
                 }
             }
+        }
+    }
+}
+
+/** "Sueño de esta noche": recommended bedtime and tomorrow's wake alarm from the sleep planner. */
+@Composable
+private fun TonightCard(t: SleepSchedules.Tonight, modifier: Modifier, onEdit: () -> Unit) {
+    PulseCard(modifier, onClick = onEdit) {
+        CardHeader("Sueño de esta noche")
+        Row(Modifier.fillMaxWidth().padding(top = 18.dp), verticalAlignment = Alignment.CenterVertically) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Outlined.Bedtime, null, tint = PulseColors.textSecondary, modifier = Modifier.size(20.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text(SleepSchedules.hm(t.bedMin), style = PulseText.bigNumber.copy(fontSize = 26.sp), color = PulseColors.text)
+                }
+                Spacer(Modifier.height(6.dp))
+                Text("HORA DE\nACOSTARTE", style = PulseText.overline.copy(lineHeight = 14.sp), color = PulseColors.textSecondary, textAlign = TextAlign.Center)
+            }
+            Text("- - - - -", style = PulseText.small, color = PulseColors.textTertiary, textAlign = TextAlign.Center, modifier = Modifier.weight(1f))
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Outlined.Alarm, null, tint = PulseColors.textSecondary, modifier = Modifier.size(20.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text(SleepSchedules.hm(t.wakeMin), style = PulseText.bigNumber.copy(fontSize = 26.sp), color = PulseColors.text)
+                }
+                Spacer(Modifier.height(6.dp))
+                val alarmOn = t.on && t.mode != WakeMode.None
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(Modifier.size(7.dp).clip(RoundedCornerShape(4.dp)).background(if (alarmOn) PulseColors.recoveryGreen else PulseColors.textTertiary))
+                    Spacer(Modifier.width(6.dp))
+                    Text(if (alarmOn) "ALARMA ACTIVADA" else "ALARMA APAGADA", style = PulseText.overline, color = if (alarmOn) PulseColors.recoveryGreen else PulseColors.textSecondary)
+                }
+                Text(if (alarmOn) t.mode.label else "SIN ALARMA", style = PulseText.overline, color = PulseColors.textSecondary)
+            }
+        }
+        Row(
+            Modifier.padding(top = 20.dp).fillMaxWidth().height(50.dp).clip(RoundedCornerShape(10.dp)).background(PulseColors.hairline).pulseClick(onEdit),
+            horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(Icons.Outlined.Edit, null, tint = PulseColors.text, modifier = Modifier.size(18.dp))
+            Spacer(Modifier.width(10.dp))
+            Text("EDITAR ALARMA", style = PulseText.overlineLg, color = PulseColors.text)
         }
     }
 }

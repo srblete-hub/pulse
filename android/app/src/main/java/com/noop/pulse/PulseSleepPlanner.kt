@@ -113,6 +113,18 @@ object SleepSchedules {
 
     fun forDay(list: List<WakeSchedule>, dayIndex: Int) = list.lastOrNull { dayIndex in it.days }
 
+    data class Tonight(val bedMin: Int, val wakeMin: Int, val mode: WakeMode, val on: Boolean)
+
+    /** Tomorrow's wake time and tonight's recommended bedtime, or null when there is no schedule for tomorrow. */
+    fun tonight(c: Context): Tonight? {
+        val list = load(c)
+        val idx = LocalDate.now().plusDays(1).dayOfWeek.value - 1
+        val s = forDay(list, idx) ?: return null
+        val needMin = ((PrefsCoachMemory(c).get("sleep_need")?.toDoubleOrNull() ?: 8.0) * 60).toInt()
+        val inBed = needMin + listOf(0, 30, -60)[goal(c).coerceIn(0, 2)] + 15
+        return Tonight(s.minutes - inBed, s.minutes, s.mode, enabled(c))
+    }
+
     fun hm(min: Int) = "%02d:%02d".format(((min % 1440) + 1440) % 1440 / 60, ((min % 1440) + 1440) % 1440 % 60)
 
     /** Pushes the schedules into noop's alarms. Returns false when the smart window needs the exact-alarm permission. */

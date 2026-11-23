@@ -12,7 +12,13 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.ime
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.union
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -36,6 +42,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -63,6 +70,7 @@ import com.noop.ui.CoachOrb
 import com.noop.ui.ProfileStore
 import com.noop.widget.StressWidgetProducer
 import java.time.LocalTime
+import kotlinx.coroutines.launch
 
 /** Coach memory in its own SharedPreferences file; never leaves the phone. */
 class PrefsCoachMemory(context: Context) : CoachMemory {
@@ -155,26 +163,37 @@ fun PulseCoachScreen(vm: AppViewModel, onBack: () -> Unit, onAction: (CoachActio
     var input by remember { mutableStateOf("") }
     val listState = rememberLazyListState()
 
+    var thinking by remember { mutableStateOf(false) }
+    val scope = androidx.compose.runtime.rememberCoroutineScope()
     fun send(text: String) {
         val t = text.trim()
-        if (t.isEmpty()) return
+        if (t.isEmpty() || thinking) return
         started = true
         lines += ChatLine(true, t)
-        val r = engine.reply(t, snapshot())
-        lines += ChatLine(false, r.text, r)
         input = ""
+        val r = engine.reply(t, snapshot())
+        thinking = true
+        scope.launch {
+            // Feels like the coach is reading and thinking: 1.2–2.8 s, a bit longer for longer answers.
+            kotlinx.coroutines.delay((1200L + r.text.length * 4L).coerceAtMost(2800L) + kotlin.random.Random.nextLong(0, 400))
+            lines += ChatLine(false, r.text, r)
+            thinking = false
+        }
     }
     fun start() {
         started = true
         val r = engine.welcome(snapshot())
         lines += ChatLine(false, r.text, r)
     }
-    LaunchedEffect(lines.size) { if (lines.isNotEmpty()) listState.animateScrollToItem(lines.lastIndex) }
+    LaunchedEffect(lines.size, thinking) { if (lines.isNotEmpty()) listState.animateScrollToItem(lines.lastIndex + if (thinking) 1 else 0) }
 
     val chips = lines.lastOrNull { !it.fromUser }?.reply?.quickReplies?.takeIf { it.isNotEmpty() }
         ?: listOf("¿Cómo dormí anoche?", "¿Entreno fuerte hoy?", "Mi semana", "¿Cómo estoy hoy?")
 
-    Column(Modifier.fillMaxSize().background(PulseColors.inset).statusBarsPadding().imePadding()) {
+    Column(
+        Modifier.fillMaxSize().background(PulseColors.inset).statusBarsPadding()
+            .windowInsetsPadding(WindowInsets.ime.union(WindowInsets.navigationBars).only(WindowInsetsSides.Bottom)),
+    ) {
         Row(Modifier.fillMaxWidth().padding(start = 14.dp, end = 14.dp, top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
             Box(Modifier.size(44.dp).pulseClick(onBack), contentAlignment = Alignment.Center) {
                 Icon(Icons.AutoMirrored.Outlined.ArrowBack, "Atrás", tint = PulseColors.text, modifier = Modifier.size(22.dp))
@@ -229,6 +248,7 @@ fun PulseCoachScreen(vm: AppViewModel, onBack: () -> Unit, onAction: (CoachActio
                     verticalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
                     items(lines) { line -> Bubble(line, onAction) }
+                    if (thinking) item { TypingBubble() }
                 }
             }
             Row(
@@ -242,7 +262,7 @@ fun PulseCoachScreen(vm: AppViewModel, onBack: () -> Unit, onAction: (CoachActio
                     ) { Text(chip, style = PulseText.body.copy(fontWeight = FontWeight.SemiBold), color = PulseColors.onAccent) }
                 }
             }
-            Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, bottom = 16.dp).navigationBarsPadding(), verticalAlignment = Alignment.CenterVertically) {
+            Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, bottom = 16.dp), verticalAlignment = Alignment.CenterVertically) {
                 Row(
                     Modifier.weight(1f).height(46.dp).clip(RoundedCornerShape(14.dp)).border(1.5.dp, inputBorder, RoundedCornerShape(14.dp))
                         .background(Color(0xFF15161F)).padding(start = 14.dp, end = 6.dp),
@@ -262,7 +282,7 @@ fun PulseCoachScreen(vm: AppViewModel, onBack: () -> Unit, onAction: (CoachActio
                         )
                     }
                     Box(Modifier.size(36.dp).pulseClick { send(input) }, contentAlignment = Alignment.Center) {
-                        Icon(Icons.AutoMirrored.Outlined.Send, "Enviar", tint = if (input.isBlank()) PulseColors.textTertiary else PulseColors.accent, modifier = Modifier.size(20.dp))
+                        Icon(Icons.AutoMirrored.Outlined.Send, "Enviar", tint = if (input.isBlank() || thinking) PulseColors.textTertiary else PulseColors.accent, modifier = Modifier.size(20.dp))
                     }
                 }
             }
@@ -283,6 +303,28 @@ private fun Bubble(line: ChatLine, onAction: (CoachAction) -> Unit) {
             line.reply?.action?.let { a ->
                 Spacer(Modifier.height(8.dp))
                 CtaLink(a.label) { onAction(a) }
+            }
+        }
+    }
+}
+
+/** Three softly pulsing dots while the coach "thinks". */
+@Composable
+private fun TypingBubble() {
+    val t = androidx.compose.animation.core.rememberInfiniteTransition(label = "typing")
+    val phase by t.animateFloat(
+        0f, 3f, androidx.compose.animation.core.infiniteRepeatable(androidx.compose.animation.core.tween(900, easing = androidx.compose.animation.core.LinearEasing)),
+        label = "phase",
+    )
+    Row(Modifier.fillMaxWidth()) {
+        Row(
+            Modifier.clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp, bottomStart = 4.dp, bottomEnd = 16.dp))
+                .background(PulseColors.overlay).padding(horizontal = 16.dp, vertical = 14.dp),
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            repeat(3) { i ->
+                val on = phase.toInt() == i
+                Box(Modifier.size(8.dp).clip(RoundedCornerShape(4.dp)).background(if (on) PulseColors.accent else PulseColors.textTertiary))
             }
         }
     }

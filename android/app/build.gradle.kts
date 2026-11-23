@@ -19,6 +19,15 @@ val requestedReleaseBuild = gradle.startParameter.taskNames.any {
 }
 
 android {
+    // Pulse: name the built APK after the app ("Pulse.apk" for the full debug build users install).
+    applicationVariants.all {
+        val variantName = name
+        outputs.all {
+            (this as com.android.build.gradle.internal.api.BaseVariantOutputImpl).outputFileName =
+                if (variantName == "fullDebug") "Pulse.apk" else "Pulse-$variantName.apk"
+        }
+    }
+
     namespace = "com.noop"
     compileSdk = 35
 
