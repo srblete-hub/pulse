@@ -2404,9 +2404,9 @@
     <string name="today_card_hydration_subtitle">Today\'s fluid</string>
     <string name="today_card_coupled">Coupled view</string>
     <string name="today_card_coupled_subtitle">Recovery, strain and sleep in one glance</string>
-    <string name="today_metric_charge">Charge</string>
+    <string name="today_metric_charge">Recovery</string>
     <string name="today_metric_effort">Effort</string>
-    <string name="today_metric_rest">Rest</string>
+    <string name="today_metric_rest">Sleep</string>
     <string name="today_metric_hrv">HRV</string>
     <string name="today_metric_resting_hr">Resting HR</string>
     <string name="today_metric_blood_oxygen">Blood oxygen</string>

@@ -2283,9 +2283,9 @@
     <string name="today_card_hydration_subtitle">Líquido de hoy</string>
     <string name="today_card_coupled">Vista combinada</string>
     <string name="today_card_coupled_subtitle">Recuperación, esfuerzo y sueño de un vistazo</string>
-    <string name="today_metric_charge">Carga</string>
+    <string name="today_metric_charge">Recuperación</string>
     <string name="today_metric_effort">Esfuerzo</string>
-    <string name="today_metric_rest">Descanso</string>
+    <string name="today_metric_rest">Sueño</string>
     <string name="today_metric_hrv">HRV</string>
     <string name="today_metric_resting_hr">FC en reposo</string>
     <string name="today_metric_blood_oxygen">Oxígeno en sangre</string>
