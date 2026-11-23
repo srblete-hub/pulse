@@ -470,7 +470,7 @@ object NoopType {
     // Helvetica Neue family — falls back to the platform grotesque (SansSerif) when
     // no res/font/helvetica_neue asset is bundled, per the v3 type spec.
     /** Body / titles: Mulish (OFL, bundled in res/font). */
-    private val sans = FontFamily(
+    val sans = FontFamily(
         Font(R.font.mulish_400, FontWeight.Normal),
         Font(R.font.mulish_500, FontWeight.Medium),
         Font(R.font.mulish_600, FontWeight.SemiBold),
