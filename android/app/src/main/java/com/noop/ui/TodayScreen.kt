@@ -33,6 +33,11 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.BatteryChargingFull
+import androidx.compose.material.icons.outlined.Bedtime
+import androidx.compose.material.icons.outlined.DirectionsRun
+import androidx.compose.material.icons.outlined.MenuBook
+import androidx.compose.material.icons.outlined.TrackChanges
 import androidx.compose.material.icons.automirrored.filled.DirectionsRun
 import androidx.compose.material.icons.automirrored.filled.DirectionsWalk
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
@@ -330,6 +335,9 @@ fun TodayScreen(
     // The #627 journal-reminder card links straight to the journal (Insights). Defaulted to a no-op so
     // the call site stays compiling; AppRoot binds it to nav.navigateTopLevel(Insights), same as Sleep.
     onOpenJournal: () -> Unit = {},
+    // Pulse "Primeros pasos": the sleep-schedule card opens Alarms, the activity card opens Live.
+    onOpenAlarms: () -> Unit = {},
+    onOpenLive: () -> Unit = {},
 ) {
     val today by viewModel.today.collectAsStateWithLifecycle()
     val alert by viewModel.healthAlert.collectAsStateWithLifecycle()
@@ -1753,6 +1761,39 @@ fun TodayScreen(
                                         color = Palette.textTertiary,
                                     )
                                 }
+                            }
+                            // Pulse "Primeros pasos": onboarding cards while the baseline is still
+                            // calibrating, on today only. Each routes to an existing feature.
+                            if (selectedDayOffset == 0 && recoveryCalibration != null) {
+                                GettingStartedSection(
+                                    steps = listOf(
+                                        GettingStartedStep(
+                                            "Define tus objetivos",
+                                            "Cuéntale al coach qué quieres mejorar y adaptará sus consejos a ti.",
+                                            "Empezar", Icons.Outlined.TrackChanges,
+                                        ) { onOpenCoach(null) },
+                                        GettingStartedStep(
+                                            "Cómo cargar la pulsera",
+                                            "Llega con batería suficiente para registrar tu primer día y tu primera noche.",
+                                            "Ver pulsera", Icons.Outlined.BatteryChargingFull, onOpenDevices,
+                                        ),
+                                        GettingStartedStep(
+                                            "Configura tu horario de sueño",
+                                            "Te avisamos para desconectar y la pulsera te despierta con vibración.",
+                                            "Crear horario", Icons.Outlined.Bedtime, onOpenAlarms,
+                                        ),
+                                        GettingStartedStep(
+                                            "Personaliza tu diario",
+                                            "Apunta tus hábitos y descubre cómo influyen en tu recuperación.",
+                                            "Abrir diario", Icons.Outlined.MenuBook, onOpenJournal,
+                                        ),
+                                        GettingStartedStep(
+                                            "¿Listo para moverte?",
+                                            "Empieza una actividad y verás tus zonas de pulso y tu esfuerzo.",
+                                            "Empezar actividad", Icons.Outlined.DirectionsRun, onOpenLive,
+                                        ),
+                                    ),
+                                )
                             }
                         }
                         // LIVE SESSIONS (beta): the compact "Start session · BETA" entry. Today only

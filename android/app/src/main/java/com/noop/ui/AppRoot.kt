@@ -676,6 +676,8 @@ fun AppRoot(viewModel: AppViewModel = viewModel()) {
                         // #627: the journal-reminder card opens the journal (hosted in Insights), same
                         // destination the Sleep screen's morning sheet uses.
                         onOpenJournal = { nav.navigateTopLevel(Destination.Insights.route) },
+                        onOpenAlarms = { nav.navigate(Destination.SmartAlarm.route) },
+                        onOpenLive = { nav.navigate(Destination.Live.route) },
                     )
                 }
                 composable(Destination.Live.route) {

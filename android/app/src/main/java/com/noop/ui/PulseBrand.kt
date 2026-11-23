@@ -3,6 +3,7 @@ package com.noop.ui
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -182,3 +183,76 @@ private fun CommunityEmptyCard(
         }
     }
 }
+
+/** One "Getting started" step: a title, a short body, the action label and where it leads. */
+internal data class GettingStartedStep(
+    val title: String,
+    val body: String,
+    val action: String,
+    val icon: androidx.compose.ui.graphics.vector.ImageVector,
+    val onClick: () -> Unit,
+)
+
+/**
+ * Pulse "Primeros pasos": onboarding cards shown on Today while the baseline is still calibrating.
+ * Each card routes to an existing feature (coach, devices, alarms, journal, live workout), so nothing
+ * here computes or stores anything new.
+ */
+@Composable
+internal fun GettingStartedSection(steps: List<GettingStartedStep>) {
+    Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+        Text(
+            "Primeros pasos",
+            style = NoopType.title2.copy(fontSize = 19.sp),
+            color = Palette.textPrimary,
+            modifier = Modifier.padding(start = 4.dp, top = 8.dp),
+        )
+        steps.forEachIndexed { i, step -> GettingStartedCard(step, highlighted = i == 0) }
+    }
+}
+
+@Composable
+private fun GettingStartedCard(step: GettingStartedStep, highlighted: Boolean) {
+    val shape = RoundedCornerShape(13.dp)
+    val base = Modifier
+        .fillMaxWidth()
+        .clip(shape)
+        .let { if (highlighted) it.border(1.5.dp, pulseAccentBrush, shape) else it }
+        .background(
+            if (highlighted) {
+                Brush.linearGradient(listOf(Color(0xFF2E2638), Color(0xFF241E33)))
+            } else {
+                Brush.linearGradient(listOf(Palette.surfaceRaised, Palette.surfaceRaised))
+            },
+        )
+        .clickableNoRipple(step.onClick)
+        .padding(horizontal = 18.dp, vertical = 20.dp)
+    androidx.compose.foundation.layout.Row(
+        modifier = base,
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Text(step.title, style = NoopType.headline.copy(fontSize = 14.sp), color = Palette.textPrimary)
+            Text(step.body, style = NoopType.subhead.copy(fontSize = 12.5.sp, lineHeight = 17.sp), color = Palette.textSecondary)
+            Text(
+                step.action.uppercase() + "  →",
+                style = NoopType.overline.copy(fontSize = 10.sp, letterSpacing = 1.2.sp),
+                color = Palette.accent,
+                modifier = Modifier.padding(top = 4.dp),
+            )
+        }
+        Box(
+            modifier = Modifier
+                .size(64.dp)
+                .clip(RoundedCornerShape(18.dp))
+                .background(Palette.surfaceOverlay),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(step.icon, contentDescription = null, tint = if (highlighted) Palette.accent else Palette.textTertiary, modifier = Modifier.size(32.dp))
+        }
+    }
+}
+
+private fun Modifier.clickableNoRipple(onClick: () -> Unit): Modifier =
+    this.clickable(onClick = onClick)
