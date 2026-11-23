@@ -194,29 +194,23 @@ class CoachEngine(
 
     // ---- training recommendation --------------------------------------------------------------
 
-    private fun effortTarget(r: Double): ClosedFloatingPointRange<Double> = when {
-        r >= 67 -> 14.0..18.0
-        r >= 34 -> 10.0..14.0
-        else -> 0.0..10.0
-    }
 
     private fun trainAdvice(s: CoachSnapshot): String {
         val r = s.recovery ?: return noRecoveryYet(s) + " Mientras tanto, guíate por sensaciones: si dormiste bien y no tienes agujetas fuertes, adelante con una sesión moderada."
-        val t = effortTarget(r)
         val flags = redFlags(s)
         val sportTxt = sport?.let { " de $it" } ?: ""
         return when {
             flags.size >= 2 -> "Tu recuperación es del ${f0(r)} %, pero veo ${flags.joinToString(" y ")}. Eso a veces anticipa un resfriado o mucha fatiga. Hoy mejor algo suave (paseo, movilidad) y acuéstate pronto."
             r >= 67 -> pick(
-                "Recuperación ${band(r)} (${f0(r)} %). Hoy es buen día para apretar: una sesión$sportTxt intensa o un entreno de calidad. Apunta a un esfuerzo de ${f0(t.start)}–${f0(t.endInclusive)}.",
-                "Estás en verde con un ${f0(r)} %. Tu cuerpo está listo para cargar: series, fuerza pesada o una tirada larga. Objetivo de esfuerzo: ${f0(t.start)}–${f0(t.endInclusive)}.",
+                "Recuperación ${band(r)} (${f0(r)} %). Hoy es buen día para apretar: una sesión$sportTxt intensa o un entreno de calidad.",
+                "Estás en verde con un ${f0(r)} %. Tu cuerpo está listo para cargar: series, fuerza pesada o una tirada larga.",
             )
             r >= 34 -> pick(
-                "Recuperación ${band(r)} (${f0(r)} %). Puedes entrenar, pero sin ir al límite: técnica, zona 2 o fuerza moderada. Esfuerzo recomendado: ${f0(t.start)}–${f0(t.endInclusive)}.",
-                "Un ${f0(r)} %: día de mantenimiento. Entrena con cabeza, deja 2–3 repeticiones en la recámara y prioriza dormir bien esta noche. Esfuerzo: ${f0(t.start)}–${f0(t.endInclusive)}.",
+                "Recuperación ${band(r)} (${f0(r)} %). Puedes entrenar, pero sin ir al límite: técnica, zona 2 o fuerza moderada.",
+                "Un ${f0(r)} %: día de mantenimiento. Entrena con cabeza, deja 2–3 repeticiones en la recámara y prioriza dormir bien esta noche.",
             )
             else -> pick(
-                "Recuperación ${band(r)} (${f0(r)} %). Hoy toca recuperar: paseo, estiramientos o yoga suave. Un entreno duro hoy cuesta mucho y rinde poco. Mantén el esfuerzo por debajo de 10.",
+                "Recuperación ${band(r)} (${f0(r)} %). Hoy toca recuperar: paseo, estiramientos o yoga suave. Un entreno duro hoy cuesta mucho y rinde poco.",
                 "Estás en rojo (${f0(r)} %). No es un fallo, es información: descansa activo, hidrátate y acuéstate antes. Mañana lo agradecerás.",
             )
         }
@@ -410,7 +404,7 @@ class CoachEngine(
             p("oxigeno", "saturacion", "spo2", w = 2.0),
             { c ->
                 CoachReply(
-                    "La pulsera estima la saturación de oxígeno durante el sueño. Es orientativa, no un pulsioxímetro médico.\n\n" +
+                    "Pulse no muestra el oxígeno en sangre: la pulsera no envía un porcentaje calibrado, así que cualquier cifra sería inventada.\n\n" +
                         "Si alguna vez notas falta de aire, labios azulados o confusión, no mires la app: llama al 112.",
                     listOf("Monitor de salud"),
                 )
@@ -504,7 +498,7 @@ class CoachEngine(
         Rule(
             "vo2",
             p("vo2", "vo2max", "capacidad aerobica", "forma fisica", "fondo fisico", w = 1.8),
-            { c -> CoachReply("El VO₂ máx. es la cantidad de oxígeno que tu cuerpo puede usar a tope, y es el mejor predictor de longevidad que existe. Se mejora con dos cosas: mucho volumen suave (zona 2, 2–4 h/semana) y un poco de intensidad alta (1–2 sesiones de intervalos de 3–4 minutos).\n\nEn tu edad fisiológica es el factor que más años puede restar (hasta 6).", listOf("¿Cómo hago zona 2?", "Mi edad fisiológica"), CoachAction.Age) },
+            { c -> CoachReply("El VO₂ máx. es la cantidad de oxígeno que tu cuerpo puede usar a tope, y es el mejor predictor de longevidad que existe. Se mejora con dos cosas: mucho volumen suave (zona 2, 2–4 h/semana) y un poco de intensidad alta (1–2 sesiones de intervalos de 3–4 minutos).\n\nAdemás, cuanto mejor es tu forma física, más baja tu pulso en reposo, que es lo que más mueve tu edad fisiológica.", listOf("¿Cómo hago zona 2?", "Mi edad fisiológica"), CoachAction.Age) },
         ),
         Rule(
             "edad_fisiologica",
@@ -560,7 +554,7 @@ class CoachEngine(
         Rule(
             "calibracion",
             p("calibr", "cuando tendre datos", "por que no tengo datos", "no veo datos", "sin datos", "linea base", "cuantas noches", w = 1.5),
-            { c -> CoachReply("Llevas ${c.s.nights} ${if (c.s.nights == 1) "noche" else "noches"} con datos. Así funciona la calibración:\n• 1 noche: sueño y esfuerzo.\n• 4 noches: primera recuperación.\n• 7 noches: línea base completa y monitor de salud.\n• 21 días: edad fisiológica.\n\nDuerme con la pulsera puesta y abre la app por la mañana para que sincronice.", listOf("¿Cómo dormí anoche?"), CoachAction.Calibration) },
+            { c -> CoachReply("Llevas ${c.s.nights} ${if (c.s.nights == 1) "noche" else "noches"} con datos. Así funciona la calibración:\n• 1 noche: sueño y esfuerzo.\n• 4 noches: primera recuperación.\n• 7 noches: línea base completa y monitor de salud.\n• 10 días: edad fisiológica.\n\nDuerme con la pulsera puesta y abre la app por la mañana para que sincronice.", listOf("¿Cómo dormí anoche?"), CoachAction.Calibration) },
         ),
         Rule(
             "pulsera",
@@ -1140,14 +1134,7 @@ class CoachEngine(
 
     private fun effortAnswer(s: CoachSnapshot): CoachReply {
         val e = s.effort ?: return CoachReply("Aún no tengo tu esfuerzo de hoy. Empieza a contar en cuanto la pulsera registra tu pulso.", listOf("¿Entreno fuerte hoy?"), CoachAction.Effort, "esfuerzo")
-        val target = s.recovery?.let { effortTarget(it) }
-        val vsTarget = target?.let {
-            when {
-                e < it.start -> " Tu objetivo según la recuperación es ${f0(it.start)}–${f0(it.endInclusive)}: aún tienes margen."
-                e > it.endInclusive -> " Ya has superado tu objetivo (${f0(it.start)}–${f0(it.endInclusive)}). Lo que sumes ahora cuesta más recuperarlo."
-                else -> " Estás dentro de tu objetivo (${f0(it.start)}–${f0(it.endInclusive)}). ¡Bien medido!"
-            }
-        } ?: ""
+        val vsTarget = ""
         val avg = s.effortAvg?.let { " Tu media es ${f1(it)}." } ?: ""
         return CoachReply("Llevas un esfuerzo de ${f1(e)} de 21.$avg$vsTarget", listOf("¿Por qué?", "¿Qué entreno me recomiendas?"), CoachAction.Effort, "esfuerzo")
     }
@@ -1241,10 +1228,10 @@ class CoachEngine(
     private fun ageAnswer(s: CoachSnapshot): CoachReply {
         val pa = s.pulseAge
         val txt = if (pa == null || s.age == null) {
-            "La edad fisiológica estima cómo de \"joven\" es tu cuerpo a partir de 9 hábitos: horas y regularidad del sueño, pasos, minutos en zonas de pulso, fuerza, VO₂ máx., pulso en reposo y masa magra. Necesito 21 días de datos para calcularla."
+            "La edad fisiológica es tu edad según tu forma física (método HUNT, igual que en NOOP): parte de tu edad real y la ajusta con tu pulso en reposo (mediana de 7 días) y tu actividad de la semana. Necesito 10 días de datos para mostrarla."
         } else {
             val d = s.age - pa
-            "Tu edad fisiológica es ${f1(pa)} años, ${if (d >= 0) "${f1(d)} menos" else "${f1(-d)} más"} que tu edad real.\n\nLo que más años puede restar: VO₂ máx. (cardio), dormir 7–9 h con regularidad y moverte a diario."
+            "Tu edad fisiológica es ${f1(pa)} años, ${if (d >= 0) "${f1(d)} menos" else "${f1(-d)} más"} que tu edad real.\n\nLo que más la mueve: bajar tu pulso en reposo (cardio regular, dormir bien) y tener varios días activos de verdad a la semana."
         }
         return CoachReply(txt, listOf("¿Cómo mejoro mi VO₂ máx.?", "Dame un plan"), CoachAction.Age, "edad_fisiologica")
     }

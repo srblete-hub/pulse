@@ -110,7 +110,7 @@ fun PulseEffortScreen(vm: AppViewModel, onBack: () -> Unit, onCoach: () -> Unit)
         tipBody = "Mide la carga que ha soportado tu corazón a lo largo del día, entrenando y en tu vida normal. Cuanto más tiempo pasas con el pulso alto, más sube. Toca la «i» para ver cómo se calcula.",
         heroIcon = Icons.Outlined.ShowChart, heroColor = PulseColors.strain,
         heroFraction = eff?.let { (it / 21).toFloat() }, heroValue = PulseData.oneDecimal(eff ?: 0.0), heroValueSize = 52, heroLabel = "ESFUERZO",
-        notice = calibrationNotice(nights) { "Duerme con la pulsera $it noches y Pulse te propondrá un objetivo de esfuerzo para cada día." },
+        notice = null,
         rows = listOf(
             MetricRow(Icons.Outlined.FavoriteBorder, "ZONAS DE PULSO 1–3", PulseActivity.mmss(z?.first ?: 0.0), "media ${PulseActivity.mmss(zAvg.map { it.first }.takeIf { it.isNotEmpty() }?.average() ?: 0.0)}"),
             MetricRow(Icons.Outlined.MonitorHeart, "ZONAS DE PULSO 4–5", PulseActivity.mmss(z?.second ?: 0.0), "media ${PulseActivity.mmss(zAvg.map { it.second }.takeIf { it.isNotEmpty() }?.average() ?: 0.0)}"),
@@ -142,7 +142,7 @@ fun PulseRecoveryScreen(vm: AppViewModel, onBack: () -> Unit, onHabits: () -> Un
     MetricPage(
         tipKey = "recovery",
         tipTitle = "Recuperación",
-        tipBody = "Te dice cada mañana cómo de preparado está tu cuerpo, a partir de tu VFC, tu pulso en reposo, tu respiración y cómo has dormido. Toca la «i» para ver cómo se calcula.",
+        tipBody = "Te dice cada mañana cómo de preparado está tu cuerpo. Se calcula como en NOOP: tu VFC (lo que más pesa), tu pulso en reposo, tu sueño, tu respiración y tu temperatura, comparados con tus propias medias.",
         heroIcon = Icons.Outlined.FavoriteBorder, heroColor = PulseColors.recovery(rec).takeIf { rec != null } ?: PulseColors.recoveryGreen,
         heroFraction = rec?.let { (it / 100).toFloat() }, heroValue = PulseData.pct(rec), heroValueSize = 46, heroLabel = "RECUPERACIÓN",
         notice = calibrationNotice(nights) { "Duerme con la pulsera $it noches para calibrar del todo tu recuperación." },
@@ -177,19 +177,26 @@ fun PulseSleepScreen(vm: AppViewModel, onBack: () -> Unit, onCoach: () -> Unit) 
     fun h(v: Double?) = if (v == null || v <= 0) "-:--" else PulseData.hoursMinutes(v)
     fun vsNeed(v: Double?) = v?.takeIf { it > 0 }?.let { "${(it / needMin * 100).roundToInt()}%" } ?: "--%"
     fun inBed(m: DailyMetric) = m.totalSleepMin?.let { t -> m.efficiency?.takeIf { it > 0 }?.let { t / (it / 100) } }
-    val regularityLocked = nights < PulseData.recoverySeedNights
+    // noop: regularity = 1 − coefficient of variation of nightly hours over the last 28 nights (≥ 3 nights).
+    fun regularityAt(dayKey: String) = com.noop.analytics.VitalityEngine.sleepConsistency(
+        days.filter { it.day <= dayKey }.takeLast(28).mapNotNull { it.totalSleepMin?.div(60.0) })?.times(100)
+    val regularity = regularityAt(PulseData.dayKey(0))
+    val regularityAvg = (0 until 30).mapNotNull { regularityAt(PulseData.dayKey(-it)) }.takeIf { it.isNotEmpty() }?.average()
+    val regularityLocked = regularity == null
+    // noop's sleep-debt ledger (55 % carried each night, 14 nights).
+    val debtByDay = com.noop.analytics.SleepDebt.debtSeries(days.map { it.day to it.totalSleepMin }, needHours = needMin / 60.0).toMap()
     MetricPage(
         tipKey = "sleep",
         tipTitle = "Rendimiento del sueño",
-        tipBody = "Una sola nota que resume tu noche: cuánto has dormido frente a lo que necesitabas, lo regulares que son tus horarios y lo bien aprovechado que ha estado el tiempo en la cama. Toca la «i» cuando quieras saber cómo se calcula.",
+        tipBody = "Una sola nota que resume tu noche, calculada como en NOOP: 50 % horas dormidas frente a las que necesitas, 20 % eficiencia, 20 % sueño reparador (profundo + REM) y 10 % regularidad.",
         heroIcon = Icons.Outlined.Bedtime, heroColor = PulseColors.sleep,
         heroFraction = perf?.let { (it / 100).toFloat() }, heroValue = PulseData.pct(perf), heroValueSize = 40, heroLabel = "RENDIMIENTO\nDEL SUEÑO",
         notice = if (perf == null) "Duerme esta noche con la pulsera y mañana verás qué tal has descansado." to 1 else null,
         rows = listOf(
             MetricRow(Icons.Outlined.Timer, "HORAS VS. NECESARIAS", vsNeed(d?.totalSleepMin), "necesitas ${h(needMin)} h"),
-            MetricRow(Icons.Outlined.CalendarMonth, "REGULARIDAD", "--", if (regularityLocked) "en calibración" else "media --"),
+            MetricRow(Icons.Outlined.CalendarMonth, "REGULARIDAD", regularity?.let { "${it.roundToInt()}%" } ?: "--", if (regularityLocked) "en calibración" else "media ${regularityAvg?.let { "${it.roundToInt()}%" } ?: "--"}"),
             MetricRow(Icons.Outlined.Speed, "EFICIENCIA", PulseData.pct(d?.efficiency).replace("--%", "--"), "media ${PulseData.pct(avg30(days) { it.efficiency }).replace("--%", "--")}"),
-            MetricRow(Icons.Outlined.Psychology, "ESTRÉS DURANTE EL SUEÑO", "--", "media --"),
+            MetricRow(Icons.Outlined.Psychology, "DEUDA DE SUEÑO", debtByDay[PulseData.dayKey(0)]?.let { h(it.takeIf { v -> v > 0 } ?: 0.0).replace("-:--", "0:00") } ?: "--", "acumulada"),
         ),
         rowHeight = 48.dp,
         coachLine = if (perf == null) "Mañana te cuento qué tal has dormido y cómo mejorar." else "Has dormido ${h(d?.totalSleepMin)} h. ¿Te doy consejos para esta noche?",
@@ -207,11 +214,11 @@ fun PulseSleepScreen(vm: AppViewModel, onBack: () -> Unit, onCoach: () -> Unit) 
                 NightCard("Horas dormidas", h(d?.totalSleepMin), avg30(days) { it.totalSleepMin }?.let { h(it) }, "Tiempo total dormido, sin contar los ratos despierto en la cama.")
                 NightCard("Horas vs. necesarias", vsNeed(d?.totalSleepMin), avg30(days) { it.totalSleepMin }?.let { vsNeed(it) }, "Lo que has dormido frente a lo que necesitas (${h(needMin)} h). Puedes ajustarlo diciéndoselo al coach.")
                 NightCard(
-                    "Regularidad", "--%", null, "Lo parecidos que son tus horarios de acostarte y levantarte de un día a otro.",
-                    locked = if (regularityLocked) "Duerme con la pulsera ${PulseData.recoverySeedNights - nights} noches para desbloquearla." to nights else null,
+                    "Regularidad", regularity?.let { "${it.roundToInt()}%" } ?: "--%", regularityAvg?.let { "${it.roundToInt()}%" },
+                    "Lo parecidas que son tus horas de sueño de una noche a otra en las últimas 4 semanas (100 % = siempre lo mismo).",
+                    locked = if (regularityLocked) "Duerme con la pulsera ${(3 - nights).coerceAtLeast(1)} noches más para desbloquearla." to nights else null,
                 )
                 NightCard("Eficiencia", PulseData.pct(d?.efficiency), avg30(days) { it.efficiency }?.let { PulseData.pct(it) }, "Porcentaje del tiempo en la cama que pasaste dormido. Por encima del 85 % es buena.")
-                NightCard("Estrés durante el sueño", "-:--", null, "Tiempo de la noche con el sistema nervioso activado (pulso alto y VFC baja).")
             }
         },
         charts = listOf(
@@ -220,13 +227,11 @@ fun PulseSleepScreen(vm: AppViewModel, onBack: () -> Unit, onCoach: () -> Unit) 
                 legend = listOf(LegendItem("DORMIDAS", PulseColors.sleep, round = true), LegendItem("NECESARIAS", PulseColors.textSecondary, round = true))),
             TrendChart("Sueño reparador (horas)", Color(0xFF5D7BFF), 300.0, week(days) { ((it.deepMin ?: 0.0) + (it.remMin ?: 0.0)).takeIf { v -> v > 0 } }, { PulseData.hoursMinutes(it) },
                 legend = listOf(LegendItem("PROFUNDO", Color(0xFF5D7BFF)), LegendItem("REM", PulseColors.accent))),
-            TrendChart("Regularidad", PulseColors.sleep, 100.0, List(7) { null }, { "${it.roundToInt()}%" },
-                locked = if (regularityLocked) "Duerme con la pulsera ${PulseData.recoverySeedNights - nights} noches para desbloquearla." else null),
+            TrendChart("Regularidad", PulseColors.sleep, 100.0, (-6..0).map { regularityAt(PulseData.dayKey(it)) }, { "${it.roundToInt()}%" },
+                locked = if (regularityLocked) "Duerme con la pulsera ${(3 - nights).coerceAtLeast(1)} noches más para desbloquearla." else null),
             TrendChart("Tiempo en la cama", PulseColors.sleep, 660.0, week(days) { inBed(it) }, { PulseData.hoursMinutes(it) }),
             TrendChart("Eficiencia", PulseColors.sleep, 100.0, week(days) { it.efficiency }, { "${it.roundToInt()}%" }),
-            TrendChart("Deuda de sueño", PulseColors.stressHigh, 180.0, week(days) { m -> m.totalSleepMin?.takeIf { it > 0 }?.let { (needMin - it).coerceAtLeast(0.0) } }, { PulseData.hoursMinutes(it) }),
-            TrendChart("Estrés durante el sueño", PulseColors.stressHigh, 120.0, List(7) { null }, { PulseActivity.mmss(it) },
-                legend = listOf(LegendItem("ALTO", PulseColors.stressHigh), LegendItem("MEDIO", PulseColors.stressMid), LegendItem("BAJO", PulseColors.stressLow))),
+            TrendChart("Deuda de sueño", PulseColors.stressHigh, 180.0, (-6..0).map { debtByDay[PulseData.dayKey(it)] }, { PulseData.hoursMinutes(it) }),
         ),
     )
 }

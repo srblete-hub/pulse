@@ -101,8 +101,6 @@ private class Vital(
 private val vitals = listOf(
     Vital("resp", "RESPIRACIÓN", Icons.Outlined.Air, "rpm", { it.respRateBpm }, 0.6, { String.format(Locale.US, "%.1f", it) },
         "Son las respiraciones por minuto mientras duermes. Suele ser muy estable de una noche a otra, así que un cambio claro puede ser una señal temprana de que estás incubando algo o de que no te has recuperado bien."),
-    Vital("spo2", "OXÍGENO (SPO₂)", Icons.Outlined.WaterDrop, "%", { it.spo2Pct }, 1.5, { "${it.toInt()}" },
-        "Es la saturación de oxígeno en sangre durante el sueño. En personas sanas suele estar entre el 95 % y el 100 %; bajadas repetidas pueden aparecer con la altitud, un resfriado o problemas respiratorios durante la noche."),
     Vital("rhr", "PULSO EN REPOSO", Icons.Outlined.FavoriteBorder, "lpm", { it.restingHr?.toDouble() }, 3.0, { "${it.toInt()}" },
         "Es tu pulso más bajo y estable durante el sueño. Baja cuando mejoras tu forma física y sube con el estrés, el alcohol, el calor, la falta de sueño o una infección."),
     Vital("hrv", "VFC", Icons.Outlined.ShowChart, "ms", { it.avgHrv }, 6.0, { "${it.toInt()}" },

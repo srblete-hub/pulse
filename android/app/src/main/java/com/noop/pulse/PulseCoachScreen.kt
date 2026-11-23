@@ -165,7 +165,7 @@ fun PulseCoachScreen(vm: AppViewModel, onBack: () -> Unit, onAction: (CoachActio
     var pulseAge by remember { mutableStateOf<Double?>(null) }
     val workouts by vm.workouts.collectAsStateWithLifecycle()
     LaunchedEffect(days.size, vo2) {
-        if (days.size >= PulseData.pulseAgeDays) pulseAge = runCatching { com.noop.pulse.engine.PulseAge.compute(context, vm, days, workouts, vo2)?.result?.pulseAge }.getOrNull()
+        if (PulseData.dataDays(days) >= PulseData.pulseAgeDays) pulseAge = runCatching { com.noop.pulse.engine.PulseAge.compute(context, vm, days, workouts, vo2)?.result?.pulseAge }.getOrNull()
     }
     fun snapshot() = buildCoachSnapshot(context, today, days, stress, vo2, live.batteryPct, live.connected, streaks.current, pulseAge)
 

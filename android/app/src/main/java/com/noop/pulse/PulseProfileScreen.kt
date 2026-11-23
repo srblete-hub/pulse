@@ -230,10 +230,10 @@ fun PulseProfileScreen(
                         Text("$level", style = PulseText.ringNumber.copy(fontSize = 14.sp, fontWeight = FontWeight.ExtraBold), color = PulseColors.text)
                     }
                 }, "NIVEL $level", "$recCount ${if (recCount == 1) "recuperación" else "recuperaciones"}")
-                val ageText = if (days.size < PulseData.pulseAgeDays) "Faltan ${PulseData.pulseAgeDays - days.size} días para calcularla." else "Ver tu edad fisiológica"
+                val ageText = if (PulseData.dataDays(days) < PulseData.pulseAgeDays) "Faltan ${PulseData.pulseAgeDays - PulseData.dataDays(days)} días para calcularla." else "Ver tu edad fisiológica"
                 BigTile(Modifier.weight(1f), onAge, {
                     Box(Modifier.size(56.dp).clip(RoundedCornerShape(28.dp)).background(Brush.radialGradient(listOf(Color(0xFF4A4258), Color(0xFF2B2635)))), contentAlignment = Alignment.Center) {
-                        DashedProgressRing(days.size.coerceAtMost(PulseData.pulseAgeDays) * 7 / PulseData.pulseAgeDays, 7, 52.dp)
+                        DashedProgressRing(PulseData.dataDays(days).coerceAtMost(PulseData.pulseAgeDays) * 7 / PulseData.pulseAgeDays, 7, 52.dp)
                     }
                 }, "EDAD FISIOLÓGICA", ageText)
             }

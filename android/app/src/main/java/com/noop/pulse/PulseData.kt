@@ -31,7 +31,11 @@ object PulseData {
     /** Nights before recovery scores, mirroring noop's Baselines.minNightsSeed. */
     const val recoverySeedNights = 4
     /** Days of history the physiological age waits for. */
-    const val pulseAgeDays = 21
+    /** Days of real data (sleep or steps) before the physiological age is shown. */
+    const val pulseAgeDays = 10
+
+    /** Days with real strap data — sleep or steps — not just a row. */
+    fun dataDays(days: List<com.noop.data.DailyMetric>): Int = days.count { (it.totalSleepMin ?: 0.0) > 0 || (it.steps ?: 0) > 0 }
 
     private val es = Locale("es", "ES")
 

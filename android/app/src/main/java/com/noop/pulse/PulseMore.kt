@@ -189,10 +189,7 @@ fun PulseStartActivityScreen(vm: AppViewModel, onClose: () -> Unit) {
     val days by com.noop.pulse.engine.pulseDays(vm)
     var i by rememberSaveable { mutableStateOf(0) }
     var route by rememberSaveable { mutableStateOf(false) }
-    var target by rememberSaveable { mutableStateOf(false) }
     DisposableEffect(Unit) { vm.requestRealtimeHr(); onDispose { vm.releaseRealtimeHr() } }
-    val rec = PulseData.metricFor(days, null, 0)?.recovery
-    val targetValue = rec?.let { r -> if (r >= 67) 15.0 else if (r >= 34) 12.0 else 8.0 } ?: 12.0
     val act = activities[i]
     fun start() {
         val sport = WorkoutSport.all.firstOrNull { it.name.equals(act.sport, true) } ?: WorkoutSport.all.firstOrNull { it.name.contains(act.sport, true) } ?: WorkoutSport.default
@@ -216,13 +213,6 @@ fun PulseStartActivityScreen(vm: AppViewModel, onClose: () -> Unit) {
                     LiveStat("${live.heartRate ?: "--"}", "LPM")
                     LiveStat(PulseData.oneDecimal(w.liveStrain * 21 / 100), "ESFUERZO")
                     if (w.distanceM > 0) LiveStat(String.format(Locale.US, "%.2f", w.distanceM / 1000), "KM")
-                }
-                if (target) {
-                    val f = (w.liveStrain * 21 / 100 / targetValue).toFloat().coerceIn(0f, 1f)
-                    Box(Modifier.padding(top = 40.dp).size(160.dp), contentAlignment = Alignment.Center) {
-                        ScoreRing(f, PulseColors.strain, "${(f * 100).roundToInt()}%", size = 160.dp, stroke = 10.dp, large = true)
-                    }
-                    Text("del objetivo de esfuerzo (${PulseData.oneDecimal(targetValue)})", style = PulseText.body, color = PulseColors.textSecondary, modifier = Modifier.padding(top = 10.dp))
                 }
                 Spacer(Modifier.weight(1f))
                 Box(
@@ -251,21 +241,6 @@ fun PulseStartActivityScreen(vm: AppViewModel, onClose: () -> Unit) {
                 Icon(Icons.Outlined.Favorite, null, tint = PulseColors.recoveryRed, modifier = Modifier.size(26.dp))
                 Text("${live.heartRate ?: "--"}", style = PulseText.bigNumber.copy(fontSize = 64.sp), color = PulseColors.text)
                 Text("LPM", style = PulseText.overline, color = PulseColors.textSecondary)
-            }
-            Box(Modifier.padding(top = 40.dp).size(170.dp), contentAlignment = Alignment.Center) {
-                Canvas(Modifier.fillMaxSize()) {
-                    drawCircle(if (target) PulseColors.stressLow else PulseColors.textQuiet, size.minDimension / 2 - 4.dp.toPx(), style = Stroke(3.dp.toPx(), pathEffect = if (target) null else PathEffect.dashPathEffect(floatArrayOf(10f, 10f))))
-                }
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(if (target) PulseData.oneDecimal(targetValue) else "---", style = PulseText.bigNumber.copy(fontSize = 34.sp), color = PulseColors.text)
-                    Text("OBJETIVO DE ESFUERZO", style = PulseText.overline.copy(fontSize = 9.sp), color = PulseColors.textSecondary)
-                    Spacer(Modifier.height(8.dp))
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(if (target) "SÍ" else "NO", style = PulseText.overline, color = PulseColors.text)
-                        Spacer(Modifier.width(8.dp))
-                        PulseSwitch(target) { target = it }
-                    }
-                }
             }
             Spacer(Modifier.weight(1f))
             Box(
@@ -302,13 +277,12 @@ fun PulseCalibrationScreen(vm: AppViewModel, onBack: () -> Unit, onHealth: () ->
     val milestones = listOf(
         Milestone("Análisis del sueño", 1, "desbloquear", Icons.Outlined.Bedtime),
         Milestone("Recuperación personal", 4, "calibrar", Icons.AutoMirrored.Outlined.TrendingUp),
-        Milestone("Objetivo de esfuerzo", 4, "desbloquear", Icons.Outlined.Bolt),
         Milestone("Nivel de estrés", 4, "calibrar", Icons.Outlined.Speed),
         Milestone("Monitor de salud", 7, "calibrar", Icons.Outlined.MonitorHeart),
         Milestone("Resumen semanal", 7, "desbloquear", Icons.Outlined.Article),
     )
     val later = listOf(
-        Milestone("Edad física", 14, "desbloquear", Icons.AutoMirrored.Outlined.TrendingUp),
+        Milestone("Edad fisiológica", 10, "desbloquear", Icons.AutoMirrored.Outlined.TrendingUp),
         Milestone("Tendencias de 90 días", 21, "desbloquear", Icons.Outlined.BarChart),
     )
     Box(Modifier.fillMaxSize().background(PulseColors.base)) {
@@ -365,11 +339,10 @@ fun PulseCalibrationScreen(vm: AppViewModel, onBack: () -> Unit, onHealth: () ->
 private fun milestoneInfo(title: String) = when (title) {
     "Análisis del sueño" -> "Tras tu primera noche verás cuánto has dormido, tus fases y tu rendimiento del sueño."
     "Recuperación personal" -> "Con 4 noches Pulse conoce tu VFC y tu pulso en reposo normales y puede decirte cada mañana cómo de recuperado estás."
-    "Objetivo de esfuerzo" -> "Con tu recuperación calibrada, Pulse te propone cada día cuánto esfuerzo te conviene."
     "Nivel de estrés" -> "Con 4 noches Pulse sabe cuál es tu estado de reposo y puede medir lo activado que estás durante el día."
     "Monitor de salud" -> "Con 7 noches Pulse conoce el rango habitual de tu respiración, oxígeno, pulso, VFC y temperatura."
     "Resumen semanal" -> "Al completar tu primera semana recibirás un resumen con tus tendencias."
-    "Edad física" -> "Con 2 semanas de datos Pulse empieza a estimar tu forma física."
+    "Edad fisiológica" -> "Con 10 días de datos Pulse calcula tu edad fisiológica; el ritmo de envejecimiento llega cuando tengas más de un mes."
     else -> "Con 3 semanas de datos podrás comparar tu evolución mes a mes."
 }
 
@@ -423,7 +396,7 @@ fun PulseAgeScreenV2(vm: AppViewModel, onBack: () -> Unit, onCoach: () -> Unit) 
         vo2 = runCatching { vm.repo.latestMetricComputedUnion(vm.activeStrapId, "vo2max_est")?.value }.getOrNull()
     }
     val profileAge = remember { ProfileStore.from(context).age }
-    val ready = days.size >= PulseData.pulseAgeDays
+    val ready = PulseData.dataDays(days) >= PulseData.pulseAgeDays
     var result by remember { mutableStateOf<PulseAgeEngine.Result?>(null) }
     var paceNow by remember { mutableStateOf<Double?>(null) }
     var pacePrevWeek by remember { mutableStateOf<Double?>(null) }
@@ -431,7 +404,7 @@ fun PulseAgeScreenV2(vm: AppViewModel, onBack: () -> Unit, onCoach: () -> Unit) 
     var history by remember { mutableStateOf(monthLabels.map { it to (null as Double?) }) }
     // Every figure below is measured from the strap over a 4-week window (see PulseAgeData), off the UI thread.
     LaunchedEffect(days.size, vo2, workouts.size) {
-        if (days.size < PulseData.pulseAgeDays) return@LaunchedEffect
+        if (PulseData.dataDays(days) < PulseData.pulseAgeDays) return@LaunchedEffect
         val now = com.noop.pulse.engine.PulseAge.compute(context, vm, days, workouts, vo2)
         result = now?.result
         paceNow = now?.pace
@@ -439,7 +412,7 @@ fun PulseAgeScreenV2(vm: AppViewModel, onBack: () -> Unit, onCoach: () -> Unit) 
         history = (5 downTo 0).mapIndexed { i, k ->
             val end = if (k == 0) LocalDate.now() else LocalDate.now().minusMonths(k.toLong()).withDayOfMonth(1).plusMonths(1).minusDays(1)
             val offset = java.time.temporal.ChronoUnit.DAYS.between(end, LocalDate.now()).toInt()
-            val enough = days.count { it.day <= end.toString() } >= PulseData.pulseAgeDays
+            val enough = PulseData.dataDays(days.filter { it.day <= end.toString() }) >= PulseData.pulseAgeDays
             monthLabels[i] to (if (enough) com.noop.pulse.engine.PulseAge.compute(context, vm, days, workouts, vo2, offset)?.result?.pulseAge else null)
         }
     }
@@ -451,21 +424,15 @@ fun PulseAgeScreenV2(vm: AppViewModel, onBack: () -> Unit, onCoach: () -> Unit) 
     }
     fun f(k: String) = result?.factors?.firstOrNull { it.key == k }
     fun pos(v: Double?, lo: Double, hi: Double) = v?.let { ((it - lo) / (hi - lo)).toFloat().coerceIn(0f, 1f) }
+    // noop's Fitness Age (Nes): the two inputs that move it, plus the context it is built from.
     val groups = listOf(
-        "Sueño" to listOf(
-            AgeRow("REGULARIDAD", f("sleep_regularity")?.value?.let { "${it.roundToInt()} %" } ?: "--", pos(f("sleep_regularity")?.value, 40.0, 100.0), "40 %", "100 %", f("sleep_regularity")?.years),
-            AgeRow("HORAS DE SUEÑO", f("sleep_hours")?.value?.let { PulseData.hoursMinutes(it * 60) + " h" } ?: "--", pos(f("sleep_hours")?.value, 5.0, 8.0), "5 h", "8 h", f("sleep_hours")?.years),
+        "Lo que la calcula" to listOf(
+            AgeRow("PULSO EN REPOSO (MEDIANA 7 DÍAS)", f("resting_hr")?.value?.let { "${it.roundToInt()} lpm" } ?: "--", pos(f("resting_hr")?.value?.let { 120 - it }, 40.0, 80.0), "80", "40", f("resting_hr")?.years),
+            AgeRow("ÍNDICE DE ACTIVIDAD (7 DÍAS)", f("activity_index")?.value?.let { String.format(es, "%.1f", it) } ?: "--", pos(f("activity_index")?.value, 0.0, 15.0), "0", "15", f("activity_index")?.years),
         ),
-        "Esfuerzo" to listOf(
-            AgeRow("ZONAS 1–3 (SEMANA)", f("zones_1_3")?.value?.let { PulseActivity.mmss(it) + " h" } ?: "--", pos(f("zones_1_3")?.value, 0.0, 300.0), "0 h", "5 h", f("zones_1_3")?.years),
-            AgeRow("ZONAS 4–5 (SEMANA)", f("zones_4_5")?.value?.let { PulseActivity.mmss(it) + " h" } ?: "--", pos(f("zones_4_5")?.value, 0.0, 60.0), "0 h", "1 h", f("zones_4_5")?.years),
-            AgeRow("FUERZA (SEMANA)", f("strength")?.value?.let { PulseActivity.mmss(it) + " h" } ?: "--", pos(f("strength")?.value, 0.0, 120.0), "0 h", "2 h", f("strength")?.years),
-            AgeRow("PASOS", f("steps")?.value?.let { PulseData.int(it.roundToInt()) } ?: "--", pos(f("steps")?.value, 0.0, 16000.0), "0", "16.000", f("steps")?.years),
-        ),
-        "Forma física" to listOf(
-            AgeRow("VO₂ MÁX ESTIMADO", f("vo2max")?.value?.roundToInt()?.toString() ?: "--", pos(f("vo2max")?.value, 15.0, 70.0), "15", "70", f("vo2max")?.years),
-            AgeRow("PULSO EN REPOSO", f("resting_hr")?.value?.let { "${it.roundToInt()} lpm" } ?: "--", pos(f("resting_hr")?.value?.let { 120 - it }, 40.0, 80.0), "80", "40", f("resting_hr")?.years),
-            AgeRow("MASA MAGRA", f("lean_mass")?.value?.let { "${it.roundToInt()} %" } ?: "--", pos(f("lean_mass")?.value, 50.0, 90.0), "50 %", "90 %", f("lean_mass")?.years),
+        "Contexto" to listOf(
+            AgeRow("DÍAS ACTIVOS ESTA SEMANA", f("active_days")?.value?.roundToInt()?.toString() ?: "--", pos(f("active_days")?.value, 0.0, 7.0), "0", "7", null),
+            AgeRow("VO₂ MÁX. ESTIMADO", f("vo2max")?.value?.roundToInt()?.toString() ?: "--", pos(f("vo2max")?.value, 15.0, 70.0), "15", "70", null),
         ),
     )
 
@@ -486,18 +453,18 @@ fun PulseAgeScreenV2(vm: AppViewModel, onBack: () -> Unit, onCoach: () -> Unit) 
                             Text(String.format(Locale.US, "%.1f", result.pulseAge), style = PulseText.bigNumber.copy(fontSize = 48.sp), color = PulseColors.text)
                             Text("EDAD FISIOLÓGICA", style = PulseText.overline.copy(fontSize = 9.sp), color = PulseColors.textSecondary)
                         }
-                    } else DashedProgressRing(days.size.coerceAtMost(PulseData.pulseAgeDays) * 7 / PulseData.pulseAgeDays, 7, 130.dp)
+                    } else DashedProgressRing(PulseData.dataDays(days).coerceAtMost(PulseData.pulseAgeDays) * 7 / PulseData.pulseAgeDays, 7, 130.dp)
                 }
                 Spacer(Modifier.height(12.dp))
                 Text(
                     if (ready && result != null) String.format(es, "%.1f años %s que tu edad", abs(result!!.yearsYounger), if (result!!.yearsYounger >= 0) "menos" else "más")
-                    else "Faltan ${PulseData.pulseAgeDays - days.size} días para calcularla. Mientras, abajo ves cómo van tus hábitos.",
+                    else "Faltan ${PulseData.pulseAgeDays - PulseData.dataDays(days)} días para calcularla. Mientras, abajo ves cómo van tus hábitos.",
                     style = PulseText.body, color = if (ready && (result?.yearsYounger ?: 0.0) >= 0) PulseColors.recoveryGreen else PulseColors.textSecondary, textAlign = TextAlign.Center,
                     modifier = Modifier.padding(horizontal = 30.dp),
                 )
             }
-            // Pace of ageing
-            Column(Modifier.padding(start = 15.dp, end = 15.dp, top = 22.dp).fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(PulseColors.raised).padding(16.dp)) {
+            // Pace of ageing: noop does not compute one, so the card only appears if a pace exists.
+            if (pace != null) Column(Modifier.padding(start = 15.dp, end = 15.dp, top = 22.dp).fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(PulseColors.raised).padding(16.dp)) {
                 Text("RITMO DE ENVEJECIMIENTO", style = PulseText.overlineLg, color = PulseColors.text)
                 if (pace != null && pacePrev != null) {
                     Text(if (pace < pacePrev) "▼ más lento que la semana pasada" else "▲ más rápido que la semana pasada", style = PulseText.body.copy(fontSize = 12.sp), color = if (pace < pacePrev) PulseColors.accentHover else PulseColors.stressHigh, modifier = Modifier.padding(top = 4.dp))
@@ -574,7 +541,7 @@ fun PulseAgeScreenV2(vm: AppViewModel, onBack: () -> Unit, onCoach: () -> Unit) 
                 Row(Modifier.fillMaxWidth().padding(top = 6.dp), horizontalArrangement = Arrangement.SpaceBetween) {
                     history.forEach { Text(it.first, style = PulseText.chartAxis, color = PulseColors.textSecondary) }
                 }
-                if (history.all { it.second == null }) Text("Aparecerá cuando lleves 3 semanas con la pulsera.", style = PulseText.body.copy(fontSize = 12.sp), color = PulseColors.textTertiary, modifier = Modifier.padding(top = 10.dp))
+                if (history.all { it.second == null }) Text("Aparecerá cuando lleves 10 días con la pulsera.", style = PulseText.body.copy(fontSize = 12.sp), color = PulseColors.textTertiary, modifier = Modifier.padding(top = 10.dp))
             }
             AccentCard(Modifier.padding(start = 15.dp, end = 15.dp, top = 14.dp), onClick = onCoach) {
                 Text("Pide un plan al coach", style = PulseText.cardTitleLg, color = PulseColors.text)
@@ -592,7 +559,7 @@ fun PulseAgeScreenV2(vm: AppViewModel, onBack: () -> Unit, onCoach: () -> Unit) 
         if (info) {
             FirstVisitTip(
                 "Edad fisiológica",
-                "Partimos de tu edad real. Para cada uno de los nueve hábitos (horas y regularidad del sueño, pasos, minutos en zonas de pulso, fuerza, VO₂ máx., pulso en reposo y masa magra) estimamos cuánto sube o baja tu riesgo según estudios publicados, y lo pasamos a años: un 10 % más de riesgo equivale a un año más. Usa tus medias de 6 meses; el ritmo compara tus últimos 30 días.",
+                "Es la edad que corresponde a tu forma física según el estudio HUNT (Nes et al.): parte de tu edad real y la ajusta con tu pulso en reposo (mediana de 7 días) y tu índice de actividad (cuántos días te esfuerzas de verdad y cuánto). Se calcula como en NOOP. No es un dispositivo médico.",
             ) { PulseTips.markSeen(context, "age"); info = false }
         }
     }

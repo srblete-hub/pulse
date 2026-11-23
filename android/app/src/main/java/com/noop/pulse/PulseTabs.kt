@@ -77,10 +77,20 @@ fun PulseHealthScreen(vm: AppViewModel, actions: HealthActions) {
     LaunchedEffect("workouts") { runCatching { vm.loadWorkouts() } }
     var ageState by remember { mutableStateOf<com.noop.analytics.PulseAgeEngine.Result?>(null) }
     LaunchedEffect(days.size, vo2, workoutsAll.size) {
-        ageState = if (days.size >= PulseData.pulseAgeDays) com.noop.pulse.engine.PulseAge.compute(context, vm, days, workoutsAll, vo2)?.result else null
+        ageState = if (PulseData.dataDays(days) >= PulseData.pulseAgeDays) com.noop.pulse.engine.PulseAge.compute(context, vm, days, workoutsAll, vo2)?.result else null
     }
     val age = ageState
     val nights = PulseData.nightsWithSleep(days)
+    var highStressMin by remember { mutableStateOf<Double?>(null) }
+    LaunchedEffect(days.size) {
+        highStressMin = runCatching {
+            val pts = com.noop.widget.StressWidgetProducer.todayCurve(vm.repo, vm.activeStrapId)?.points.orEmpty().filter { it.level != null }
+            if (pts.size < 2) null else {
+                val step = pts.zipWithNext { a, b -> b.ts - a.ts }.sorted().let { it[it.size / 2] } / 60.0
+                pts.count { it.level!! >= 2.0 } * step
+            }
+        }.getOrNull()
+    }
 
     Column(Modifier.fillMaxSize().background(saludBrush).verticalScroll(rememberScrollState())) {
         TabTitle("Salud")
@@ -105,21 +115,21 @@ fun PulseHealthScreen(vm: AppViewModel, actions: HealthActions) {
                             Text("AÑOS", style = PulseText.overline, color = PulseColors.textSecondary)
                         }
                     } else {
-                        DashedProgressRing(days.size.coerceAtMost(PulseData.pulseAgeDays) * 7 / PulseData.pulseAgeDays, 7, 110.dp)
+                        DashedProgressRing(PulseData.dataDays(days).coerceAtMost(PulseData.pulseAgeDays) * 7 / PulseData.pulseAgeDays, 7, 110.dp)
                     }
                 }
             }
             Overline("Tu edad fisiológica", large = true)
             Spacer(Modifier.height(10.dp))
             Text(
-                if (age == null) "Faltan ${PulseData.pulseAgeDays - days.size} días para calcular tu edad fisiológica."
+                if (age == null) "Faltan ${PulseData.pulseAgeDays - PulseData.dataDays(days)} días para calcular tu edad fisiológica."
                 else String.format(Locale("es"), "%.1f años %s que tu edad real.", abs(age.yearsYounger), if (age.yearsYounger >= 0) "menos" else "más"),
                 style = PulseText.body, color = PulseColors.text,
             )
             Spacer(Modifier.height(14.dp))
             Box(Modifier.fillMaxWidth().height(4.dp).clip(RoundedCornerShape(2.dp)).background(PulseColors.hairlineStrong)) {
                 Box(
-                    Modifier.fillMaxWidth((days.size.toFloat() / PulseData.pulseAgeDays).coerceIn(0f, 1f)).height(4.dp)
+                    Modifier.fillMaxWidth((PulseData.dataDays(days).toFloat() / PulseData.pulseAgeDays).coerceIn(0f, 1f)).height(4.dp)
                         .clip(RoundedCornerShape(2.dp)).background(PulseColors.accent),
                 )
             }
@@ -147,7 +157,6 @@ fun PulseHealthScreen(vm: AppViewModel, actions: HealthActions) {
             val ready = nights >= PulseData.calibrationNights
             Row(Modifier.fillMaxWidth().padding(top = 18.dp)) {
                 VitalCell("RESP", Icons.Outlined.Air, d?.respRateBpm?.let { String.format(Locale.US, "%.1f", it) }, ready, Modifier.weight(1f), first = true)
-                VitalCell("SPO₂", Icons.Outlined.WaterDrop, d?.spo2Pct?.let { "${it.toInt()}%" }, ready, Modifier.weight(1f))
                 VitalCell("FCR", Icons.Outlined.Favorite, d?.restingHr?.toString(), ready, Modifier.weight(1f))
                 VitalCell("VFC", Icons.Outlined.MonitorHeart, d?.avgHrv?.let { "${it.toInt()}" }, ready, Modifier.weight(1f))
                 VitalCell("TEMP", Icons.Outlined.Thermostat, d?.skinTempDevC?.takeIf { abs(it) < 5 }?.let { String.format(Locale.US, "%+.1f", it) }, ready, Modifier.weight(1f))
@@ -164,7 +173,7 @@ fun PulseHealthScreen(vm: AppViewModel, actions: HealthActions) {
             Overline("Estrés alto hoy", color = PulseColors.textSecondary)
             Spacer(Modifier.height(6.dp))
             Row(verticalAlignment = Alignment.Bottom) {
-                Text("--:--", style = PulseText.ringNumberLg, color = PulseColors.text)
+                Text(highStressMin?.let { PulseActivity.mmss(it) } ?: "--:--", style = PulseText.ringNumberLg, color = PulseColors.text)
                 Spacer(Modifier.width(4.dp))
                 Text("h", style = PulseText.small, color = PulseColors.textSecondary)
             }
