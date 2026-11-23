@@ -53,7 +53,6 @@ import com.noop.ui.NotificationsSettingsScreen
 import com.noop.ui.SettingsScreen
 import com.noop.ui.SleepScreen
 import com.noop.ui.SmartAlarmScreen
-import com.noop.ui.StressScreen
 import com.noop.ui.TrendsScreen
 import com.noop.ui.WorkoutsScreen
 
@@ -89,7 +88,9 @@ object PulseRoute {
     const val live = "noop/live"
     const val trends = "noop/trends"
     const val monitor = "noop/health"
-    const val stress = "noop/stress"
+    const val stress = "stress"
+    const val breatheRelax = "breathe/relax"
+    const val breatheActivate = "breathe/activate"
     const val sleepDetail = "noop/sleep"
     const val workouts = "noop/workouts"
     const val journal = "noop/journal"
@@ -250,7 +251,11 @@ fun PulseApp(vm: AppViewModel) {
             legacy(PulseRoute.live, "Actividad", back) { LiveScreen(vm, onManageDevices = { nav.navigate(PulseRoute.strap) }) }
             legacy(PulseRoute.trends, "Tendencias", back) { TrendsScreen(vm) }
             legacy(PulseRoute.monitor, "Monitor de salud", back) { HealthScreen(vm, onOpenSettings = { nav.navigate(PulseRoute.advanced) }) }
-            legacy(PulseRoute.stress, "Nivel de estrés", back) { StressScreen(vm) }
+            composable(PulseRoute.stress) {
+                PulseStressScreen(vm, back, onCoach = go(PulseRoute.coach), onBreathe = { relax -> nav.navigate(if (relax) PulseRoute.breatheRelax else PulseRoute.breatheActivate) }, onSettings = go(PulseRoute.notifications))
+            }
+            composable(PulseRoute.breatheRelax) { PulseBreatheScreen(true, back) }
+            composable(PulseRoute.breatheActivate) { PulseBreatheScreen(false, back) }
             legacy(PulseRoute.sleepDetail, "Sueño", back) { SleepScreen(vm = vm, onOpenAlarms = { nav.navigate(PulseRoute.alarms) }) }
             legacy(PulseRoute.workouts, "Entrenamientos", back) { WorkoutsScreen(vm) }
             legacy(PulseRoute.journal, "Diario", back) { InsightsScreen(vm) }
