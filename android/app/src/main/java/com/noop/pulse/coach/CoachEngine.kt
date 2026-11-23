@@ -786,7 +786,7 @@ class CoachEngine(
             return bedtime(c.s)
         }
         if (c.has("olvida", "borra") && c.has("todo", "datos", "memoria", "lo que sabes")) {
-            listOf("name", "goal", "sport", "sleep_need", "usual_sleep", "coffees", "drinks_week", "pending", "last_intent").forEach { memory.set(it, null) }
+            listOf("name", "goal", "sport", "sleep_need", "usual_sleep", "coffees", "drinks_week", "pending", "last_intent", "wake_time").forEach { memory.set(it, null) }
             return CoachReply("Hecho, he olvidado lo que me habías contado. Tus datos de la pulsera no se tocan.", listOf("Empezar de nuevo"), intent = "olvidar")
         }
         if (c.has("que sabes de mi", "que recuerdas")) return memorySummary()

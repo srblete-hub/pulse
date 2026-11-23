@@ -223,8 +223,10 @@ private fun HomeHeader(
             Modifier.height(30.dp).clip(RoundedCornerShape(16.dp)).background(PulseColors.overlay).pulseClick(onProfile).padding(end = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
+            val initials = PulseProfile.initials(androidx.compose.ui.platform.LocalContext.current)
             Box(Modifier.size(30.dp).clip(RoundedCornerShape(15.dp)).background(PulseColors.accentBrush), contentAlignment = Alignment.Center) {
-                Icon(Icons.Outlined.Person, "Perfil", tint = PulseColors.onAccent, modifier = Modifier.size(17.dp))
+                if (initials.isNotEmpty()) Text(initials, style = PulseText.small.copy(fontSize = 11.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold), color = PulseColors.onAccent)
+                else Icon(Icons.Outlined.Person, "Perfil", tint = PulseColors.onAccent, modifier = Modifier.size(17.dp))
             }
             Spacer(Modifier.width(8.dp))
             Icon(Icons.Outlined.Whatshot, null, tint = PulseColors.gold, modifier = Modifier.size(13.dp))

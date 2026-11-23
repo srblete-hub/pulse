@@ -76,6 +76,9 @@ object PulseRoute {
     const val help = "help"
     const val privacy = "privacy"
     const val about = "about"
+    const val editProfile = "profile/edit"
+    const val coachMemory = "coach/memory"
+    const val welcome = "welcome"
 
     // noop engine screens hosted inside the Pulse shell (device link, import, backup, alarms…).
     const val strap = "noop/devices"
@@ -147,7 +150,19 @@ fun PulseApp(vm: AppViewModel) {
             composable(PulseRoute.recovery) { PulseRecoveryScreen(vm, back, onHabits = go(PulseRoute.journal)) }
             composable(PulseRoute.effort) { PulseEffortScreen(vm, back, onStartActivity = go(PulseRoute.live)) }
             composable(PulseRoute.age) { PulseAgeScreen(vm, back, onCoach = go(PulseRoute.coach)) }
-            composable(PulseRoute.profile) { PulseProfileScreen(vm, back, onEdit = go(PulseRoute.advanced), onAge = go(PulseRoute.age)) }
+            composable(PulseRoute.profile) {
+                PulseProfileScreen(
+                    vm, back,
+                    onSettings = go(PulseRoute.more),
+                    onEdit = go(PulseRoute.editProfile),
+                    onAge = go(PulseRoute.age),
+                    onCoachMemory = go(PulseRoute.coachMemory),
+                    onCalibration = go(PulseRoute.calibration),
+                )
+            }
+            composable(PulseRoute.editProfile) { PulseEditProfileScreen(back) }
+            composable(PulseRoute.coachMemory) { PulseCoachMemoryScreen(back) }
+            composable(PulseRoute.welcome) { PulseWelcome(vm, onFinished = back) }
             composable(PulseRoute.calibration) { PulseCalibrationScreen(vm, back) }
             composable(PulseRoute.goals) {
                 PulseInfoScreen(
@@ -283,6 +298,7 @@ private fun settingsGroups(go: (String) -> () -> Unit): List<Pair<String?, List<
         SettingsItem("Coach", "Sin inteligencia artificial, todo en tu teléfono", go(PulseRoute.coach)),
         SettingsItem("Privacidad", onClick = go(PulseRoute.privacy)),
         SettingsItem("Cómo funciona", onClick = go(PulseRoute.help)),
+        SettingsItem("Configuración inicial", "Repite la bienvenida: perfil, pulsera y permisos", go(PulseRoute.welcome)),
         SettingsItem("Ajustes avanzados", "Todas las opciones del motor NOOP", go(PulseRoute.advanced)),
         SettingsItem("Acerca de Pulse", onClick = go(PulseRoute.about)),
     ),

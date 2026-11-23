@@ -1630,29 +1630,15 @@ fun NoopRoot() {
         }
     }
 
-    // Terms acknowledgment gate, over EVERYTHING (before onboarding/pairing/Bluetooth) until the
-    // current terms version is accepted; re-appears if the terms materially change. (clickwrap)
-    var acceptedTerms by remember {
-        mutableStateOf(prefs.getString(NoopPrefs.KEY_ACCEPTED_TERMS_VERSION, "") ?: "")
-    }
-    if (acceptedTerms != Terms.CURRENT_VERSION) {
-        TermsGateScreen(onAccept = {
-            prefs.edit()
-                .putString(NoopPrefs.KEY_ACCEPTED_TERMS_VERSION, Terms.CURRENT_VERSION)
-                .putString(NoopPrefs.KEY_ACCEPTED_TERMS_AT, java.time.Instant.now().toString())
-                .apply()
-            acceptedTerms = Terms.CURRENT_VERSION
-        })
-        return
-    }
-
+    // Pulse first-run setup replaces noop's terms gate and onboarding questionnaire. Its "Tus datos, solo
+    // tuyos" acknowledgements are recorded as the terms acceptance (version + timestamp).
     if (!onboarded) {
-        OnboardingScreen(
-            viewModel = appViewModel,
+        com.noop.pulse.PulseWelcome(
+            vm = appViewModel,
             onFinished = {
-                // A brand-new user just saw the expectations in onboarding, don't also pop the
-                // changelog at them; mark them current (mirrors macOS ContentView onFinished).
                 prefs.edit()
+                    .putString(NoopPrefs.KEY_ACCEPTED_TERMS_VERSION, Terms.CURRENT_VERSION)
+                    .putString(NoopPrefs.KEY_ACCEPTED_TERMS_AT, java.time.Instant.now().toString())
                     .putBoolean(NoopPrefs.KEY_ONBOARDED, true)
                     .putString(NoopPrefs.KEY_LAST_SEEN_CHANGELOG, AppChangelog.CURRENT_VERSION)
                     .apply()
@@ -1667,26 +1653,11 @@ fun NoopRoot() {
     // (stored version behind current), show "What's New" once over the top.
     com.noop.pulse.PulseApp(appViewModel)
 
-    if (lastSeenChangelog != AppChangelog.CURRENT_VERSION) {
-        Dialog(
-            onDismissRequest = {
-                prefs.edit()
-                    .putString(NoopPrefs.KEY_LAST_SEEN_CHANGELOG, AppChangelog.CURRENT_VERSION)
-                    .apply()
-                lastSeenChangelog = AppChangelog.CURRENT_VERSION
-            },
-            properties = DialogProperties(usePlatformDefaultWidth = false),
-        ) {
-            Surface(modifier = Modifier.fillMaxSize(), color = Palette.surfaceBase) {
-                WhatsNewSheet(
-                    onClose = {
-                        prefs.edit()
-                            .putString(NoopPrefs.KEY_LAST_SEEN_CHANGELOG, AppChangelog.CURRENT_VERSION)
-                            .apply()
-                        lastSeenChangelog = AppChangelog.CURRENT_VERSION
-                    },
-                )
-            }
+    // noop's What's New sheet is not shown in Pulse; just record the version as seen.
+    LaunchedEffect(lastSeenChangelog) {
+        if (lastSeenChangelog != AppChangelog.CURRENT_VERSION) {
+            prefs.edit().putString(NoopPrefs.KEY_LAST_SEEN_CHANGELOG, AppChangelog.CURRENT_VERSION).apply()
+            lastSeenChangelog = AppChangelog.CURRENT_VERSION
         }
     }
 }
