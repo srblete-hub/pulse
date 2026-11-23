@@ -87,7 +87,8 @@ object PulseRoute {
     const val coach = "coach"
     const val live = "noop/live"
     const val trends = "noop/trends"
-    const val monitor = "noop/health"
+    const val monitor = "monitor"
+    const val healthClassic = "noop/health"
     const val stress = "stress"
     const val breatheRelax = "breathe/relax"
     const val breatheActivate = "breathe/activate"
@@ -250,7 +251,8 @@ fun PulseApp(vm: AppViewModel) {
             }
             legacy(PulseRoute.live, "Actividad", back) { LiveScreen(vm, onManageDevices = { nav.navigate(PulseRoute.strap) }) }
             legacy(PulseRoute.trends, "Tendencias", back) { TrendsScreen(vm) }
-            legacy(PulseRoute.monitor, "Monitor de salud", back) { HealthScreen(vm, onOpenSettings = { nav.navigate(PulseRoute.advanced) }) }
+            composable(PulseRoute.monitor) { PulseMonitorScreen(vm, back, onCoach = go(PulseRoute.coach)) }
+            legacy(PulseRoute.healthClassic, "Salud (detalle)", back) { HealthScreen(vm, onOpenSettings = { nav.navigate(PulseRoute.advanced) }) }
             composable(PulseRoute.stress) {
                 PulseStressScreen(vm, back, onCoach = go(PulseRoute.coach), onBreathe = { relax -> nav.navigate(if (relax) PulseRoute.breatheRelax else PulseRoute.breatheActivate) }, onSettings = go(PulseRoute.notifications))
             }
