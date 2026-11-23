@@ -58,21 +58,14 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.noop.ui.AppRoot
 import com.noop.ui.AppViewModel
 import com.noop.ui.BackupSyncScreen
 import com.noop.ui.CoachOrb
 import com.noop.pulse.coach.CoachAction
-import com.noop.ui.DataSourcesScreen
-import com.noop.ui.DevicesScreen
-import com.noop.ui.HealthScreen
-import com.noop.ui.InsightsScreen
-import com.noop.ui.LiveScreen
 import com.noop.ui.NoopLimitationsScreen
 import com.noop.ui.NotificationsSettingsScreen
 import com.noop.ui.SettingsScreen
 import com.noop.ui.SleepScreen
-import com.noop.ui.SmartAlarmScreen
 import com.noop.ui.TrendsScreen
 import com.noop.ui.WorkoutsScreen
 
@@ -104,13 +97,10 @@ object PulseRoute {
     const val dataImport = "noop/data"
     const val backup = "noop/backup"
     const val alarms = "planner"
-    const val alarmsClassic = "noop/alarms"
     const val coach = "coach"
     const val live = "activity"
-    const val liveClassic = "noop/live"
     const val trends = "noop/trends"
     const val monitor = "monitor"
-    const val healthClassic = "noop/health"
     const val stress = "stress"
     const val breatheRelax = "breathe/relax"
     const val breatheActivate = "breathe/activate"
@@ -118,11 +108,9 @@ object PulseRoute {
     const val workouts = "noop/workouts"
     const val journal = "journal"
     const val habits = "habits"
-    const val insights = "noop/insights"
     const val notifications = "noop/notifications"
     const val advanced = "noop/settings"
     const val limitations = "noop/limitations"
-    const val classic = "noop/classic"
 }
 
 @Composable
@@ -258,7 +246,7 @@ fun PulseApp(vm: AppViewModel) {
                         "Interfaz Pulse construida sobre el motor de código abierto NOOP (licencia PolyForm Noncommercial 1.0.0), que gestiona la conexión Bluetooth con la pulsera y los cálculos.",
                         "Uso personal, no comercial. No es un dispositivo médico.",
                     ),
-                    back, cta = "Interfaz clásica de NOOP" to go(PulseRoute.classic),
+                    back,
                 )
             }
 
@@ -269,10 +257,9 @@ fun PulseApp(vm: AppViewModel) {
                     liveEnabled = liveHr, onLiveChange = { liveHr = it; PulseLivePref.set(ctx, it) },
                 )
             }
-            legacy(PulseRoute.dataImport, "Importar datos", back) { DataSourcesScreen(vm) }
+            composable(PulseRoute.dataImport) { PulseImportScreen(vm, back) }
             legacy(PulseRoute.backup, "Copia y restauración", back) { BackupSyncScreen() }
             composable(PulseRoute.alarms) { PulseSleepPlannerScreen(vm, back) }
-            legacy(PulseRoute.alarmsClassic, "Alarmas (NOOP)", back) { SmartAlarmScreen(vm) }
             composable(PulseRoute.coach) {
                 PulseCoachScreen(vm, back) { action ->
                     nav.navigate(
@@ -296,10 +283,8 @@ fun PulseApp(vm: AppViewModel) {
                 }
             }
             composable(PulseRoute.live) { PulseStartActivityScreen(vm, back) }
-            legacy(PulseRoute.liveClassic, "Directo (NOOP)", back) { LiveScreen(vm, onManageDevices = { nav.navigate(PulseRoute.strap) }) }
             legacy(PulseRoute.trends, "Tendencias", back) { TrendsScreen(vm) }
             composable(PulseRoute.monitor) { PulseMonitorScreen(vm, back, onCoach = go(PulseRoute.coach)) }
-            legacy(PulseRoute.healthClassic, "Salud (detalle)", back) { HealthScreen(vm, onOpenSettings = { nav.navigate(PulseRoute.advanced) }) }
             composable(PulseRoute.stress) {
                 PulseStressScreen(vm, back, onCoach = go(PulseRoute.coach), onBreathe = { relax -> nav.navigate(if (relax) PulseRoute.breatheRelax else PulseRoute.breatheActivate) }, onSettings = go(PulseRoute.notifications))
             }
@@ -309,13 +294,11 @@ fun PulseApp(vm: AppViewModel) {
             legacy(PulseRoute.workouts, "Entrenamientos", back) { WorkoutsScreen(vm) }
             composable(PulseRoute.journal) { PulseJournalScreen(vm, onClose = back, onCoach = go(PulseRoute.coach)) }
             composable(PulseRoute.habits) { PulseHabitsScreen(vm, back, onJournal = go(PulseRoute.journal)) }
-            legacy(PulseRoute.insights, "Análisis (NOOP)", back) { InsightsScreen(vm) }
             legacy(PulseRoute.notifications, "Notificaciones", back) { NotificationsSettingsScreen(vm) }
             legacy(PulseRoute.advanced, "Ajustes avanzados", back) {
                 SettingsScreen(vm, onOpenBackupSync = { nav.navigate(PulseRoute.backup) })
             }
             legacy(PulseRoute.limitations, "Detalles técnicos", back) { NoopLimitationsScreen() }
-            composable(PulseRoute.classic) { AppRoot(viewModel = vm) }
         }
 
         if (route in PulseRoute.tabs && !(route == PulseRoute.community && communityIntro)) {
@@ -349,7 +332,7 @@ private fun settingsGroups(go: (String) -> () -> Unit): List<Pair<String?, List<
             SettingsItem("Notificaciones", icon = Icons.Outlined.Notifications, onClick = go(PulseRoute.notifications)),
             SettingsItem("Idioma", icon = Icons.Outlined.Language, onClick = go(PulseRoute.advanced)),
             SettingsItem("Exportar mis datos", icon = Icons.Outlined.FileUpload, onClick = go(PulseRoute.backup)),
-            SettingsItem("Importar datos", "Exportación de tu historial, Apple Health, Health Connect, nutrición (CSV)", Icons.Outlined.FileDownload, go(PulseRoute.dataImport)),
+            SettingsItem("Importar datos", "Tu exportación de WHOOP y Health Connect", Icons.Outlined.FileDownload, go(PulseRoute.dataImport)),
             SettingsItem("Copia y restauración", "Guarda o recupera una copia completa de Pulse (.noopbak)", Icons.Outlined.Restore, go(PulseRoute.backup)),
             SettingsItem("Privacidad", icon = Icons.Outlined.Lock, onClick = go(PulseRoute.privacy)),
             SettingsItem("Coach", icon = Icons.Outlined.Psychology, onClick = go(PulseRoute.coach)),

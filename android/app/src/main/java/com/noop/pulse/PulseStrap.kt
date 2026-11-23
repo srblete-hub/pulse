@@ -51,7 +51,6 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.noop.ble.WhoopModel
 import com.noop.ui.AppViewModel
-import com.noop.ui.DevicesScreen
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -126,7 +125,7 @@ fun PulseStrapScreen(vm: AppViewModel, onClose: () -> Unit, onCharging: () -> Un
                 }
             }
             if (tab == 1) {
-                Box(Modifier.fillMaxWidth().weight(1f).padding(top = 8.dp)) { DevicesScreen(vm, onUseFileImport = onImport) }
+                Box(Modifier.fillMaxWidth().weight(1f).padding(top = 8.dp)) { StrapAdvancedPanel(vm) }
             } else {
                 Box(Modifier.fillMaxWidth().weight(1f)) {
                     StrapArt(Modifier.align(Alignment.TopStart).offset(x = (-10).dp, y = 40.dp), live.connected)
