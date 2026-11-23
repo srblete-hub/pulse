@@ -18,6 +18,25 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Groups
+import androidx.compose.material.icons.outlined.Bedtime
+import androidx.compose.material.icons.outlined.EditNote
+import androidx.compose.material.icons.outlined.FavoriteBorder
+import androidx.compose.material.icons.outlined.FileDownload
+import androidx.compose.material.icons.outlined.FileUpload
+import androidx.compose.material.icons.outlined.FitnessCenter
+import androidx.compose.material.icons.outlined.HelpOutline
+import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.Language
+import androidx.compose.material.icons.outlined.Lock
+import androidx.compose.material.icons.outlined.Notifications
+import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material.icons.outlined.Psychology
+import androidx.compose.material.icons.outlined.RestartAlt
+import androidx.compose.material.icons.outlined.Restore
+import androidx.compose.material.icons.outlined.Tune
+import androidx.compose.material.icons.outlined.VisibilityOff
+import androidx.compose.material.icons.outlined.Watch
+import androidx.compose.material.icons.outlined.WaterDrop
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Menu
 import androidx.compose.material.icons.outlined.MonitorHeart
@@ -87,7 +106,8 @@ object PulseRoute {
     const val alarms = "planner"
     const val alarmsClassic = "noop/alarms"
     const val coach = "coach"
-    const val live = "noop/live"
+    const val live = "activity"
+    const val liveClassic = "noop/live"
     const val trends = "noop/trends"
     const val monitor = "monitor"
     const val healthClassic = "noop/health"
@@ -113,6 +133,7 @@ fun PulseApp(vm: AppViewModel) {
     val back: () -> Unit = { nav.popBackStack() }
     fun go(r: String): () -> Unit = { nav.navigate(r) { launchSingleTop = true } }
     val ctx = androidx.compose.ui.platform.LocalContext.current
+    var communityIntro by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(!PulseTips.seen(ctx, "community_intro")) }
     var liveHr by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(PulseLivePref.enabled(ctx)) }
     androidx.compose.runtime.DisposableEffect(liveHr) {
         if (liveHr) vm.requestRealtimeHr()
@@ -153,15 +174,20 @@ fun PulseApp(vm: AppViewModel) {
                     ),
                 )
             }
-            composable(PulseRoute.community) { PulseCommunityScreen() }
+            composable(PulseRoute.community) {
+                if (communityIntro) PulseCommunityIntro(
+                    onClose = { PulseTips.markSeen(ctx, "community_intro"); communityIntro = false },
+                    onDone = { PulseTips.markSeen(ctx, "community_intro"); communityIntro = false },
+                ) else PulseCommunityScreen()
+            }
             composable(PulseRoute.more) {
-                PulseSettingsScreen(vm, settingsGroups(::go), onCalibration = go(PulseRoute.calibration))
+                PulseSettingsScreen(vm, settingsGroups(::go), onCalibration = go(PulseRoute.calibration), onBackup = go(PulseRoute.backup))
             }
 
             composable(PulseRoute.sleep) { PulseSleepScreen(vm, back, onCoach = go(PulseRoute.coach)) }
             composable(PulseRoute.recovery) { PulseRecoveryScreen(vm, back, onHabits = go(PulseRoute.habits), onCoach = go(PulseRoute.coach)) }
             composable(PulseRoute.effort) { PulseEffortScreen(vm, back, onCoach = go(PulseRoute.coach)) }
-            composable(PulseRoute.age) { PulseAgeScreen(vm, back, onCoach = go(PulseRoute.coach)) }
+            composable(PulseRoute.age) { PulseAgeScreenV2(vm, back, onCoach = go(PulseRoute.coach)) }
             composable(PulseRoute.profile) {
                 PulseProfileScreen(
                     vm, back,
@@ -175,7 +201,11 @@ fun PulseApp(vm: AppViewModel) {
             composable(PulseRoute.editProfile) { PulseEditProfileScreen(back) }
             composable(PulseRoute.coachMemory) { PulseCoachMemoryScreen(back) }
             composable(PulseRoute.welcome) { PulseWelcome(vm, onFinished = back) }
-            composable(PulseRoute.calibration) { PulseCalibrationScreen(vm, back) }
+            composable(PulseRoute.calibration) {
+                PulseCalibrationScreen(vm, back, onHealth = {
+                    nav.navigate(PulseRoute.health) { popUpTo(PulseRoute.home) { saveState = true }; launchSingleTop = true; restoreState = true }
+                })
+            }
             composable(PulseRoute.goals) {
                 PulseInfoScreen(
                     "Objetivos", "¿Qué quieres mejorar?",
@@ -265,7 +295,8 @@ fun PulseApp(vm: AppViewModel) {
                     ) { launchSingleTop = true }
                 }
             }
-            legacy(PulseRoute.live, "Actividad", back) { LiveScreen(vm, onManageDevices = { nav.navigate(PulseRoute.strap) }) }
+            composable(PulseRoute.live) { PulseStartActivityScreen(vm, back) }
+            legacy(PulseRoute.liveClassic, "Directo (NOOP)", back) { LiveScreen(vm, onManageDevices = { nav.navigate(PulseRoute.strap) }) }
             legacy(PulseRoute.trends, "Tendencias", back) { TrendsScreen(vm) }
             composable(PulseRoute.monitor) { PulseMonitorScreen(vm, back, onCoach = go(PulseRoute.coach)) }
             legacy(PulseRoute.healthClassic, "Salud (detalle)", back) { HealthScreen(vm, onOpenSettings = { nav.navigate(PulseRoute.advanced) }) }
@@ -287,7 +318,7 @@ fun PulseApp(vm: AppViewModel) {
             composable(PulseRoute.classic) { AppRoot(viewModel = vm) }
         }
 
-        if (route in PulseRoute.tabs) {
+        if (route in PulseRoute.tabs && !(route == PulseRoute.community && communityIntro)) {
             PulseBottomBar(
                 current = route,
                 onSelect = { r ->
@@ -304,30 +335,33 @@ fun PulseApp(vm: AppViewModel) {
     }
 }
 
-private fun settingsGroups(go: (String) -> () -> Unit): List<Pair<String?, List<SettingsItem>>> = listOf(
-    "Preferencias" to listOf(
-        SettingsItem("Perfil", onClick = go(PulseRoute.profile)),
-        SettingsItem("Pulsera", onClick = go(PulseRoute.strap)),
-        SettingsItem("Entrenamientos", onClick = go(PulseRoute.workouts)),
-        SettingsItem("Diario", onClick = go(PulseRoute.journal)),
-        SettingsItem("Horario de sueño y alarma", onClick = go(PulseRoute.alarms)),
-        SettingsItem("Health Connect", onClick = go(PulseRoute.dataImport)),
-        SettingsItem("Notificaciones", onClick = go(PulseRoute.notifications)),
-        SettingsItem("Ciclo menstrual, idioma y unidades", onClick = go(PulseRoute.advanced)),
-    ),
-    "Tus datos" to listOf(
-        SettingsItem("Importar datos", "Exportación de tu historial, Apple Health, Health Connect, nutrición (CSV)", go(PulseRoute.dataImport)),
-        SettingsItem("Copia y restauración", "Guarda o recupera una copia completa de Pulse (.noopbak)", go(PulseRoute.backup)),
-    ),
-    "Más" to listOf(
-        SettingsItem("Coach", "Sin inteligencia artificial, todo en tu teléfono", go(PulseRoute.coach)),
-        SettingsItem("Privacidad", onClick = go(PulseRoute.privacy)),
-        SettingsItem("Cómo funciona", onClick = go(PulseRoute.help)),
-        SettingsItem("Configuración inicial", "Repite la bienvenida: perfil, pulsera y permisos", go(PulseRoute.welcome)),
-        SettingsItem("Ajustes avanzados", "Todas las opciones del motor NOOP", go(PulseRoute.advanced)),
-        SettingsItem("Acerca de Pulse", onClick = go(PulseRoute.about)),
-    ),
-)
+private fun settingsGroups(go: (String) -> () -> Unit): List<Pair<String?, List<SettingsItem>>> {
+    return listOf(
+        "Preferencias" to listOf(
+            SettingsItem("Perfil", icon = Icons.Outlined.Person, onClick = go(PulseRoute.profile)),
+            SettingsItem("Pulsera", icon = Icons.Outlined.Watch, onClick = go(PulseRoute.strap)),
+            SettingsItem("Entrenamientos", icon = Icons.Outlined.FitnessCenter, onClick = go(PulseRoute.workouts)),
+            SettingsItem("Diario", icon = Icons.Outlined.EditNote, onClick = go(PulseRoute.journal)),
+            SettingsItem("Horario de sueño", icon = Icons.Outlined.Bedtime, onClick = go(PulseRoute.alarms)),
+            SettingsItem("Ciclo menstrual", icon = Icons.Outlined.WaterDrop, onClick = go(PulseRoute.advanced)),
+            SettingsItem("Ocultar métricas", icon = Icons.Outlined.VisibilityOff, onClick = go(PulseRoute.advanced)),
+            SettingsItem("Health Connect", icon = Icons.Outlined.FavoriteBorder, onClick = go(PulseRoute.dataImport)),
+            SettingsItem("Notificaciones", icon = Icons.Outlined.Notifications, onClick = go(PulseRoute.notifications)),
+            SettingsItem("Idioma", icon = Icons.Outlined.Language, onClick = go(PulseRoute.advanced)),
+            SettingsItem("Exportar mis datos", icon = Icons.Outlined.FileUpload, onClick = go(PulseRoute.backup)),
+            SettingsItem("Importar datos", "Exportación de tu historial, Apple Health, Health Connect, nutrición (CSV)", Icons.Outlined.FileDownload, go(PulseRoute.dataImport)),
+            SettingsItem("Copia y restauración", "Guarda o recupera una copia completa de Pulse (.noopbak)", Icons.Outlined.Restore, go(PulseRoute.backup)),
+            SettingsItem("Privacidad", icon = Icons.Outlined.Lock, onClick = go(PulseRoute.privacy)),
+            SettingsItem("Coach", icon = Icons.Outlined.Psychology, onClick = go(PulseRoute.coach)),
+        ),
+        "Ayuda" to listOf(
+            SettingsItem("Cómo funciona", icon = Icons.Outlined.HelpOutline, onClick = go(PulseRoute.help)),
+            SettingsItem("Configuración inicial", icon = Icons.Outlined.RestartAlt, onClick = go(PulseRoute.welcome)),
+            SettingsItem("Ajustes avanzados", "Todas las opciones del motor NOOP", Icons.Outlined.Tune, go(PulseRoute.advanced)),
+            SettingsItem("Acerca de Pulse", icon = Icons.Outlined.Info, onClick = go(PulseRoute.about)),
+        ),
+    )
+}
 
 private fun androidx.navigation.NavGraphBuilder.legacy(
     route: String,

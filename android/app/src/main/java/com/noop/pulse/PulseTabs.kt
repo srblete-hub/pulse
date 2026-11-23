@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -20,6 +21,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Air
+import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.ChevronRight
 import androidx.compose.material.icons.outlined.Favorite
 import androidx.compose.material.icons.outlined.Groups
@@ -46,6 +48,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.noop.BuildConfig
 import com.noop.ui.AppViewModel
@@ -233,46 +236,50 @@ fun PulseCommunityScreen() {
     }
 }
 
-/** One Ajustes row: label, optional subtitle, destination. */
-data class SettingsItem(val label: String, val subtitle: String? = null, val onClick: () -> Unit)
+/** One Ajustes row: icon, label, optional subtitle, destination. */
+data class SettingsItem(val label: String, val subtitle: String? = null, val icon: ImageVector? = null, val onClick: () -> Unit)
 
 @Composable
-fun PulseSettingsScreen(vm: AppViewModel, groups: List<Pair<String?, List<SettingsItem>>>, onCalibration: () -> Unit) {
+fun PulseSettingsScreen(vm: AppViewModel, groups: List<Pair<String?, List<SettingsItem>>>, onCalibration: () -> Unit, onBackup: () -> Unit) {
     val days by vm.recentDays.collectAsStateWithLifecycle()
     val nights = PulseData.nightsWithSleep(days)
     Column(Modifier.fillMaxSize().background(PulseColors.screenBrush).verticalScroll(rememberScrollState())) {
         TabTitle("Ajustes")
         if (nights < PulseData.calibrationNights) {
-            PulseCard(Modifier.padding(start = PulseMetrics.gutter, end = PulseMetrics.gutter, top = 24.dp), onClick = onCalibration) {
-                CardHeader("Tu primera semana")
-                Row(Modifier.padding(top = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Text("Duerme con la pulsera cada noche y vuelve aquí para ver cómo se calibra tu línea base.", style = PulseText.body, color = PulseColors.textSecondary, modifier = Modifier.weight(1f))
-                    Spacer(Modifier.width(14.dp))
-                    DashedProgressRing(nights, PulseData.calibrationNights)
+            Row(
+                Modifier.padding(start = 18.dp, end = 18.dp, top = 20.dp).fillMaxWidth().clip(RoundedCornerShape(12.dp))
+                    .border(1.5.dp, PulseColors.accentBrush, RoundedCornerShape(12.dp)).background(PulseColors.base)
+                    .clickable(onClick = onCalibration).padding(16.dp),
+            ) {
+                Icon(Icons.Outlined.CalendarMonth, null, tint = PulseColors.textQuiet, modifier = Modifier.padding(top = 2.dp).size(22.dp))
+                Spacer(Modifier.width(14.dp))
+                Column {
+                    Text("TU PRIMERA SEMANA", style = PulseText.overline.copy(fontSize = 11.sp), color = PulseColors.text)
+                    Spacer(Modifier.height(6.dp))
+                    Text("Duerme con la pulsera cada noche y vuelve aquí para ver cómo se calibra tu línea base. (${nights}/${PulseData.calibrationNights})", style = PulseText.body, color = PulseColors.textSecondary)
                 }
             }
         }
         groups.forEach { (title, items) ->
             if (title != null) {
-                Text(title.uppercase(), style = PulseText.overline, color = PulseColors.textTertiary, modifier = Modifier.padding(start = 20.dp, top = 26.dp, bottom = 10.dp))
-            } else {
-                Spacer(Modifier.height(16.dp))
+                Text(title.uppercase(), style = PulseText.overline.copy(fontSize = 11.sp, letterSpacing = PulseText.tabTitle.letterSpacing * 0.875f), color = PulseColors.textTertiary, modifier = Modifier.padding(start = 18.dp, top = 30.dp, bottom = 12.dp))
             }
-            Column(
-                Modifier.padding(horizontal = PulseMetrics.gutter).fillMaxWidth()
-                    .clip(RoundedCornerShape(PulseMetrics.cardRadius)).background(PulseColors.overlay),
-            ) {
-                items.forEachIndexed { i, item ->
-                    if (i > 0) Box(Modifier.padding(start = 16.dp).fillMaxWidth().height(1.dp).background(PulseColors.hairline))
+            Column(Modifier.padding(horizontal = 18.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                items.forEach { item ->
                     Row(
-                        Modifier.fillMaxWidth().clickable(onClick = item.onClick).padding(horizontal = 16.dp, vertical = if (item.subtitle == null) 19.dp else 14.dp),
+                        Modifier.fillMaxWidth().heightIn(min = 54.dp).clip(RoundedCornerShape(12.dp)).background(PulseColors.overlay)
+                            .clickable(onClick = item.onClick).padding(horizontal = 16.dp, vertical = if (item.subtitle == null) 0.dp else 10.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        Column(Modifier.weight(1f)) {
-                            Text(item.label.uppercase(), style = PulseText.overlineLg, color = PulseColors.text)
+                        item.icon?.let {
+                            Icon(it, null, tint = PulseColors.textQuiet, modifier = Modifier.size(22.dp))
+                            Spacer(Modifier.width(14.dp))
+                        }
+                        Column(Modifier.weight(1f).padding(vertical = if (item.subtitle == null) 18.dp else 0.dp)) {
+                            Text(item.label.uppercase(), style = PulseText.overline.copy(fontSize = 11.sp), color = PulseColors.text)
                             if (item.subtitle != null) {
                                 Spacer(Modifier.height(4.dp))
-                                Text(item.subtitle, style = PulseText.body, color = PulseColors.textSecondary)
+                                Text(item.subtitle, style = PulseText.body.copy(fontSize = 12.sp, lineHeight = 16.sp), color = PulseColors.textSecondary)
                             }
                         }
                         Icon(Icons.Outlined.ChevronRight, null, tint = PulseColors.textSecondary, modifier = Modifier.size(18.dp))
@@ -280,10 +287,15 @@ fun PulseSettingsScreen(vm: AppViewModel, groups: List<Pair<String?, List<Settin
                 }
             }
         }
+        Box(
+            Modifier.align(Alignment.CenterHorizontally).padding(top = 34.dp).width(230.dp).height(46.dp).clip(RoundedCornerShape(23.dp))
+                .border(1.5.dp, PulseColors.text, RoundedCornerShape(23.dp)).clickable(onClick = onBackup),
+            contentAlignment = Alignment.Center,
+        ) { Text("COPIA DE SEGURIDAD", style = PulseText.overline.copy(fontSize = 11.sp), color = PulseColors.text) }
         Text(
             "Versión ${BuildConfig.VERSION_NAME} · todos los datos en tu teléfono",
-            style = PulseText.body.copy(fontSize = PulseText.chartAxis.fontSize), color = PulseColors.textTertiary,
-            textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth().padding(top = 24.dp),
+            style = PulseText.small.copy(fontSize = 10.sp, letterSpacing = PulseText.overline.letterSpacing * 0.5f), color = PulseColors.textQuiet,
+            textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
         )
         Spacer(Modifier.height(PulseMetrics.barClearance))
     }
