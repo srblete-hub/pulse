@@ -186,7 +186,7 @@ fun PulseStartActivityScreen(vm: AppViewModel, onClose: () -> Unit) {
     val context = LocalContext.current
     val live by vm.live.collectAsStateWithLifecycle()
     val active by vm.activeWorkout.collectAsStateWithLifecycle()
-    val days by vm.recentDays.collectAsStateWithLifecycle()
+    val days by com.noop.pulse.engine.pulseDays(vm)
     var i by rememberSaveable { mutableStateOf(0) }
     var route by rememberSaveable { mutableStateOf(false) }
     var target by rememberSaveable { mutableStateOf(false) }
@@ -296,7 +296,7 @@ private data class Milestone(val title: String, val nights: Int, val verb: Strin
 
 @Composable
 fun PulseCalibrationScreen(vm: AppViewModel, onBack: () -> Unit, onHealth: () -> Unit) {
-    val days by vm.recentDays.collectAsStateWithLifecycle()
+    val days by com.noop.pulse.engine.pulseDays(vm)
     val nights = PulseData.nightsWithSleep(days)
     var info by remember { mutableStateOf<Milestone?>(null) }
     val milestones = listOf(
@@ -414,7 +414,7 @@ private data class AgeRow(val label: String, val value: String, val pos: Float?,
 @Composable
 fun PulseAgeScreenV2(vm: AppViewModel, onBack: () -> Unit, onCoach: () -> Unit) {
     val context = LocalContext.current
-    val days by vm.recentDays.collectAsStateWithLifecycle()
+    val days by com.noop.pulse.engine.pulseDays(vm)
     val workouts by vm.workouts.collectAsStateWithLifecycle()
     var vo2 by remember { mutableStateOf<Double?>(null) }
     var info by remember { mutableStateOf(!PulseTips.seen(context, "age")) }
@@ -425,25 +425,26 @@ fun PulseAgeScreenV2(vm: AppViewModel, onBack: () -> Unit, onCoach: () -> Unit) 
     val profileAge = remember { ProfileStore.from(context).age }
     val ready = days.size >= PulseData.pulseAgeDays
     var result by remember { mutableStateOf<PulseAgeEngine.Result?>(null) }
-    var prev by remember { mutableStateOf<PulseAgeEngine.Result?>(null) }
-    var prev2 by remember { mutableStateOf<PulseAgeEngine.Result?>(null) }
+    var paceNow by remember { mutableStateOf<Double?>(null) }
+    var pacePrevWeek by remember { mutableStateOf<Double?>(null) }
     val monthLabels = remember { (5 downTo 0).map { k -> LocalDate.now().minusMonths(k.toLong()).month.getDisplayName(TextStyle.SHORT, es).trimEnd('.').replaceFirstChar { it.uppercase() } } }
     var history by remember { mutableStateOf(monthLabels.map { it to (null as Double?) }) }
     // Every figure below is measured from the strap over a 4-week window (see PulseAgeData), off the UI thread.
     LaunchedEffect(days.size, vo2, workouts.size) {
         if (days.size < PulseData.pulseAgeDays) return@LaunchedEffect
-        result = PulseAgeData.result(context, vm, days, workouts, vo2).second
-        prev = if (days.size >= PulseData.pulseAgeDays + 7) PulseAgeData.result(context, vm, days, workouts, vo2, 7).second else null
-        prev2 = if (days.size >= PulseData.pulseAgeDays + 14) PulseAgeData.result(context, vm, days, workouts, vo2, 14).second else null
+        val now = com.noop.pulse.engine.PulseAge.compute(context, vm, days, workouts, vo2)
+        result = now?.result
+        paceNow = now?.pace
+        pacePrevWeek = com.noop.pulse.engine.PulseAge.compute(context, vm, days, workouts, vo2, 7)?.pace
         history = (5 downTo 0).mapIndexed { i, k ->
             val end = if (k == 0) LocalDate.now() else LocalDate.now().minusMonths(k.toLong()).withDayOfMonth(1).plusMonths(1).minusDays(1)
             val offset = java.time.temporal.ChronoUnit.DAYS.between(end, LocalDate.now()).toInt()
             val enough = days.count { it.day <= end.toString() } >= PulseData.pulseAgeDays
-            monthLabels[i] to (if (enough) PulseAgeData.result(context, vm, days, workouts, vo2, offset).second?.pulseAge else null)
+            monthLabels[i] to (if (enough) com.noop.pulse.engine.PulseAge.compute(context, vm, days, workouts, vo2, offset)?.result?.pulseAge else null)
         }
     }
-    val pace = if (prev != null && result != null) PulseAgeEngine.paceOfAgeing(prev!!, result!!, 7) else null
-    val pacePrev = if (prev2 != null && prev != null) PulseAgeEngine.paceOfAgeing(prev2!!, prev!!, 7) else null
+    val pace = paceNow
+    val pacePrev = pacePrevWeek
     val weekLabel = run {
         val a = LocalDate.now().minusDays(6); val b = LocalDate.now()
         "${a.dayOfMonth} – ${b.dayOfMonth} ${b.month.getDisplayName(TextStyle.SHORT, es).trimEnd('.').uppercase(es)}"
@@ -591,7 +592,7 @@ fun PulseAgeScreenV2(vm: AppViewModel, onBack: () -> Unit, onCoach: () -> Unit) 
         if (info) {
             FirstVisitTip(
                 "Edad fisiológica",
-                "Partimos de tu edad real y sumamos o restamos años según nueve hábitos: horas y regularidad del sueño, pasos, minutos en zonas de pulso, fuerza, VO₂ máx., pulso en reposo y masa magra. Se basa en guías públicas (OMS 2020) y estudios publicados.",
+                "Partimos de tu edad real. Para cada uno de los nueve hábitos (horas y regularidad del sueño, pasos, minutos en zonas de pulso, fuerza, VO₂ máx., pulso en reposo y masa magra) estimamos cuánto sube o baja tu riesgo según estudios publicados, y lo pasamos a años: un 10 % más de riesgo equivale a un año más. Usa tus medias de 6 meses; el ritmo compara tus últimos 30 días.",
             ) { PulseTips.markSeen(context, "age"); info = false }
         }
     }

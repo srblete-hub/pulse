@@ -158,7 +158,7 @@ fun PulseProfileScreen(
     onCalibration: () -> Unit,
 ) {
     val context = LocalContext.current
-    val days by vm.recentDays.collectAsStateWithLifecycle()
+    val days by com.noop.pulse.engine.pulseDays(vm)
     val streaks by vm.streaks.collectAsStateWithLifecycle()
     val workouts by vm.workouts.collectAsStateWithLifecycle()
     LaunchedEffect(Unit) { runCatching { vm.loadWorkouts() } }

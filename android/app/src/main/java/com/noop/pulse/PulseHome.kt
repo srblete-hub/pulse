@@ -84,13 +84,15 @@ class HomeActions(
 
 @Composable
 fun PulseHomeScreen(vm: AppViewModel, showLiveHr: Boolean = false, actions: HomeActions) {
-    val today by vm.today.collectAsStateWithLifecycle()
-    val days by vm.recentDays.collectAsStateWithLifecycle()
+    val today by com.noop.pulse.engine.pulseToday(vm)
+    val days by com.noop.pulse.engine.pulseDays(vm)
     val live by vm.live.collectAsStateWithLifecycle()
     val streaks by vm.streaks.collectAsStateWithLifecycle()
     var offset by rememberSaveable { mutableStateOf(0) }
     val metric = PulseData.metricFor(days, today, offset)
     val nights = PulseData.nightsWithSleep(days)
+    val needCtx = androidx.compose.ui.platform.LocalContext.current
+    LaunchedEffect(days) { if (days.isNotEmpty()) PulseNeed.save(needCtx, com.noop.pulse.engine.PulseSleepNeed.needMin(needCtx, days)) }
 
     var stress by remember { mutableStateOf<List<StressPoint>>(emptyList()) }
     LaunchedEffect(days.size, today?.day) {

@@ -114,8 +114,8 @@ private val vitals = listOf(
 @Composable
 fun PulseMonitorScreen(vm: AppViewModel, onBack: () -> Unit, onCoach: () -> Unit) {
     val context = LocalContext.current
-    val today by vm.today.collectAsStateWithLifecycle()
-    val days by vm.recentDays.collectAsStateWithLifecycle()
+    val today by com.noop.pulse.engine.pulseToday(vm)
+    val days by com.noop.pulse.engine.pulseDays(vm)
     val live by vm.live.collectAsStateWithLifecycle()
     val nights = PulseData.nightsWithSleep(days)
     DisposableEffect(Unit) {

@@ -262,7 +262,7 @@ fun PulseStressScreen(vm: AppViewModel, onBack: () -> Unit, onCoach: () -> Unit,
         PulseStressIntro(onClose = onBack, onDone = { PulseTips.markSeen(context, "stress_intro"); introDone = true })
         return
     }
-    val days by vm.recentDays.collectAsStateWithLifecycle()
+    val days by com.noop.pulse.engine.pulseDays(vm)
     val nights = PulseData.nightsWithSleep(days)
     var offset by rememberSaveable { mutableStateOf(0) }
     var points by remember { mutableStateOf<List<StressPoint>>(emptyList()) }

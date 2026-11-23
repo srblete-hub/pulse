@@ -442,7 +442,7 @@ private fun HabitRow(h: Habit, chosen: Boolean, onToggle: () -> Unit) {
 @Composable
 fun PulseHabitsScreen(vm: AppViewModel, onBack: () -> Unit, onJournal: () -> Unit) {
     val context = LocalContext.current
-    val days by vm.recentDays.collectAsStateWithLifecycle()
+    val days by com.noop.pulse.engine.pulseDays(vm)
     var effects by remember { mutableStateOf<List<Pair<String, Double>>>(emptyList()) }
     LaunchedEffect(days.size) {
         val rows = runCatching { vm.repo.journal(JOURNAL_DEVICE_ID, "0000-01-01", "9999-12-31") }.getOrDefault(emptyList())

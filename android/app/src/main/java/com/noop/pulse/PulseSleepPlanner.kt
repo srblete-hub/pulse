@@ -120,7 +120,7 @@ object SleepSchedules {
         val list = load(c)
         val idx = LocalDate.now().plusDays(1).dayOfWeek.value - 1
         val s = forDay(list, idx) ?: return null
-        val needMin = ((PrefsCoachMemory(c).get("sleep_need")?.toDoubleOrNull() ?: 8.0) * 60).toInt()
+        val needMin = ((PulseNeed.hours(c)) * 60).toInt()
         val inBed = needMin + listOf(0, 30, -60)[goal(c).coerceIn(0, 2)] + 15
         return Tonight(s.minutes - inBed, s.minutes, s.mode, enabled(c))
     }
@@ -266,7 +266,7 @@ fun PulseSleepPlannerScreen(vm: AppViewModel, onBack: () -> Unit) {
         })
         return
     }
-    val days by vm.recentDays.collectAsStateWithLifecycle()
+    val days by com.noop.pulse.engine.pulseDays(vm)
     val live by vm.live.collectAsStateWithLifecycle()
     val schedules = remember { mutableStateListOf<WakeSchedule>().apply { addAll(SleepSchedules.load(context)) } }
     var on by remember { mutableStateOf(SleepSchedules.enabled(context)) }
@@ -292,7 +292,7 @@ fun PulseSleepPlannerScreen(vm: AppViewModel, onBack: () -> Unit) {
         }
     }
 
-    val needMin = ((PrefsCoachMemory(context).get("sleep_need")?.toDoubleOrNull() ?: 8.0) * 60).toInt()
+    val needMin = ((PulseNeed.hours(context)) * 60).toInt()
     val goalShift = listOf(0, 30, -60)[goal]
     val tomorrow = LocalDate.now().plusDays(1)
     val tIdx = tomorrow.dayOfWeek.value - 1

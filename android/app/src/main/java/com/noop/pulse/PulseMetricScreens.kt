@@ -85,8 +85,8 @@ private fun calibrationNotice(nights: Int, text: (Int) -> String): Pair<String, 
 
 @Composable
 fun PulseEffortScreen(vm: AppViewModel, onBack: () -> Unit, onCoach: () -> Unit) {
-    val today by vm.today.collectAsStateWithLifecycle()
-    val days by vm.recentDays.collectAsStateWithLifecycle()
+    val today by com.noop.pulse.engine.pulseToday(vm)
+    val days by com.noop.pulse.engine.pulseDays(vm)
     val workouts by vm.workouts.collectAsStateWithLifecycle()
     LaunchedEffect(Unit) { runCatching { vm.loadWorkouts() } }
     val d = PulseData.metricFor(days, today, 0)
@@ -133,8 +133,8 @@ fun PulseEffortScreen(vm: AppViewModel, onBack: () -> Unit, onCoach: () -> Unit)
 
 @Composable
 fun PulseRecoveryScreen(vm: AppViewModel, onBack: () -> Unit, onHabits: () -> Unit, onCoach: () -> Unit) {
-    val today by vm.today.collectAsStateWithLifecycle()
-    val days by vm.recentDays.collectAsStateWithLifecycle()
+    val today by com.noop.pulse.engine.pulseToday(vm)
+    val days by com.noop.pulse.engine.pulseDays(vm)
     val d = PulseData.metricFor(days, today, 0)
     val rec = d?.recovery
     val nights = PulseData.nightsWithSleep(days)
@@ -167,13 +167,13 @@ fun PulseRecoveryScreen(vm: AppViewModel, onBack: () -> Unit, onHabits: () -> Un
 
 @Composable
 fun PulseSleepScreen(vm: AppViewModel, onBack: () -> Unit, onCoach: () -> Unit) {
-    val today by vm.today.collectAsStateWithLifecycle()
-    val days by vm.recentDays.collectAsStateWithLifecycle()
+    val today by com.noop.pulse.engine.pulseToday(vm)
+    val days by com.noop.pulse.engine.pulseDays(vm)
     val context = androidx.compose.ui.platform.LocalContext.current
     val d = PulseData.metricFor(days, today, 0)
     val perf = PulseData.sleepPct(d)
     val nights = PulseData.nightsWithSleep(days)
-    val needMin = (PrefsCoachMemory(context).get("sleep_need")?.toDoubleOrNull() ?: 8.0) * 60
+    val needMin = (PulseNeed.hours(context)) * 60
     fun h(v: Double?) = if (v == null || v <= 0) "-:--" else PulseData.hoursMinutes(v)
     fun vsNeed(v: Double?) = v?.takeIf { it > 0 }?.let { "${(it / needMin * 100).roundToInt()}%" } ?: "--%"
     fun inBed(m: DailyMetric) = m.totalSleepMin?.let { t -> m.efficiency?.takeIf { it > 0 }?.let { t / (it / 100) } }

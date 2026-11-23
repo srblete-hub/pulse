@@ -54,6 +54,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -122,6 +123,8 @@ fun PulseApp(vm: AppViewModel) {
     fun go(r: String): () -> Unit = { nav.navigate(r) { launchSingleTop = true } }
     val ctx = androidx.compose.ui.platform.LocalContext.current
     var communityIntro by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(!PulseTips.seen(ctx, "community_intro")) }
+    val liveForEngine by vm.live.collectAsStateWithLifecycle()
+    androidx.compose.runtime.LaunchedEffect(liveForEngine.lastSyncAt) { runCatching { com.noop.pulse.engine.PulseRunner.run(ctx, vm) } }
     var liveHr by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(PulseLivePref.enabled(ctx)) }
     androidx.compose.runtime.DisposableEffect(liveHr) {
         if (liveHr) vm.requestRealtimeHr()

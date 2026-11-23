@@ -69,15 +69,15 @@ class HealthActions(
 @Composable
 fun PulseHealthScreen(vm: AppViewModel, actions: HealthActions) {
     val context = LocalContext.current
-    val today by vm.today.collectAsStateWithLifecycle()
-    val days by vm.recentDays.collectAsStateWithLifecycle()
+    val today by com.noop.pulse.engine.pulseToday(vm)
+    val days by com.noop.pulse.engine.pulseDays(vm)
     var vo2 by remember { mutableStateOf<Double?>(null) }
     LaunchedEffect(Unit) { vo2 = runCatching { vm.repo.latestMetricComputedUnion(vm.activeStrapId, "vo2max_est")?.value }.getOrNull() }
     val workoutsAll by vm.workouts.collectAsStateWithLifecycle()
     LaunchedEffect("workouts") { runCatching { vm.loadWorkouts() } }
     var ageState by remember { mutableStateOf<com.noop.analytics.PulseAgeEngine.Result?>(null) }
     LaunchedEffect(days.size, vo2, workoutsAll.size) {
-        ageState = if (days.size >= PulseData.pulseAgeDays) PulseAgeData.result(context, vm, days, workoutsAll, vo2).second else null
+        ageState = if (days.size >= PulseData.pulseAgeDays) com.noop.pulse.engine.PulseAge.compute(context, vm, days, workoutsAll, vo2)?.result else null
     }
     val age = ageState
     val nights = PulseData.nightsWithSleep(days)
@@ -245,7 +245,7 @@ data class SettingsItem(val label: String, val subtitle: String? = null, val ico
 
 @Composable
 fun PulseSettingsScreen(vm: AppViewModel, groups: List<Pair<String?, List<SettingsItem>>>, onCalibration: () -> Unit, onBackup: () -> Unit) {
-    val days by vm.recentDays.collectAsStateWithLifecycle()
+    val days by com.noop.pulse.engine.pulseDays(vm)
     val nights = PulseData.nightsWithSleep(days)
     Column(Modifier.fillMaxSize().background(PulseColors.screenBrush).verticalScroll(rememberScrollState())) {
         TabTitle("Ajustes")

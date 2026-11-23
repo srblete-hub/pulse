@@ -111,7 +111,7 @@ class CoachEngine(
     private val name get() = memory.get("name")
     private val goal get() = memory.get("goal")
     private val sport get() = memory.get("sport")
-    private val sleepNeedH: Double get() = memory.get("sleep_need")?.toDoubleOrNull() ?: 8.0
+    private val sleepNeedH: Double get() = memory.get("sleep_need")?.toDoubleOrNull() ?: memory.get("auto_need")?.toDoubleOrNull() ?: 8.0
     private fun hi() = name?.let { ", $it" } ?: ""
 
     private fun goalLabel(g: String?) = when (g) {

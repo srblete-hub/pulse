@@ -14,6 +14,16 @@ import kotlin.math.roundToInt
  * Read-side helpers that turn noop's stored rows into what the Pulse screens show. Pure functions over
  * [DailyMetric]; the scoring itself stays in noop's analytics (recovery, strain, rest composite).
  */
+/** The sleep need the planner, the tonight card, the sleep page and the coach all read. A value the user
+ *  told the coach wins; otherwise the computed need ([com.noop.pulse.engine.PulseSleepNeed]). */
+object PulseNeed {
+    fun hours(c: android.content.Context): Double {
+        val mem = PrefsCoachMemory(c)
+        return mem.get("sleep_need")?.toDoubleOrNull() ?: mem.get("auto_need")?.toDoubleOrNull() ?: 8.0
+    }
+    fun save(c: android.content.Context, minutes: Double) = PrefsCoachMemory(c).set("auto_need", String.format(java.util.Locale.US, "%.2f", minutes / 60.0))
+}
+
 object PulseData {
 
     /** Nights needed before the personal baseline (and the Health monitor) is considered calibrated. */
