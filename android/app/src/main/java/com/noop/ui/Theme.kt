@@ -23,7 +23,9 @@ import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
+import com.noop.R
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -467,13 +469,27 @@ object Metrics {
 object NoopType {
     // Helvetica Neue family — falls back to the platform grotesque (SansSerif) when
     // no res/font/helvetica_neue asset is bundled, per the v3 type spec.
-    private val sans = FontFamily.SansSerif
+    /** Body / titles: Mulish (OFL, bundled in res/font). */
+    private val sans = FontFamily(
+        Font(R.font.mulish_400, FontWeight.Normal),
+        Font(R.font.mulish_500, FontWeight.Medium),
+        Font(R.font.mulish_600, FontWeight.SemiBold),
+        Font(R.font.mulish_700, FontWeight.Bold),
+    )
+
+    /** Labels, overlines and numbers: Montserrat (OFL, bundled in res/font). */
+    val label = FontFamily(
+        Font(R.font.montserrat_500, FontWeight.Medium),
+        Font(R.font.montserrat_600, FontWeight.SemiBold),
+        Font(R.font.montserrat_700, FontWeight.Bold),
+        Font(R.font.montserrat_800, FontWeight.ExtraBold),
+    )
     private val monoFamily = FontFamily.Monospace
 
     /** Display 64–80 / Bold — the recovery ring number. Tight tracking (≈ -0.04em),
      *  tabular figures so a changing value never reflows. Mirrors StrandFont.display. */
     fun display(size: Float = 72f) = TextStyle(
-        fontFamily = sans, fontWeight = FontWeight.Bold, fontSize = size.sp,
+        fontFamily = label, fontWeight = FontWeight.Bold, fontSize = size.sp,
         letterSpacing = displayTracking(size).sp, fontFeatureSettings = "tnum",
     )
 
@@ -491,7 +507,7 @@ object NoopType {
 
     /** Overline 11 / Bold, +1.4 tracking, ALL-CAPS at use site. */
     val overline = TextStyle(
-        fontFamily = sans, fontWeight = FontWeight.Bold, fontSize = 11.sp,
+        fontFamily = label, fontWeight = FontWeight.Bold, fontSize = 11.sp,
         letterSpacing = 1.4.sp,
     )
 
@@ -501,7 +517,7 @@ object NoopType {
     /** A numeric style at an arbitrary size — the house sans with TABULAR figures
      *  ('tnum') so live values don't reflow. Mirrors StrandFont.number. */
     fun number(size: Float, weight: FontWeight = FontWeight.SemiBold) = TextStyle(
-        fontFamily = sans, fontWeight = weight, fontSize = size.sp, fontFeatureSettings = "tnum",
+        fontFamily = label, fontWeight = weight, fontSize = size.sp, fontFeatureSettings = "tnum",
     )
 
     fun mono(size: Float, weight: FontWeight = FontWeight.Normal) = TextStyle(
