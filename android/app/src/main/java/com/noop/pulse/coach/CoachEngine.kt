@@ -616,6 +616,9 @@ class CoachEngine(
         )
     }
 
+    /** The coach opened the chat with a suggestion; a "sí" next answers [query] as if the user asked it. */
+    fun offer(query: String) = memory.set("offer", query)
+
     fun reply(message: String, s: CoachSnapshot): CoachReply {
         val norm = CoachText.normalize(message)
         val c = Ctx(message, norm, CoachText.tokens(norm), s)
@@ -824,6 +827,12 @@ class CoachEngine(
         }
         if (c.tokens.size <= 4 && c.has("empezar$", "empezar de nuevo")) return welcome(c.s)
         val yes = setOf("si", "vale", "claro", "venga", "dale", "bueno", "perfecto", "va")
+        val offered = memory.get("offer")
+        if (offered != null) {
+            memory.set("offer", null)
+            val accept = c.tokens.size <= 4 && (c.tokens.all { it in yes } || c.has("ayudame", "vamos", "claro", "por favor"))
+            if (accept) return reply(offered, c.s)
+        }
         if (c.tokens.size <= 2 && c.tokens.all { it in yes }) {
             return CoachReply(pick("¡Genial! ¿Qué quieres que miremos?", "Perfecto. Dime qué te interesa."), listOf("¿Cómo estoy hoy?", "Mi semana", "Dame un plan"), intent = "afirmacion")
         }

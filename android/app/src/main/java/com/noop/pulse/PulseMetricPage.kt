@@ -197,7 +197,17 @@ fun MetricPage(
         Row(
             Modifier.align(Alignment.BottomCenter).navigationBarsPadding().padding(start = 12.dp, end = 12.dp, bottom = 18.dp)
                 .fillMaxWidth().height(66.dp).shadow(18.dp, RoundedCornerShape(24.dp)).clip(RoundedCornerShape(24.dp))
-                .background(coachBarBg).border(1.dp, PulseColors.hairline, RoundedCornerShape(24.dp)).pulseClick(onCoach).padding(horizontal = 16.dp),
+                .background(coachBarBg).border(1.dp, PulseColors.hairline, RoundedCornerShape(24.dp)).pulseClick {
+                    CoachLaunch.offer(
+                        coachLine,
+                        when (tipKey) {
+                            "effort" -> "como va mi esfuerzo de hoy"
+                            "recovery" -> "como esta mi recuperacion"
+                            else -> "consejos para dormir mejor"
+                        },
+                    )
+                    onCoach()
+                }.padding(horizontal = 16.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             CoachOrb(diameter = 40.dp)

@@ -147,4 +147,19 @@ class CoachEngineTest {
         e.reply("ejercicio de respiracion", data)
         assertEquals("mas", e.reply("otro", data).intent)
     }
+
+    @Test fun `accepting an offer from a coach bar answers that topic`() {
+        val e = engine()
+        e.offer("como esta mi estres")
+        assertEquals("estres", e.reply("Sí, vamos", data).intent)
+        e.offer("como esta mi recuperacion")
+        assertEquals("negacion", e.reply("No, gracias", data).intent)
+    }
+
+    @Test fun `bar suggestion queries route to their topic`() {
+        assertEquals("esfuerzo", intentOf("como va mi esfuerzo de hoy"))
+        assertEquals("recuperacion", intentOf("como esta mi recuperacion"))
+        assertEquals("sueno_consejos", intentOf("consejos para dormir mejor"))
+        assertEquals("respirar", intentOf("ejercicio de respiracion"))
+    }
 }

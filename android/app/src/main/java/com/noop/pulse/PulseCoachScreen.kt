@@ -72,6 +72,12 @@ import com.noop.widget.StressWidgetProducer
 import java.time.LocalTime
 import kotlinx.coroutines.launch
 
+/** A suggestion tapped in a screen's coach bar: shown as the coach's opening message in the chat. */
+object CoachLaunch {
+    var pending: Pair<String, String>? = null
+    fun offer(line: String, query: String) { pending = line to query }
+}
+
 /** Coach memory in its own SharedPreferences file; never leaves the phone. */
 class PrefsCoachMemory(context: Context) : CoachMemory {
     private val prefs = context.applicationContext.getSharedPreferences("pulse_coach", Context.MODE_PRIVATE)
@@ -184,6 +190,14 @@ fun PulseCoachScreen(vm: AppViewModel, onBack: () -> Unit, onAction: (CoachActio
         started = true
         val r = engine.welcome(snapshot())
         lines += ChatLine(false, r.text, r)
+    }
+    LaunchedEffect(Unit) {
+        CoachLaunch.pending?.let { (line, query) ->
+            CoachLaunch.pending = null
+            started = true
+            engine.offer(query)
+            lines += ChatLine(false, line, CoachReply(line, listOf("Sí, vamos", "No, gracias"), intent = "oferta"))
+        }
     }
     LaunchedEffect(lines.size, thinking) { if (lines.isNotEmpty()) listState.animateScrollToItem(lines.lastIndex + if (thinking) 1 else 0) }
 

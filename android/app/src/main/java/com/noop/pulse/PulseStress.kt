@@ -407,14 +407,16 @@ fun PulseStressScreen(vm: AppViewModel, onBack: () -> Unit, onCoach: () -> Unit,
             Spacer(Modifier.height(110.dp))
             Spacer(Modifier.navigationBarsPadding())
         }
-        CoachBar(
-            when {
+        val stressLine =             when {
                 level == null -> "Cuando tenga lecturas de hoy, te ayudo a interpretarlas."
                 level < 1 -> "Tu estrés está bajo ahora mismo. ¿Quieres que lo veamos juntos?"
                 level < 2 -> "Tu estrés está en nivel medio. ¿Te propongo cómo gestionarlo?"
                 else -> "Tu estrés está alto. Te ayudo a bajarlo en dos minutos."
-            },
-            onCoach,
+            }
+        CoachBar(stressLine, {
+            CoachLaunch.offer(stressLine, if ((level ?: 0.0) >= 2) "ejercicio de respiracion" else "como esta mi estres")
+            onCoach()
+        },
         )
         if (tipOpen) {
             FirstVisitTip("Nivel de estrés", "Resume lo activado que está tu cuerpo en una escala de 0 a 3, a partir de tu pulso, tu VFC y tu movimiento, comparados con tus valores de reposo.") { tipOpen = false }
