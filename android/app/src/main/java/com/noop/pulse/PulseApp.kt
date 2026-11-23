@@ -96,7 +96,9 @@ object PulseRoute {
     const val breatheActivate = "breathe/activate"
     const val sleepDetail = "noop/sleep"
     const val workouts = "noop/workouts"
-    const val journal = "noop/journal"
+    const val journal = "journal"
+    const val habits = "habits"
+    const val insights = "noop/insights"
     const val notifications = "noop/notifications"
     const val advanced = "noop/settings"
     const val limitations = "noop/limitations"
@@ -157,7 +159,7 @@ fun PulseApp(vm: AppViewModel) {
             }
 
             composable(PulseRoute.sleep) { PulseSleepScreen(vm, back, onCoach = go(PulseRoute.coach)) }
-            composable(PulseRoute.recovery) { PulseRecoveryScreen(vm, back, onHabits = go(PulseRoute.journal), onCoach = go(PulseRoute.coach)) }
+            composable(PulseRoute.recovery) { PulseRecoveryScreen(vm, back, onHabits = go(PulseRoute.habits), onCoach = go(PulseRoute.coach)) }
             composable(PulseRoute.effort) { PulseEffortScreen(vm, back, onCoach = go(PulseRoute.coach)) }
             composable(PulseRoute.age) { PulseAgeScreen(vm, back, onCoach = go(PulseRoute.coach)) }
             composable(PulseRoute.profile) {
@@ -274,7 +276,9 @@ fun PulseApp(vm: AppViewModel) {
             composable(PulseRoute.breatheActivate) { PulseBreatheScreen(false, back) }
             legacy(PulseRoute.sleepDetail, "Sueño", back) { SleepScreen(vm = vm, onOpenAlarms = { nav.navigate(PulseRoute.alarms) }) }
             legacy(PulseRoute.workouts, "Entrenamientos", back) { WorkoutsScreen(vm) }
-            legacy(PulseRoute.journal, "Diario", back) { InsightsScreen(vm) }
+            composable(PulseRoute.journal) { PulseJournalScreen(vm, onClose = back, onCoach = go(PulseRoute.coach)) }
+            composable(PulseRoute.habits) { PulseHabitsScreen(vm, back, onJournal = go(PulseRoute.journal)) }
+            legacy(PulseRoute.insights, "Análisis (NOOP)", back) { InsightsScreen(vm) }
             legacy(PulseRoute.notifications, "Notificaciones", back) { NotificationsSettingsScreen(vm) }
             legacy(PulseRoute.advanced, "Ajustes avanzados", back) {
                 SettingsScreen(vm, onOpenBackupSync = { nav.navigate(PulseRoute.backup) })
