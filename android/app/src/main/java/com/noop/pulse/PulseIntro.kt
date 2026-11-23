@@ -50,6 +50,8 @@ class IntroStep(
     /** Distance of the text block from the top, as in the mockups (dp on a 844-tall screen). */
     val textTop: Dp = 640.dp,
     val background: Brush? = null,
+    /** Small lilac label above the title ("ORGANIZA", "NUEVO"…). */
+    val kicker: String? = null,
     val art: @Composable BoxScope.() -> Unit,
 )
 
@@ -74,6 +76,10 @@ fun IntroFlow(
     Box(Modifier.fillMaxSize().background(step.background ?: introBg).statusBarsPadding().navigationBarsPadding()) {
         step.art(this)
         Column(Modifier.align(Alignment.TopStart).padding(start = 30.dp, end = 30.dp, top = step.textTop - 24.dp)) {
+            step.kicker?.let {
+                Text(it, style = PulseText.overlineLg, color = PulseColors.accent)
+                Spacer(Modifier.height(8.dp))
+            }
             Text(step.title, style = PulseText.headline.copy(fontSize = 22.sp, fontWeight = FontWeight.SemiBold), color = PulseColors.text)
             step.body.forEachIndexed { n, p ->
                 Spacer(Modifier.height(if (n == 0) 8.dp else 12.dp))

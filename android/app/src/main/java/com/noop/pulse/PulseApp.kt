@@ -84,7 +84,8 @@ object PulseRoute {
     const val strap = "noop/devices"
     const val dataImport = "noop/data"
     const val backup = "noop/backup"
-    const val alarms = "noop/alarms"
+    const val alarms = "planner"
+    const val alarmsClassic = "noop/alarms"
     const val coach = "coach"
     const val live = "noop/live"
     const val trends = "noop/trends"
@@ -238,7 +239,8 @@ fun PulseApp(vm: AppViewModel) {
             }
             legacy(PulseRoute.dataImport, "Importar datos", back) { DataSourcesScreen(vm) }
             legacy(PulseRoute.backup, "Copia y restauración", back) { BackupSyncScreen() }
-            legacy(PulseRoute.alarms, "Horario de sueño", back) { SmartAlarmScreen(vm) }
+            composable(PulseRoute.alarms) { PulseSleepPlannerScreen(vm, back) }
+            legacy(PulseRoute.alarmsClassic, "Alarmas (NOOP)", back) { SmartAlarmScreen(vm) }
             composable(PulseRoute.coach) {
                 PulseCoachScreen(vm, back) { action ->
                     nav.navigate(
