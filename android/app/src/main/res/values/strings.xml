@@ -56,6 +56,7 @@
     <string name="nav_test_centre">Test Centre</string>
     <string name="nav_self_hosted_push">Self-hosted push</string>
     <string name="nav_more">More</string>
+    <string name="nav_community">Community</string>
 
     <string name="push_title">Self-hosted push</string>
     <string name="push_subtitle">Experimental · Android</string>

@@ -2961,17 +2961,16 @@ private fun LiquidWordmark() {
                 translationX = animDx
             }
             .clearAndSetSemantics {}, // decorative wordmark — invisible to TalkBack
-        horizontalArrangement = Arrangement.spacedBy(14.dp, Alignment.CenterHorizontally),
+        horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        "NOOP".forEach { ch ->
-            Text(
-                ch.toString(),
-                style = NoopType.number(16f, weight = FontWeight.Bold)
-                    .copy(shadow = Shadow(color = Color.Black.copy(alpha = 0.25f), offset = Offset(0f, 1f), blurRadius = 6f)),
-                color = Color.White.copy(alpha = 0.5f),
-            )
-        }
+        // Pulse wordmark: the ring-and-trace mark beside the name in widely tracked caps.
+        PulseMark(size = 17.dp)
+        Text(
+            "PULSE",
+            style = NoopType.number(17f, weight = FontWeight.Medium).copy(letterSpacing = 1.4.sp),
+            color = Palette.textPrimary,
+        )
     }
 }
 

@@ -27,13 +27,20 @@ class BottomBarTabsTest {
         assertTrue("a bar tab must not also appear in the More sheet, found $both", both.isEmpty())
     }
 
-    /** Matching iOS: Today, Trends, Sleep, Coach, then More, which the bar appends itself. */
+    /** Pulse: Today, Health, Community, then More, which the bar appends itself; Coach is an orb. */
     @Test
-    fun theBarCarriesTheSameFourNamedTabsAsIOS() {
+    fun theBarCarriesThePulseTabs() {
         assertEquals(
-            listOf(Destination.Today, Destination.Trends, Destination.Sleep, Destination.Coach),
+            listOf(Destination.Today, Destination.Health, Destination.Community),
             barTabs.map { it.dest },
         )
+    }
+
+    /** Sleep and Trends left the bar, so they must be reachable from the More sheet. */
+    @Test
+    fun sleepAndTrendsAreReachableFromMore() {
+        val inDrawer = drawerGroups.flatMap { it.items }.toSet()
+        assertTrue(Destination.Sleep in inDrawer && Destination.Trends in inDrawer)
     }
 
     /** A destination cannot occupy two slots; the More slot's selected state derives from this list. */
