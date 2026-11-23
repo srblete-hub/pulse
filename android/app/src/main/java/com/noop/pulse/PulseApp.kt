@@ -146,9 +146,9 @@ fun PulseApp(vm: AppViewModel) {
                 PulseSettingsScreen(vm, settingsGroups(::go), onCalibration = go(PulseRoute.calibration))
             }
 
-            composable(PulseRoute.sleep) { PulseSleepScreen(vm, back) }
-            composable(PulseRoute.recovery) { PulseRecoveryScreen(vm, back, onHabits = go(PulseRoute.journal)) }
-            composable(PulseRoute.effort) { PulseEffortScreen(vm, back, onStartActivity = go(PulseRoute.live)) }
+            composable(PulseRoute.sleep) { PulseSleepScreen(vm, back, onCoach = go(PulseRoute.coach)) }
+            composable(PulseRoute.recovery) { PulseRecoveryScreen(vm, back, onHabits = go(PulseRoute.journal), onCoach = go(PulseRoute.coach)) }
+            composable(PulseRoute.effort) { PulseEffortScreen(vm, back, onCoach = go(PulseRoute.coach)) }
             composable(PulseRoute.age) { PulseAgeScreen(vm, back, onCoach = go(PulseRoute.coach)) }
             composable(PulseRoute.profile) {
                 PulseProfileScreen(

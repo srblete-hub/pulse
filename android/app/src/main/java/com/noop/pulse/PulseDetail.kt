@@ -50,12 +50,6 @@ import java.util.Locale
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
-/** One "today vs your 30-day average" row of a metric detail page. */
-data class DetailRow(val label: String, val value: String, val base: String)
-
-/** One weekly mini bar chart on a detail page. */
-data class WeekChart(val title: String, val color: Color, val max: Double, val values: List<Double?>, val format: (Double) -> String)
-
 @Composable
 private fun DetailScaffold(title: String, onBack: () -> Unit, info: Pair<String, String>?, content: @Composable () -> Unit) {
     var showInfo by rememberSaveable { mutableStateOf(false) }
@@ -85,208 +79,16 @@ private fun DetailScaffold(title: String, onBack: () -> Unit, info: Pair<String,
 }
 
 @Composable
-private fun MetricDetail(
-    title: String,
-    onBack: () -> Unit,
-    info: Pair<String, String>,
-    ringFraction: Float?,
-    ringColor: Color,
-    ringValue: String,
-    ringLabel: List<String>,
-    caption: String,
-    rows: List<DetailRow>,
-    charts: List<WeekChart>,
-    extra: (@Composable () -> Unit)? = null,
-) {
-    DetailScaffold(title, onBack, info) {
-        Column(Modifier.fillMaxWidth().padding(top = 18.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-            ScoreRing(ringFraction, ringColor, ringValue, size = 170.dp, stroke = 9.dp, textStyle = PulseText.heroNumber)
-            Spacer(Modifier.height(14.dp))
-            ringLabel.forEach { Text(it, style = PulseText.overlineLg, color = PulseColors.text) }
-            Spacer(Modifier.height(12.dp))
-            Text(caption, style = PulseText.body, color = PulseColors.textSecondary, textAlign = TextAlign.Center, modifier = Modifier.padding(horizontal = 40.dp))
-        }
-        SectionTitle("Tu última noche".takeIf { title == "Sueño" } ?: "Hoy")
-        Text("frente a tus últimos 30 días", style = PulseText.body, color = PulseColors.textSecondary, modifier = Modifier.padding(start = 20.dp, bottom = 12.dp))
-        Column(Modifier.padding(horizontal = PulseMetrics.gutter), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            rows.forEach { r ->
-                Row(
-                    Modifier.fillMaxWidth().clip(RoundedCornerShape(PulseMetrics.cardRadius)).background(PulseColors.overlay).padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text(r.label.uppercase(), style = PulseText.overlineLg, color = PulseColors.text, modifier = Modifier.weight(1f))
-                    Column(horizontalAlignment = Alignment.End) {
-                        Text(r.value, style = PulseText.bigNumber, color = PulseColors.text)
-                        Text(r.base, style = PulseText.chartAxis, color = PulseColors.textSecondary)
-                    }
-                }
-            }
-        }
-        extra?.invoke()
-        SectionTitle("Tendencias de la semana")
-        Column(Modifier.padding(horizontal = PulseMetrics.gutter), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            charts.forEach { WeekBars(it) }
-        }
-    }
-}
-
-@Composable
-fun WeekBars(chart: WeekChart) {
-    val keys = remember { (-6..0).map { PulseData.dayKey(it) } }
-    PulseCard {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Overline(chart.title, Modifier.weight(1f), large = true)
-            val last = chart.values.lastOrNull { it != null }
-            Text(last?.let(chart.format) ?: "SIN DATOS", style = PulseText.overline, color = PulseColors.textSecondary)
-        }
-        Canvas(Modifier.fillMaxWidth().height(110.dp).padding(top = 14.dp)) {
-            val slot = size.width / 7
-            val w = slot * 0.46f
-            chart.values.forEachIndexed { i, v ->
-                val cx = slot * i + slot / 2
-                drawRoundRect(PulseColors.inset, Offset(cx - w / 2, 0f), Size(w, size.height), CornerRadius(4.dp.toPx()))
-                if (v != null && v > 0) {
-                    val h = (v / chart.max).toFloat().coerceIn(0.02f, 1f) * size.height
-                    drawRoundRect(chart.color, Offset(cx - w / 2, size.height - h), Size(w, h), CornerRadius(4.dp.toPx()))
-                }
-            }
-        }
-        Row(Modifier.fillMaxWidth().padding(top = 8.dp)) {
-            keys.forEachIndexed { i, k ->
-                Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(if (i == 6) "Hoy" else PulseData.shortWeekday(k), style = PulseText.chartAxis, color = if (i == 6) PulseColors.text else PulseColors.textSecondary)
-                    Text(PulseData.dayOfMonth(k), style = PulseText.chartAxis, color = PulseColors.textSecondary)
-                }
-            }
-        }
-    }
-}
-
-private fun weekValues(days: List<DailyMetric>, f: (DailyMetric) -> Double?): List<Double?> {
-    val byDay = days.associateBy { it.day }
-    return (-6..0).map { byDay[PulseData.dayKey(it)]?.let(f) }
-}
-
-private fun avg30(days: List<DailyMetric>, f: (DailyMetric) -> Double?): Double? =
-    days.takeLast(30).mapNotNull(f).takeIf { it.isNotEmpty() }?.average()
-
-@Composable
-fun PulseSleepScreen(vm: AppViewModel, onBack: () -> Unit) {
-    val today by vm.today.collectAsStateWithLifecycle()
-    val days by vm.recentDays.collectAsStateWithLifecycle()
-    val d = PulseData.metricFor(days, today, 0)
-    val perf = PulseData.sleepPct(d)
-    val nights = PulseData.nightsWithSleep(days)
-    fun h(v: Double?) = if (v == null) "-:--" else PulseData.hoursMinutes(v)
-    MetricDetail(
-        title = "Sueño", onBack = onBack,
-        info = "Rendimiento del sueño" to "Una sola nota que resume tu noche: cuánto has dormido frente a lo que necesitabas, lo regulares que son tus horarios y lo bien aprovechado que ha estado el tiempo en la cama.",
-        ringFraction = perf?.let { (it / 100).toFloat() }, ringColor = PulseColors.sleep, ringValue = PulseData.pct(perf),
-        ringLabel = listOf("RENDIMIENTO", "DEL SUEÑO"),
-        caption = if (perf == null) "Duerme esta noche con la pulsera y mañana verás qué tal has descansado." else "Has dormido ${h(d?.totalSleepMin)} h con una eficiencia del ${PulseData.pct(d?.efficiency)}.",
-        rows = listOf(
-            DetailRow("Horas dormidas", h(d?.totalSleepMin), "media ${h(avg30(days) { it.totalSleepMin })}"),
-            DetailRow("Eficiencia", PulseData.pct(d?.efficiency), "media ${PulseData.pct(avg30(days) { it.efficiency })}"),
-            DetailRow("Sueño profundo", h(d?.deepMin), "media ${h(avg30(days) { it.deepMin })}"),
-            DetailRow("Sueño REM", h(d?.remMin), "media ${h(avg30(days) { it.remMin })}"),
-            DetailRow("Despertares", d?.disturbances?.toString() ?: "--", "media ${avg30(days) { it.disturbances?.toDouble() }?.roundToInt() ?: "--"}"),
-        ),
-        charts = listOf(
-            WeekChart("Rendimiento del sueño", PulseColors.sleep, 100.0, weekValues(days) { PulseData.sleepPct(it) }) { "${it.roundToInt()}%" },
-            WeekChart("Horas dormidas", PulseColors.sleep, 600.0, weekValues(days) { it.totalSleepMin }) { PulseData.hoursMinutes(it) },
-            WeekChart("Sueño reparador (horas)", PulseColors.accent, 300.0, weekValues(days) { ((it.deepMin ?: 0.0) + (it.remMin ?: 0.0)).takeIf { v -> v > 0 } }) { PulseData.hoursMinutes(it) },
-            WeekChart("Eficiencia", PulseColors.sleep, 100.0, weekValues(days) { it.efficiency }) { "${it.roundToInt()}%" },
-        ),
-        extra = if (nights < PulseData.recoverySeedNights) {
-            { Column(Modifier.padding(start = PulseMetrics.gutter, end = PulseMetrics.gutter, top = 12.dp)) { UnlockPanel("Duerme con la pulsera ${PulseData.recoverySeedNights - nights} noches para desbloquear la regularidad.", nights, PulseData.recoverySeedNights) } }
-        } else null,
-    )
-}
-
-@Composable
-fun PulseRecoveryScreen(vm: AppViewModel, onBack: () -> Unit, onHabits: () -> Unit) {
-    val today by vm.today.collectAsStateWithLifecycle()
-    val days by vm.recentDays.collectAsStateWithLifecycle()
-    val d = PulseData.metricFor(days, today, 0)
-    val rec = d?.recovery
-    val nights = PulseData.nightsWithSleep(days)
-    MetricDetail(
-        title = "Recuperación", onBack = onBack,
-        info = "Recuperación" to "Te dice cada mañana cómo de preparado está tu cuerpo, a partir de tu VFC, tu pulso en reposo, tu respiración y cómo has dormido. Se calcula en el teléfono con tu propia línea base.",
-        ringFraction = rec?.let { (it / 100).toFloat() }, ringColor = PulseColors.recovery(rec), ringValue = PulseData.pct(rec),
-        ringLabel = listOf("RECUPERACIÓN"),
-        caption = if (rec == null) "Duerme con la pulsera ${(PulseData.recoverySeedNights - nights).coerceAtLeast(1)} noches para calibrar del todo tu recuperación." else "Recuperación ${PulseData.recoveryWord(rec).lowercase()} hoy.",
-        rows = listOf(
-            DetailRow("VFC", d?.avgHrv?.let { "${it.roundToInt()} ms" } ?: "--", "media ${avg30(days) { it.avgHrv }?.roundToInt()?.let { "$it ms" } ?: "--"}"),
-            DetailRow("Pulso en reposo", d?.restingHr?.let { "$it lpm" } ?: "--", "media ${avg30(days) { it.restingHr?.toDouble() }?.roundToInt()?.let { "$it lpm" } ?: "--"}"),
-            DetailRow("Frecuencia respiratoria", d?.respRateBpm?.let { String.format(Locale.US, "%.1f rpm", it) } ?: "--", "media ${avg30(days) { it.respRateBpm }?.let { String.format(Locale.US, "%.1f", it) } ?: "--"}"),
-            DetailRow("Rendimiento del sueño", PulseData.pct(PulseData.sleepPct(d)), "media ${PulseData.pct(avg30(days) { PulseData.sleepPct(it) })}"),
-        ),
-        charts = listOf(
-            WeekChart("Recuperación", PulseColors.recoveryGreen, 100.0, weekValues(days) { it.recovery }) { "${it.roundToInt()}%" },
-            WeekChart("VFC", PulseColors.accent, (avg30(days) { it.avgHrv } ?: 60.0) * 1.8, weekValues(days) { it.avgHrv }) { "${it.roundToInt()} ms" },
-            WeekChart("Pulso en reposo", PulseColors.recoveryRed, 100.0, weekValues(days) { it.restingHr?.toDouble() }) { "${it.roundToInt()} lpm" },
-        ),
-        extra = {
-            Column(Modifier.padding(start = PulseMetrics.gutter, end = PulseMetrics.gutter, top = 16.dp)) {
-                AccentCard(onClick = onHabits) {
-                    Text("Descubre qué te ayuda a recuperarte", style = PulseText.cardTitle, color = PulseColors.text)
-                    Spacer(Modifier.height(6.dp))
-                    Text("Apunta tus hábitos en el diario y verás cuáles suben o bajan tu recuperación.", style = PulseText.body, color = PulseColors.textSecondary)
-                    Spacer(Modifier.height(6.dp))
-                    CtaLink("Ver hábitos que influyen", onClick = onHabits)
-                }
-            }
-        },
-    )
-}
-
-@Composable
-fun PulseEffortScreen(vm: AppViewModel, onBack: () -> Unit, onStartActivity: () -> Unit) {
-    val today by vm.today.collectAsStateWithLifecycle()
-    val days by vm.recentDays.collectAsStateWithLifecycle()
-    val d = PulseData.metricFor(days, today, 0)
-    val eff = PulseData.effort21(d)
-    MetricDetail(
-        title = "Esfuerzo", onBack = onBack,
-        info = "Esfuerzo del día" to "Mide la carga que ha soportado tu corazón a lo largo del día, entrenando y en tu vida normal. Cuanto más tiempo pasas con el pulso alto, más sube. Escala de 0 a 21.",
-        ringFraction = eff?.let { (it / 21).toFloat() }, ringColor = PulseColors.strain, ringValue = PulseData.oneDecimal(eff ?: 0.0),
-        ringLabel = listOf("ESFUERZO"),
-        caption = "Mueve el cuerpo: cada minuto con el pulso alto suma a tu esfuerzo del día.",
-        rows = listOf(
-            DetailRow("Esfuerzo", PulseData.oneDecimal(eff), "media ${PulseData.oneDecimal(avg30(days) { PulseData.effort21(it) })}"),
-            DetailRow("Actividades", d?.exerciseCount?.toString() ?: "0", "media ${avg30(days) { it.exerciseCount?.toDouble() }?.let { String.format(Locale.US, "%.1f", it) } ?: "--"}"),
-            DetailRow("Pasos", PulseData.int(d?.steps), "media ${PulseData.int(avg30(days) { it.steps?.toDouble() }?.roundToInt())}"),
-            DetailRow("Calorías", d?.activeKcalEst?.let { PulseData.int(it.roundToInt()) } ?: "--", "media ${PulseData.int(avg30(days) { it.activeKcalEst }?.roundToInt())}"),
-        ),
-        charts = listOf(
-            WeekChart("Esfuerzo", PulseColors.strain, 21.0, weekValues(days) { PulseData.effort21(it) }) { String.format(Locale.US, "%.1f", it) },
-            WeekChart("Pasos", PulseColors.strain, 15000.0, weekValues(days) { it.steps?.toDouble() }) { PulseData.int(it.roundToInt()) },
-            WeekChart("Calorías", PulseColors.stressHigh, 3500.0, weekValues(days) { it.activeKcalEst }) { PulseData.int(it.roundToInt()) },
-        ),
-        extra = {
-            Column(Modifier.padding(start = PulseMetrics.gutter, end = PulseMetrics.gutter, top = 16.dp)) {
-                AccentCard(onClick = onStartActivity) {
-                    Text("¿Vas a entrenar?", style = PulseText.cardTitle, color = PulseColors.text)
-                    Spacer(Modifier.height(6.dp))
-                    Text("Inicia una actividad para ver tu pulso en directo y registrar el esfuerzo.", style = PulseText.body, color = PulseColors.textSecondary)
-                    Spacer(Modifier.height(6.dp))
-                    CtaLink("Iniciar actividad", onClick = onStartActivity)
-                }
-            }
-        },
-    )
-}
-
-@Composable
 fun PulseAgeScreen(vm: AppViewModel, onBack: () -> Unit, onCoach: () -> Unit) {
     val context = LocalContext.current
     val days by vm.recentDays.collectAsStateWithLifecycle()
     var vo2 by remember { mutableStateOf<Double?>(null) }
     LaunchedEffect(Unit) { vo2 = runCatching { vm.repo.latestMetricComputedUnion(vm.activeStrapId, "vo2max_est")?.value }.getOrNull() }
     val have = days.size
-    val result = remember(days, vo2) { PulseData.pulseAge(context, days, vo2) }
-    val previous = remember(days, vo2) { if (days.size > 14) PulseData.pulseAge(context, days.dropLast(7), vo2) else null }
+    val workoutsAll by vm.workouts.collectAsStateWithLifecycle()
+    LaunchedEffect("workouts") { runCatching { vm.loadWorkouts() } }
+    val result = remember(days, vo2, workoutsAll) { PulseData.pulseAge(context, days, vo2, workoutsAll) }
+    val previous = remember(days, vo2, workoutsAll) { if (days.size > 14) PulseData.pulseAge(context, days.dropLast(7), vo2, workoutsAll) else null }
     DetailScaffold(
         "Edad fisiológica", onBack,
         "Edad fisiológica" to "Partimos de tu edad real y sumamos o restamos años según nueve hábitos: horas y regularidad del sueño, pasos, minutos en zonas de pulso, fuerza, VO₂ máx., pulso en reposo y masa magra. Usa guías públicas (OMS 2020) y estudios publicados; no es un dispositivo médico.",

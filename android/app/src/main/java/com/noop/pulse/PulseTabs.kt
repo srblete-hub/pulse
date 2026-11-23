@@ -70,7 +70,9 @@ fun PulseHealthScreen(vm: AppViewModel, actions: HealthActions) {
     val days by vm.recentDays.collectAsStateWithLifecycle()
     var vo2 by remember { mutableStateOf<Double?>(null) }
     LaunchedEffect(Unit) { vo2 = runCatching { vm.repo.latestMetricComputedUnion(vm.activeStrapId, "vo2max_est")?.value }.getOrNull() }
-    val age = remember(days, vo2) { if (days.size >= PulseData.pulseAgeDays) PulseData.pulseAge(context, days, vo2) else null }
+    val workoutsAll by vm.workouts.collectAsStateWithLifecycle()
+    LaunchedEffect("workouts") { runCatching { vm.loadWorkouts() } }
+    val age = remember(days, vo2, workoutsAll) { if (days.size >= PulseData.pulseAgeDays) PulseData.pulseAge(context, days, vo2, workoutsAll) else null }
     val nights = PulseData.nightsWithSleep(days)
 
     Column(Modifier.fillMaxSize().background(saludBrush).verticalScroll(rememberScrollState())) {

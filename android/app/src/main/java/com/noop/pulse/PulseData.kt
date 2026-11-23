@@ -87,7 +87,12 @@ object PulseData {
      * resting HR, plus the VO₂max estimate noop computes. Factors without data stay null and are
      * reported as missing on screen rather than guessed.
      */
-    fun pulseAge(context: Context, days: List<DailyMetric>, vo2max: Double?): PulseAgeEngine.Result? {
+    fun pulseAge(
+        context: Context,
+        days: List<DailyMetric>,
+        vo2max: Double?,
+        workouts: List<com.noop.data.WorkoutRow> = emptyList(),
+    ): PulseAgeEngine.Result? {
         val profile = ProfileStore.from(context)
         val recent = days.takeLast(30)
         fun avg(xs: List<Double>) = xs.takeIf { it.isNotEmpty() }?.average()
@@ -101,12 +106,16 @@ object PulseData {
         } else null
         val steps = avg(recent.mapNotNull { it.steps?.takeIf { s -> s > 0 }?.toDouble() })
         val rhr = avg(recent.mapNotNull { it.restingHr?.toDouble() })
+        val (z13, z45, strength) = if (workouts.isEmpty()) Triple(null, null, null) else PulseActivity.weekly(workouts)
         return PulseAgeEngine.compute(
             profile.age.toDouble(),
             PulseAgeEngine.Inputs(
                 sleepHours = sleepH,
                 sleepRegularityPct = regularity,
                 stepsPerDay = steps,
+                zones13MinPerWeek = z13,
+                zones45MinPerWeek = z45,
+                strengthMinPerWeek = strength,
                 vo2max = vo2max,
                 restingHr = rhr,
                 sex = profile.sex,
