@@ -25,6 +25,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -108,12 +109,18 @@ fun PulseApp(vm: AppViewModel) {
     val route = entry?.destination?.route ?: PulseRoute.home
     val back: () -> Unit = { nav.popBackStack() }
     fun go(r: String): () -> Unit = { nav.navigate(r) { launchSingleTop = true } }
+    val ctx = androidx.compose.ui.platform.LocalContext.current
+    var liveHr by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(PulseLivePref.enabled(ctx)) }
+    androidx.compose.runtime.DisposableEffect(liveHr) {
+        if (liveHr) vm.requestRealtimeHr()
+        onDispose { if (liveHr) vm.releaseRealtimeHr() }
+    }
 
     Box(Modifier.fillMaxSize().background(PulseColors.base)) {
         NavHost(nav, startDestination = PulseRoute.home, modifier = Modifier.fillMaxSize()) {
             composable(PulseRoute.home) {
                 PulseHomeScreen(
-                    vm,
+                    vm, showLiveHr = liveHr,
                     HomeActions(
                         openProfile = go(PulseRoute.profile),
                         openStrap = go(PulseRoute.strap),
@@ -223,7 +230,12 @@ fun PulseApp(vm: AppViewModel) {
             }
 
             // Hosted noop engine screens.
-            legacy(PulseRoute.strap, "Pulsera", back) { DevicesScreen(vm, onUseFileImport = { nav.navigate(PulseRoute.dataImport) }) }
+            composable(PulseRoute.strap) {
+                PulseStrapScreen(
+                    vm, onClose = back, onCharging = go(PulseRoute.charging), onImport = go(PulseRoute.dataImport),
+                    liveEnabled = liveHr, onLiveChange = { liveHr = it; PulseLivePref.set(ctx, it) },
+                )
+            }
             legacy(PulseRoute.dataImport, "Importar datos", back) { DataSourcesScreen(vm) }
             legacy(PulseRoute.backup, "Copia y restauración", back) { BackupSyncScreen() }
             legacy(PulseRoute.alarms, "Horario de sueño", back) { SmartAlarmScreen(vm) }

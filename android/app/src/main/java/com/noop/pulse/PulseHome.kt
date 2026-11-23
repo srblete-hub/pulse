@@ -81,7 +81,7 @@ class HomeActions(
 )
 
 @Composable
-fun PulseHomeScreen(vm: AppViewModel, actions: HomeActions) {
+fun PulseHomeScreen(vm: AppViewModel, showLiveHr: Boolean = false, actions: HomeActions) {
     val today by vm.today.collectAsStateWithLifecycle()
     val days by vm.recentDays.collectAsStateWithLifecycle()
     val live by vm.live.collectAsStateWithLifecycle()
@@ -104,6 +104,7 @@ fun PulseHomeScreen(vm: AppViewModel, actions: HomeActions) {
             canGoForward = offset < 0,
             battery = live.batteryPct,
             connected = live.connected,
+            heartRate = if (showLiveHr) live.heartRate else null,
             onPrev = { offset -= 1 },
             onNext = { if (offset < 0) offset += 1 },
             onProfile = actions.openProfile,
@@ -209,6 +210,7 @@ private fun HomeHeader(
     canGoForward: Boolean,
     battery: Double?,
     connected: Boolean,
+    heartRate: Int?,
     onPrev: () -> Unit,
     onNext: () -> Unit,
     onProfile: () -> Unit,
@@ -248,6 +250,12 @@ private fun HomeHeader(
             }
         }
         Row(Modifier.pulseClick(onBattery), verticalAlignment = Alignment.CenterVertically) {
+            if (heartRate != null) {
+                Icon(Icons.Outlined.MonitorHeart, null, tint = PulseColors.recoveryRed, modifier = Modifier.size(13.dp))
+                Spacer(Modifier.width(4.dp))
+                Text("$heartRate", style = PulseText.small, color = PulseColors.text)
+                Spacer(Modifier.width(10.dp))
+            }
             Text(battery?.let { "${it.roundToInt()}%" } ?: "--%", style = PulseText.small, color = PulseColors.text)
             Spacer(Modifier.width(7.dp))
             Box(Modifier.size(19.dp, 25.dp)) {
