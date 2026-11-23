@@ -75,7 +75,11 @@ fun PulseHealthScreen(vm: AppViewModel, actions: HealthActions) {
     LaunchedEffect(Unit) { vo2 = runCatching { vm.repo.latestMetricComputedUnion(vm.activeStrapId, "vo2max_est")?.value }.getOrNull() }
     val workoutsAll by vm.workouts.collectAsStateWithLifecycle()
     LaunchedEffect("workouts") { runCatching { vm.loadWorkouts() } }
-    val age = remember(days, vo2, workoutsAll) { if (days.size >= PulseData.pulseAgeDays) PulseData.pulseAge(context, days, vo2, workoutsAll) else null }
+    var ageState by remember { mutableStateOf<com.noop.analytics.PulseAgeEngine.Result?>(null) }
+    LaunchedEffect(days.size, vo2, workoutsAll.size) {
+        ageState = if (days.size >= PulseData.pulseAgeDays) PulseAgeData.result(context, vm, days, workoutsAll, vo2).second else null
+    }
+    val age = ageState
     val nights = PulseData.nightsWithSleep(days)
 
     Column(Modifier.fillMaxSize().background(saludBrush).verticalScroll(rememberScrollState())) {

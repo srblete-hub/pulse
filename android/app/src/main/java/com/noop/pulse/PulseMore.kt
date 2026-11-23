@@ -424,20 +424,26 @@ fun PulseAgeScreenV2(vm: AppViewModel, onBack: () -> Unit, onCoach: () -> Unit) 
     }
     val profileAge = remember { ProfileStore.from(context).age }
     val ready = days.size >= PulseData.pulseAgeDays
-    val result = remember(days, vo2, workouts) { PulseData.pulseAge(context, days, vo2, workouts) }
-    val prev = remember(days, vo2, workouts) { if (days.size > 14) PulseData.pulseAge(context, days.dropLast(7), vo2, workouts) else null }
-    val prev2 = remember(days, vo2, workouts) { if (days.size > 21) PulseData.pulseAge(context, days.dropLast(14), vo2, workouts) else null }
-    val pace = if (prev != null && result != null) PulseAgeEngine.paceOfAgeing(prev, result, 7) else null
-    val pacePrev = if (prev2 != null && prev != null) PulseAgeEngine.paceOfAgeing(prev2, prev, 7) else null
-    // Monthly history: physiological age computed on the data up to the end of each month.
-    val history = remember(days, vo2, workouts) {
-        (5 downTo 0).mapNotNull { k ->
-            val end = LocalDate.now().minusMonths(k.toLong()).withDayOfMonth(1).plusMonths(1).minusDays(1).toString()
-            val upto = days.filter { it.day <= end }
-            val label = LocalDate.now().minusMonths(k.toLong()).month.getDisplayName(TextStyle.SHORT, es).trimEnd('.').replaceFirstChar { it.uppercase() }
-            if (upto.size < PulseData.pulseAgeDays) label to null else label to PulseData.pulseAge(context, upto, vo2, workouts)?.pulseAge
+    var result by remember { mutableStateOf<PulseAgeEngine.Result?>(null) }
+    var prev by remember { mutableStateOf<PulseAgeEngine.Result?>(null) }
+    var prev2 by remember { mutableStateOf<PulseAgeEngine.Result?>(null) }
+    val monthLabels = remember { (5 downTo 0).map { k -> LocalDate.now().minusMonths(k.toLong()).month.getDisplayName(TextStyle.SHORT, es).trimEnd('.').replaceFirstChar { it.uppercase() } } }
+    var history by remember { mutableStateOf(monthLabels.map { it to (null as Double?) }) }
+    // Every figure below is measured from the strap over a 4-week window (see PulseAgeData), off the UI thread.
+    LaunchedEffect(days.size, vo2, workouts.size) {
+        if (days.size < PulseData.pulseAgeDays) return@LaunchedEffect
+        result = PulseAgeData.result(context, vm, days, workouts, vo2).second
+        prev = if (days.size >= PulseData.pulseAgeDays + 7) PulseAgeData.result(context, vm, days, workouts, vo2, 7).second else null
+        prev2 = if (days.size >= PulseData.pulseAgeDays + 14) PulseAgeData.result(context, vm, days, workouts, vo2, 14).second else null
+        history = (5 downTo 0).mapIndexed { i, k ->
+            val end = if (k == 0) LocalDate.now() else LocalDate.now().minusMonths(k.toLong()).withDayOfMonth(1).plusMonths(1).minusDays(1)
+            val offset = java.time.temporal.ChronoUnit.DAYS.between(end, LocalDate.now()).toInt()
+            val enough = days.count { it.day <= end.toString() } >= PulseData.pulseAgeDays
+            monthLabels[i] to (if (enough) PulseAgeData.result(context, vm, days, workouts, vo2, offset).second?.pulseAge else null)
         }
     }
+    val pace = if (prev != null && result != null) PulseAgeEngine.paceOfAgeing(prev!!, result!!, 7) else null
+    val pacePrev = if (prev2 != null && prev != null) PulseAgeEngine.paceOfAgeing(prev2!!, prev!!, 7) else null
     val weekLabel = run {
         val a = LocalDate.now().minusDays(6); val b = LocalDate.now()
         "${a.dayOfMonth} – ${b.dayOfMonth} ${b.month.getDisplayName(TextStyle.SHORT, es).trimEnd('.').uppercase(es)}"
@@ -474,7 +480,7 @@ fun PulseAgeScreenV2(vm: AppViewModel, onBack: () -> Unit, onCoach: () -> Unit) 
             Text(weekLabel, style = PulseText.overline, color = PulseColors.textSecondary, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth().padding(top = 12.dp))
             Column(Modifier.fillMaxWidth().padding(top = 18.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                 Box(Modifier.size(170.dp).clip(RoundedCornerShape(85.dp)).background(Brush.radialGradient(listOf(Color(0xFF4A4258), Color(0xFF2B2635)))), contentAlignment = Alignment.Center) {
-                    if (ready && result != null) {
+                    if (ready && result != null) { val result = result!!
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Text(String.format(Locale.US, "%.1f", result.pulseAge), style = PulseText.bigNumber.copy(fontSize = 48.sp), color = PulseColors.text)
                             Text("EDAD FISIOLÓGICA", style = PulseText.overline.copy(fontSize = 9.sp), color = PulseColors.textSecondary)
@@ -483,7 +489,7 @@ fun PulseAgeScreenV2(vm: AppViewModel, onBack: () -> Unit, onCoach: () -> Unit) 
                 }
                 Spacer(Modifier.height(12.dp))
                 Text(
-                    if (ready && result != null) String.format(es, "%.1f años %s que tu edad", abs(result.yearsYounger), if (result.yearsYounger >= 0) "menos" else "más")
+                    if (ready && result != null) String.format(es, "%.1f años %s que tu edad", abs(result!!.yearsYounger), if (result!!.yearsYounger >= 0) "menos" else "más")
                     else "Faltan ${PulseData.pulseAgeDays - days.size} días para calcularla. Mientras, abajo ves cómo van tus hábitos.",
                     style = PulseText.body, color = if (ready && (result?.yearsYounger ?: 0.0) >= 0) PulseColors.recoveryGreen else PulseColors.textSecondary, textAlign = TextAlign.Center,
                     modifier = Modifier.padding(horizontal = 30.dp),

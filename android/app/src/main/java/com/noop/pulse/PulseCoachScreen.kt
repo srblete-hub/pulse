@@ -103,6 +103,7 @@ fun buildCoachSnapshot(
     battery: Double?,
     connected: Boolean,
     streak: Int,
+    pulseAge: Double? = null,
 ): CoachSnapshot {
     val d = today ?: days.lastOrNull { it.day == PulseData.dayKey(0) }
     val yesterday = days.lastOrNull { it.day == PulseData.dayKey(-1) }
@@ -111,7 +112,6 @@ fun buildCoachSnapshot(
     val byDay = days.associateBy { it.day }
     val week = (-6..0).map { byDay[PulseData.dayKey(it)] }
     val profile = ProfileStore.from(context)
-    val pa = if (days.size >= PulseData.pulseAgeDays) PulseData.pulseAge(context, days, vo2)?.pulseAge else null
     return CoachSnapshot(
         recovery = d?.recovery,
         sleepPct = PulseData.sleepPct(d),
@@ -138,7 +138,7 @@ fun buildCoachSnapshot(
         streak = streak,
         age = profile.age,
         sex = profile.sex,
-        pulseAge = pa,
+        pulseAge = pulseAge,
         weekRecovery = week.map { it?.recovery },
         weekSleepMin = week.map { it?.totalSleepMin?.takeIf { m -> m > 0 } },
         weekEffort = week.map { PulseData.effort21(it) },
@@ -162,7 +162,12 @@ fun PulseCoachScreen(vm: AppViewModel, onBack: () -> Unit, onAction: (CoachActio
         vo2 = runCatching { vm.repo.latestMetricComputedUnion(vm.activeStrapId, "vo2max_est")?.value }.getOrNull()
     }
     val engine = remember { CoachEngine(PrefsCoachMemory(context)) }
-    fun snapshot() = buildCoachSnapshot(context, today, days, stress, vo2, live.batteryPct, live.connected, streaks.current)
+    var pulseAge by remember { mutableStateOf<Double?>(null) }
+    val workouts by vm.workouts.collectAsStateWithLifecycle()
+    LaunchedEffect(days.size, vo2) {
+        if (days.size >= PulseData.pulseAgeDays) pulseAge = runCatching { PulseAgeData.result(context, vm, days, workouts, vo2).second?.pulseAge }.getOrNull()
+    }
+    fun snapshot() = buildCoachSnapshot(context, today, days, stress, vo2, live.batteryPct, live.connected, streaks.current, pulseAge)
 
     val lines = remember { mutableStateListOf<ChatLine>() }
     var started by remember { mutableStateOf(false) }

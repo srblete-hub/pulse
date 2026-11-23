@@ -81,48 +81,6 @@ object PulseData {
         else -> "ALTO"
     }
 
-    /**
-     * Builds the physiological-age inputs from the last 30 days that noop has: sleep duration, sleep
-     * regularity (spread of nightly duration as a proxy until bedtimes are exposed), daily steps and
-     * resting HR, plus the VO₂max estimate noop computes. Factors without data stay null and are
-     * reported as missing on screen rather than guessed.
-     */
-    fun pulseAge(
-        context: Context,
-        days: List<DailyMetric>,
-        vo2max: Double?,
-        workouts: List<com.noop.data.WorkoutRow> = emptyList(),
-    ): PulseAgeEngine.Result? {
-        val profile = ProfileStore.from(context)
-        val recent = days.takeLast(30)
-        fun avg(xs: List<Double>) = xs.takeIf { it.isNotEmpty() }?.average()
-        val sleepH = avg(recent.mapNotNull { it.totalSleepMin?.takeIf { m -> m > 0 }?.div(60.0) })
-        val sleepMins = recent.mapNotNull { it.totalSleepMin?.takeIf { m -> m > 0 } }
-        val regularity = if (sleepMins.size >= 7) {
-            val mean = sleepMins.average()
-            val sd = kotlin.math.sqrt(sleepMins.sumOf { (it - mean) * (it - mean) } / sleepMins.size)
-            // 0 min spread → 100 %, 90 min spread → 40 %.
-            (100.0 - sd / 90.0 * 60.0).coerceIn(0.0, 100.0)
-        } else null
-        val steps = avg(recent.mapNotNull { it.steps?.takeIf { s -> s > 0 }?.toDouble() })
-        val rhr = avg(recent.mapNotNull { it.restingHr?.toDouble() })
-        val (z13, z45, strength) = if (workouts.isEmpty()) Triple(null, null, null) else PulseActivity.weekly(workouts)
-        return PulseAgeEngine.compute(
-            profile.age.toDouble(),
-            PulseAgeEngine.Inputs(
-                sleepHours = sleepH,
-                sleepRegularityPct = regularity,
-                stepsPerDay = steps,
-                zones13MinPerWeek = z13,
-                zones45MinPerWeek = z45,
-                strengthMinPerWeek = strength,
-                vo2max = vo2max,
-                restingHr = rhr,
-                sex = profile.sex,
-            ),
-        )
-    }
-
     fun factorLabel(key: String): String = when (key) {
         "sleep_hours" -> "Horas de sueño"
         "sleep_regularity" -> "Regularidad del sueño"
