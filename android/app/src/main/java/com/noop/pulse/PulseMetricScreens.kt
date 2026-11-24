@@ -128,6 +128,12 @@ fun PulseEffortScreen(vm: AppViewModel, onBack: () -> Unit, onCoach: () -> Unit)
         notice = null,
         middle = {
             EffortDiagCard(diags[PulseData.dayKey(diagOffset)], if (diagOffset == 0) "HOY ›" else "‹ AYER", onToggleDay = { diagOffset = if (diagOffset == 0) -1 else 0 })
+            val dayKey = PulseData.dayKey(diagOffset)
+            ActivitiesCard(
+                workouts.filter { PulseActivity.dayOf(it) == dayKey }.sortedBy { it.startTs },
+                isAuto = { PulseAutoActivity.isAuto(context, it) },
+                onDelete = { PulseAutoActivity.delete(context, vm, it) },
+            )
         },
         rows = listOf(
             MetricRow(Icons.Outlined.FavoriteBorder, "ZONAS DE PULSO 1–3", PulseActivity.mmss(z?.first ?: 0.0), "media ${PulseActivity.mmss(zAvg.map { it.first }.takeIf { it.isNotEmpty() }?.average() ?: 0.0)}"),

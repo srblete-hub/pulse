@@ -14,6 +14,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -151,5 +153,51 @@ private fun DiagRow(label: String, value: String) {
     Row(Modifier.fillMaxWidth().padding(vertical = 4.dp), horizontalArrangement = Arrangement.SpaceBetween) {
         Text(label, style = PulseText.body, color = PulseColors.textSecondary, modifier = Modifier.weight(1f))
         Text(value, style = PulseText.body.copy(fontWeight = FontWeight.SemiBold), color = PulseColors.text)
+    }
+}
+
+/** The day's activities — detected automatically or logged — with duration, heart rate and Effort. */
+@Composable
+fun ActivitiesCard(rows: List<com.noop.data.WorkoutRow>, isAuto: (com.noop.data.WorkoutRow) -> Boolean, onDelete: (com.noop.data.WorkoutRow) -> Unit) {
+    val fmt = java.time.format.DateTimeFormatter.ofPattern("HH:mm")
+    fun clock(ts: Long) = java.time.Instant.ofEpochSecond(ts).atZone(ZoneId.systemDefault()).toLocalTime().format(fmt)
+    var confirm by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<com.noop.data.WorkoutRow?>(null) }
+    Column(
+        Modifier.padding(start = 15.dp, end = 15.dp, top = 12.dp).fillMaxWidth().clip(RoundedCornerShape(14.dp))
+            .background(PulseColors.raised).padding(16.dp),
+    ) {
+        Text("ACTIVIDADES", style = PulseText.overlineLg, color = PulseColors.text)
+        if (rows.isEmpty()) {
+            Text(
+                "No se ha detectado ninguna actividad. Pulse las registra solo cuando tu pulso se mantiene alto (unos 30 lpm por encima del reposo) 12 minutos o más.",
+                style = PulseText.body, color = PulseColors.textSecondary, modifier = Modifier.padding(top = 8.dp),
+            )
+        }
+        rows.forEach { w ->
+            val min = ((w.endTs - w.startTs) / 60).toInt()
+            Row(Modifier.fillMaxWidth().padding(top = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text(
+                        "${if (w.sport == PulseAutoActivity.SPORT || w.sport == "Workout") "Actividad" else w.sport} · ${clock(w.startTs)}–${clock(w.endTs)}",
+                        style = PulseText.cardTitle, color = PulseColors.text,
+                    )
+                    Text(
+                        listOfNotNull(
+                            "${min / 60}:${"%02d".format(min % 60)} h",
+                            w.avgHr?.let { "media $it lpm" },
+                            w.maxHr?.let { "máx. $it" },
+                            if (isAuto(w)) "detectada" else null,
+                        ).joinToString(" · "),
+                        style = PulseText.body.copy(fontSize = 12.sp), color = PulseColors.textSecondary,
+                    )
+                }
+                Text(w.strain?.let { String.format(Locale.US, "%.1f", it * 21.0 / 100.0) } ?: "--", style = PulseText.bigNumber.copy(fontSize = 18.sp), color = PulseColors.strain)
+                Spacer(Modifier.width(12.dp))
+                Text(
+                    if (confirm == w) "¿BORRAR?" else "✕", style = PulseText.overline, color = if (confirm == w) PulseColors.recoveryRed else PulseColors.textTertiary,
+                    modifier = Modifier.pulseClick { if (confirm == w) { onDelete(w); confirm = null } else confirm = w },
+                )
+            }
+        }
     }
 }

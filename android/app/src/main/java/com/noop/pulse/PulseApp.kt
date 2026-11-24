@@ -123,6 +123,9 @@ fun PulseApp(vm: AppViewModel) {
     fun go(r: String): () -> Unit = { nav.navigate(r) { launchSingleTop = true } }
     val ctx = androidx.compose.ui.platform.LocalContext.current
     var communityIntro by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(!PulseTips.seen(ctx, "community_intro")) }
+    // Automatic activity logging after every strap sync (and once at start).
+    val syncState by vm.live.collectAsStateWithLifecycle()
+    androidx.compose.runtime.LaunchedEffect(syncState.lastSyncAt) { runCatching { PulseAutoActivity.run(ctx, vm); vm.loadWorkouts() } }
     var liveHr by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(PulseLivePref.enabled(ctx)) }
     androidx.compose.runtime.DisposableEffect(liveHr) {
         if (liveHr) vm.requestRealtimeHr()
