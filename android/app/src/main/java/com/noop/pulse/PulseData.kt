@@ -64,7 +64,8 @@ object PulseData {
     }
 
     /** Sleep performance 0–100 from noop's rest composite. */
-    fun sleepPct(d: DailyMetric?): Double? = d?.let { RestScorer.restFromDaily(it) }
+    /** Sleep score 0–100 as noop shows it (resolved `sleep_performance` series). */
+    fun sleepPct(d: DailyMetric?): Double? = d?.let { com.noop.pulse.engine.PulseSleepScore.values.value[it.day] }
 
     /** Stored Effort is 0–100; Pulse shows it on the 0–21 scale. */
     fun effort21(d: DailyMetric?): Double? = d?.strain?.let { it * 21.0 / 100.0 }

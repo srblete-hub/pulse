@@ -133,6 +133,9 @@ fun PulseApp(vm: AppViewModel) {
         val p = com.noop.ui.NoopPrefs.of(ctx)
         if (!p.getBoolean("pulse.effortNoopRestored", false)) { vm.setBanisterEffort(false); p.edit().putBoolean("pulse.effortNoopRestored", true).apply() }
     }
+    // noop's Sleep score series, reloaded whenever the daily rows change.
+    val pulseDaysState by com.noop.pulse.engine.pulseDays(vm)
+    androidx.compose.runtime.LaunchedEffect(pulseDaysState) { com.noop.pulse.engine.PulseSleepScore.refresh(vm) }
     androidx.compose.runtime.LaunchedEffect(syncState.lastSyncAt) { runCatching { PulseAutoActivity.run(ctx, vm); vm.loadWorkouts() } }
     var liveHr by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(PulseLivePref.enabled(ctx)) }
     androidx.compose.runtime.DisposableEffect(liveHr) {

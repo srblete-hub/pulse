@@ -36,6 +36,8 @@ data class PulseDayView(
     val recovery: Double?,
     /** Day the recovery comes from when it is carried from a previous night, else null. */
     val recoveryFromDay: String?,
+    /** Sleep score 0–100 (noop's Rest), with noop's fresh carry-over on today. */
+    val sleep: Double? = null,
 ) {
     val recoveryCaption: String? get() = recoveryFromDay?.let { "De la última noche medida · ${shortDate(it)}" }
 
@@ -55,6 +57,7 @@ fun pulseDayView(vm: AppViewModel, offset: Int = 0): PulseDayView {
     val today by pulseToday(vm)
     val activeDayCycle by vm.activeDayCycle.collectAsStateWithLifecycle()
     val metric = PulseData.metricFor(days, today, offset)
+    val sleepScores by PulseSleepScore.values.collectAsStateWithLifecycle()
 
     var live by remember { mutableStateOf<Double?>(null) }
     LaunchedEffect(days, today, offset, activeDayCycle) {
@@ -93,6 +96,7 @@ fun pulseDayView(vm: AppViewModel, offset: Int = 0): PulseDayView {
     return PulseDayView(
         metric = metric,
         effort21 = effort?.let { it * 21.0 / 100.0 },
+        sleep = PulseSleepScore.forDay(metric?.day ?: PulseData.dayKey(offset), offset == 0, sleepScores),
         recovery = metric?.recovery ?: carried?.recovery,
         recoveryFromDay = if (metric?.recovery == null) carried?.day else null,
     )

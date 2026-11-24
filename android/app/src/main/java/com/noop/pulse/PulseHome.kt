@@ -125,8 +125,8 @@ fun PulseHomeScreen(vm: AppViewModel, showLiveHr: Boolean = false, actions: Home
         }
 
         // Rings: Sueño · Recuperación · Esfuerzo
-        val sleep = PulseData.sleepPct(metric)
         val view = com.noop.pulse.engine.pulseDayView(vm, offset)
+        val sleep = view.sleep
         val rec = view.recovery
         val eff = view.effort21
         Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 24.dp)) {

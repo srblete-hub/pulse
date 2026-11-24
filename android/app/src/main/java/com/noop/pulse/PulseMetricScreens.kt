@@ -210,7 +210,7 @@ fun PulseSleepScreen(vm: AppViewModel, onBack: () -> Unit, onCoach: () -> Unit) 
     val days by com.noop.pulse.engine.pulseDays(vm)
     val context = androidx.compose.ui.platform.LocalContext.current
     val d = PulseData.metricFor(days, today, 0)
-    val perf = PulseData.sleepPct(d)
+    val perf = com.noop.pulse.engine.pulseDayView(vm, 0).sleep
     val nights = PulseData.nightsWithSleep(days)
     val needMin = (PulseNeed.hours(context)) * 60
     fun h(v: Double?) = if (v == null || v <= 0) "-:--" else PulseData.hoursMinutes(v)

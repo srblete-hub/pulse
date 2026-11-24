@@ -113,7 +113,7 @@ fun buildCoachSnapshot(
     val profile = ProfileStore.from(context)
     return CoachSnapshot(
         recovery = view?.recovery ?: d?.recovery,
-        sleepPct = PulseData.sleepPct(d),
+        sleepPct = view?.sleep ?: PulseData.sleepPct(d),
         sleepMin = d?.totalSleepMin?.takeIf { it > 0 },
         deepMin = d?.deepMin,
         remMin = d?.remMin,
