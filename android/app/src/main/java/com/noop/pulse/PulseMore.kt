@@ -209,10 +209,35 @@ fun PulseStartActivityScreen(vm: AppViewModel, onClose: () -> Unit) {
             Column(Modifier.fillMaxSize().padding(top = 90.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(act.label.uppercase(es), style = PulseText.tabTitle, color = PulseColors.text)
                 Text("%d:%02d:%02d".format(secs / 3600, secs / 60 % 60, secs % 60), style = PulseText.bigNumber.copy(fontSize = 52.sp), color = PulseColors.text, modifier = Modifier.padding(top = 24.dp))
+                val profileStore = remember { com.noop.ui.ProfileStore.from(context) }
+                val rest = days.lastOrNull { it.restingHr != null }?.restingHr?.toDouble()
+                var load by remember { mutableStateOf<com.noop.pulse.engine.PulseLiveLoad.Live?>(null) }
+                LaunchedEffect(w.samples.size / 5) {
+                    load = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
+                        runCatching {
+                            com.noop.pulse.engine.PulseLiveLoad.compute(
+                                w.samples, profileStore.toUserProfile(), profileStore.hrMax.toDouble(), rest,
+                                com.noop.ui.NoopPrefs.effortMethod(context),
+                            )
+                        }.getOrNull()
+                    }
+                }
                 Row(Modifier.padding(top = 30.dp), horizontalArrangement = Arrangement.spacedBy(30.dp)) {
                     LiveStat("${live.heartRate ?: "--"}", "LPM")
                     LiveStat(PulseData.oneDecimal(w.liveStrain * 21 / 100), "ESFUERZO")
                     if (w.distanceM > 0) LiveStat(String.format(Locale.US, "%.2f", w.distanceM / 1000), "KM")
+                }
+                Row(Modifier.padding(top = 22.dp), horizontalArrangement = Arrangement.spacedBy(30.dp)) {
+                    LiveStat(load?.kcal?.let { "${it.roundToInt()}" } ?: "--", "KCAL")
+                    LiveStat(load?.kcalPerMin?.let { String.format(Locale.US, "%.1f", it) } ?: "--", "KCAL/MIN")
+                    LiveStat(load?.met?.let { String.format(Locale.US, "%.1f", it) } ?: "--", "MET")
+                }
+                load?.projectedEffort21?.let { p ->
+                    Text(
+                        "Si sigues ${com.noop.pulse.engine.PulseLiveLoad.PROJECT_MIN} min más a este ritmo: esfuerzo ${PulseData.oneDecimal(p)}",
+                        style = PulseText.body, color = PulseColors.textSecondary, textAlign = TextAlign.Center,
+                        modifier = Modifier.padding(start = 24.dp, end = 24.dp, top = 22.dp),
+                    )
                 }
                 Spacer(Modifier.weight(1f))
                 Box(
