@@ -2,6 +2,7 @@ package com.noop.pulse
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.ui.draw.clip
+import kotlinx.coroutines.launch
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -98,6 +99,7 @@ fun PulseEffortScreen(vm: AppViewModel, onBack: () -> Unit, onCoach: () -> Unit)
     val view = com.noop.pulse.engine.pulseDayView(vm, 0)
     val d = view.metric
     val eff = view.effort21
+    val scope = androidx.compose.runtime.rememberCoroutineScope()
     val nights = PulseData.nightsWithSleep(days)
     val todayKey = PulseData.dayKey(0)
     val keys = (-6..0).map { PulseData.dayKey(it) }
@@ -137,7 +139,11 @@ fun PulseEffortScreen(vm: AppViewModel, onBack: () -> Unit, onCoach: () -> Unit)
                 workouts.filter { PulseActivity.dayOf(it) == dayKey }.sortedBy { it.startTs },
                 isAuto = { PulseAutoActivity.isAuto(context, it) },
                 onDelete = { PulseAutoActivity.delete(context, vm, it) },
+                onLabel = { w, label -> scope.launch { PulseSports.confirm(context, vm, w, label); vm.loadWorkouts() } },
             )
+            val (named, right) = remember(workouts) { PulseSports.accuracy(context) }
+            if (named > 0) Text("Pulse acertó el deporte en $right de $named actividades que revisaste.",
+                style = PulseText.body, color = PulseColors.textSecondary, modifier = Modifier.padding(start = 18.dp, end = 18.dp, top = 8.dp))
         },
         rows = listOf(
             MetricRow(Icons.Outlined.FavoriteBorder, "ZONAS DE PULSO 1–3", PulseActivity.mmss(z?.first ?: 0.0), "media ${PulseActivity.mmss(zAvg.map { it.first }.takeIf { it.isNotEmpty() }?.average() ?: 0.0)}"),

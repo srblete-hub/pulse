@@ -158,7 +158,15 @@ private fun DiagRow(label: String, value: String) {
 
 /** The day's activities — detected automatically or logged — with duration, heart rate and Effort. */
 @Composable
-fun ActivitiesCard(rows: List<com.noop.data.WorkoutRow>, isAuto: (com.noop.data.WorkoutRow) -> Boolean, onDelete: (com.noop.data.WorkoutRow) -> Unit) {
+fun ActivitiesCard(
+    rows: List<com.noop.data.WorkoutRow>,
+    isAuto: (com.noop.data.WorkoutRow) -> Boolean,
+    onDelete: (com.noop.data.WorkoutRow) -> Unit,
+    onLabel: ((com.noop.data.WorkoutRow, String) -> Unit)? = null,
+) {
+    val ctx = androidx.compose.ui.platform.LocalContext.current
+    var picking by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<com.noop.data.WorkoutRow?>(null) }
+    var tick by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(0) }
     val fmt = java.time.format.DateTimeFormatter.ofPattern("HH:mm")
     fun clock(ts: Long) = java.time.Instant.ofEpochSecond(ts).atZone(ZoneId.systemDefault()).toLocalTime().format(fmt)
     var confirm by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<com.noop.data.WorkoutRow?>(null) }
@@ -176,9 +184,10 @@ fun ActivitiesCard(rows: List<com.noop.data.WorkoutRow>, isAuto: (com.noop.data.
         rows.forEach { w ->
             val min = ((w.endTs - w.startTs) / 60).toInt()
             Row(Modifier.fillMaxWidth().padding(top = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-                Column(Modifier.weight(1f)) {
+                Column(Modifier.weight(1f).pulseClick { if (onLabel != null) picking = if (picking == w) null else w }) {
                     Text(
-                        "${if (w.sport == PulseAutoActivity.SPORT || w.sport == "Workout") "Actividad" else w.sport} · ${clock(w.startTs)}–${clock(w.endTs)}",
+                        "${if (w.sport == PulseAutoActivity.SPORT || w.sport == "Workout") "Actividad" else w.sport} · ${clock(w.startTs)}–${clock(w.endTs)}" +
+                            (if (onLabel != null) " ›" else ""),
                         style = PulseText.cardTitle, color = PulseColors.text,
                     )
                     Text(
@@ -187,6 +196,9 @@ fun ActivitiesCard(rows: List<com.noop.data.WorkoutRow>, isAuto: (com.noop.data.
                             w.avgHr?.let { "media $it lpm" },
                             w.maxHr?.let { "máx. $it" },
                             if (isAuto(w)) "detectada" else null,
+                            PulseSports.guessed(ctx, w)?.takeIf { tick >= 0 && !PulseSports.isConfirmed(ctx, w) && it.first != PulseAutoActivity.SPORT }
+                                ?.let { "nombre sugerido (${(it.second * 100).toInt()} %)" },
+                            if (isAuto(w) && w.sport == PulseAutoActivity.SPORT && !PulseSports.isConfirmed(ctx, w)) "toca para decir qué fue" else null,
                         ).joinToString(" · "),
                         style = PulseText.body.copy(fontSize = 12.sp), color = PulseColors.textSecondary,
                     )
@@ -197,6 +209,26 @@ fun ActivitiesCard(rows: List<com.noop.data.WorkoutRow>, isAuto: (com.noop.data.
                     if (confirm == w) "¿BORRAR?" else "✕", style = PulseText.overline, color = if (confirm == w) PulseColors.recoveryRed else PulseColors.textTertiary,
                     modifier = Modifier.pulseClick { if (confirm == w) { onDelete(w); confirm = null } else confirm = w },
                 )
+            }
+            if (picking == w && onLabel != null) {
+                var custom by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf("") }
+                @OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+                androidx.compose.foundation.layout.FlowRow(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(6.dp)) {
+                    PulseSports.choices(ctx).forEach { label ->
+                        Text(label, style = PulseText.body.copy(fontSize = 13.sp), color = if (label == w.sport) PulseColors.onAccent else PulseColors.text,
+                            modifier = Modifier.padding(top = 6.dp).clip(RoundedCornerShape(14.dp))
+                                .background(if (label == w.sport) PulseColors.accent else PulseColors.overlay)
+                                .pulseClick { onLabel(w, label); picking = null; tick++ }.padding(horizontal = 12.dp, vertical = 6.dp))
+                    }
+                }
+                Row(Modifier.fillMaxWidth().padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                    androidx.compose.material3.OutlinedTextField(custom, { custom = it.take(30) }, Modifier.weight(1f), singleLine = true,
+                        placeholder = { Text("Otro deporte…", style = PulseText.body, color = PulseColors.textTertiary) },
+                        textStyle = PulseText.body.copy(color = PulseColors.text))
+                    Spacer(Modifier.width(8.dp))
+                    Text("GUARDAR", style = PulseText.overline, color = PulseColors.accent,
+                        modifier = Modifier.pulseClick { if (custom.isNotBlank()) { onLabel(w, custom.trim().replaceFirstChar { it.uppercase() }); picking = null; tick++ } })
+                }
             }
         }
     }

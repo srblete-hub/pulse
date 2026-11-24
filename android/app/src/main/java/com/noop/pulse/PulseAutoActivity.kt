@@ -62,9 +62,11 @@ object PulseAutoActivity {
                 // Already logged by Pulse (the save may still be in flight from a previous run).
                 .filterNot { "${it.startSec}:${it.endSec}" in autoTokens(context) }
                 .mapNotNull { w ->
+                    // Name the sport (Pulse's own recogniser); stays "Actividad" when unsure.
+                    val sport = runCatching { PulseSports.guess(context, vm, w.startSec, w.endSec)?.label }.getOrNull() ?: SPORT
                     WorkoutEditing.buildManualRowFromSpan(
                         deviceId = vm.deviceId, startSeconds = w.startSec, endSeconds = w.endSec,
-                        sport = SPORT, avgHr = w.avgBpm, energyKcal = null,
+                        sport = sport, avgHr = w.avgBpm, energyKcal = null,
                     )?.copy(notes = NOTE)
                 }
         }
