@@ -132,6 +132,7 @@ fun PulseEffortScreen(vm: AppViewModel, onBack: () -> Unit, onCoach: () -> Unit)
         heroIcon = Icons.Outlined.ShowChart, heroColor = PulseColors.strain,
         heroFraction = eff?.let { (it / 21).toFloat() }, heroValue = PulseData.oneDecimal(eff ?: 0.0), heroValueSize = 52, heroLabel = "ESFUERZO",
         notice = null,
+        confidence = view.effortConfidence, confidenceMetric = "El esfuerzo",
         middle = {
             EffortDiagCard(diags[PulseData.dayKey(diagOffset)], if (diagOffset == 0) "HOY ›" else "‹ AYER", onToggleDay = { diagOffset = if (diagOffset == 0) -1 else 0 })
             val dayKey = PulseData.dayKey(diagOffset)
@@ -183,6 +184,7 @@ fun PulseRecoveryScreen(vm: AppViewModel, onBack: () -> Unit, onHabits: () -> Un
         heroFraction = rec?.let { (it / 100).toFloat() }, heroValue = PulseData.pct(rec), heroValueSize = 46, heroLabel = "RECUPERACIÓN",
         notice = if (rec != null) null else calibrationNotice(nights) { "Duerme con la pulsera $it noches para calibrar del todo tu recuperación." },
         heroCaption = view.recoveryCaption,
+        confidence = view.recoveryConfidence, confidenceMetric = "La recuperación",
         rows = listOf(
             MetricRow(Icons.Outlined.ShowChart, "VFC", avgS(d?.avgHrv, " ms"), "media ${avgS(avg30(days) { it.avgHrv }, " ms")}"),
             MetricRow(Icons.Outlined.FavoriteBorder, "PULSO EN REPOSO", avgS(d?.restingHr?.toDouble(), " lpm"), "media ${avgS(avg30(days) { it.restingHr?.toDouble() }, " lpm")}"),
@@ -210,7 +212,8 @@ fun PulseSleepScreen(vm: AppViewModel, onBack: () -> Unit, onCoach: () -> Unit) 
     val days by com.noop.pulse.engine.pulseDays(vm)
     val context = androidx.compose.ui.platform.LocalContext.current
     val d = PulseData.metricFor(days, today, 0)
-    val perf = com.noop.pulse.engine.pulseDayView(vm, 0).sleep
+    val sleepView = com.noop.pulse.engine.pulseDayView(vm, 0)
+    val perf = sleepView.sleep
     val nights = PulseData.nightsWithSleep(days)
     val needMin = (PulseNeed.hours(context)) * 60
     fun h(v: Double?) = if (v == null || v <= 0) "-:--" else PulseData.hoursMinutes(v)
@@ -225,6 +228,7 @@ fun PulseSleepScreen(vm: AppViewModel, onBack: () -> Unit, onCoach: () -> Unit) 
     // noop's sleep-debt ledger (55 % carried each night, 14 nights).
     val debtByDay = com.noop.analytics.SleepDebt.debtSeries(days.map { it.day to it.totalSleepMin }, needHours = needMin / 60.0).toMap()
     MetricPage(
+        confidence = sleepView.sleepConfidence, confidenceMetric = "El sueño",
         tipKey = "sleep",
         tipTitle = "Rendimiento del sueño",
         tipBody = "Una sola nota que resume tu noche, calculada como en NOOP: 50 % horas dormidas frente a las que necesitas, 20 % eficiencia, 20 % sueño reparador (profundo + REM) y 10 % regularidad.",

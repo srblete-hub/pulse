@@ -16,6 +16,8 @@ import com.noop.ui.NoopPrefs
 import com.noop.ui.ProfileStore
 import com.noop.ui.activeDayCycleStart
 import com.noop.ui.lastScoredRecoveryDay
+import com.noop.ui.chargeConfidenceTier
+import com.noop.analytics.ScoreConfidence
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.TextStyle
@@ -38,6 +40,10 @@ data class PulseDayView(
     val recoveryFromDay: String?,
     /** Sleep score 0–100 (noop's Rest), with noop's fresh carry-over on today. */
     val sleep: Double? = null,
+    /** noop's own certainty tier for each score (ScoreConfidence), read, never recomputed differently. */
+    val recoveryConfidence: ScoreConfidence = ScoreConfidence.CALIBRATING,
+    val effortConfidence: ScoreConfidence = ScoreConfidence.CALIBRATING,
+    val sleepConfidence: ScoreConfidence = ScoreConfidence.CALIBRATING,
 ) {
     val recoveryCaption: String? get() = recoveryFromDay?.let { "De la última noche medida · ${shortDate(it)}" }
 
@@ -58,6 +64,21 @@ fun pulseDayView(vm: AppViewModel, offset: Int = 0): PulseDayView {
     val activeDayCycle by vm.activeDayCycle.collectAsStateWithLifecycle()
     val metric = PulseData.metricFor(days, today, offset)
     val sleepScores by PulseSleepScore.values.collectAsStateWithLifecycle()
+
+    val chargeBaselines by vm.chargeBaselines.collectAsStateWithLifecycle()
+    // HR samples behind the day's Effort, and whether the night was staged on sparse motion (noop #345).
+    var hrCount by remember { mutableStateOf(0) }
+    var sleepSparse by remember { mutableStateOf(false) }
+    LaunchedEffect(days, offset) {
+        val zone = ZoneId.systemDefault()
+        val day = LocalDate.now().plusDays(offset.toLong())
+        val from = day.atStartOfDay(zone).toEpochSecond()
+        val to = minOf(day.plusDays(1).atStartOfDay(zone).toEpochSecond(), System.currentTimeMillis() / 1000)
+        hrCount = runCatching { vm.repo.hrSamplesUnion(vm.activeStrapId, from, to, limit = 200_000).size }.getOrDefault(0)
+        sleepSparse = runCatching {
+            vm.repo.sleepSessionsUnion(vm.activeStrapId, from - 12 * 3600, from + 14 * 3600).any { it.stagingSparse == true }
+        }.getOrDefault(false)
+    }
 
     var live by remember { mutableStateOf<Double?>(null) }
     LaunchedEffect(days, today, offset, activeDayCycle) {
@@ -93,7 +114,24 @@ fun pulseDayView(vm: AppViewModel, offset: Int = 0): PulseDayView {
         isCalibrating = days.none { it.recovery != null },
         today = todayKey,
     )
+    val recoveryValue = metric?.recovery ?: carried?.recovery
+    val recoveryRow = if (metric?.recovery != null) metric else carried
+    val sleepValue = PulseSleepScore.forDay(metric?.day ?: PulseData.dayKey(offset), offset == 0, sleepScores)
+    val sleepRow = metric?.takeIf { (it.totalSleepMin ?: 0.0) > 0 }
+    val sleepConf = when {
+        sleepValue == null -> ScoreConfidence.CALIBRATING
+        sleepRow == null -> ScoreConfidence.BUILDING
+        else -> {
+            val restorative = ((sleepRow.deepMin ?: 0.0) + (sleepRow.remMin ?: 0.0)) * 60.0
+            val eff = sleepRow.efficiency
+            if (eff == null) ScoreConfidence.forRest(true, restorative > 0)
+            else ScoreConfidence.forRest(true, restorative > 0, (sleepRow.totalSleepMin ?: 0.0) * 60.0, restorative, eff, gravitySparse = sleepSparse)
+        }
+    }
     return PulseDayView(
+        recoveryConfidence = if (recoveryValue == null) ScoreConfidence.CALIBRATING else chargeConfidenceTier(chargeBaselines, recoveryRow),
+        effortConfidence = ScoreConfidence.forEffort(effort, hrCount),
+        sleepConfidence = sleepConf,
         metric = metric,
         effort21 = effort?.let { it * 21.0 / 100.0 },
         sleep = PulseSleepScore.forDay(metric?.day ?: PulseData.dayKey(offset), offset == 0, sleepScores),

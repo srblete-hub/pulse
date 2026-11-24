@@ -383,3 +383,36 @@ fun Pill(text: String, color: Color = PulseColors.hairlineStrong, textColor: Col
         Text(text.uppercase(), style = PulseText.overline.copy(fontSize = 9.sp), color = textColor)
     }
 }
+
+/** Spanish wording for noop's ScoreConfidence tiers. */
+fun confidenceLabel(c: com.noop.analytics.ScoreConfidence): String = when (c) {
+    com.noop.analytics.ScoreConfidence.SOLID -> "Dato fiable"
+    com.noop.analytics.ScoreConfidence.BUILDING -> "Estimación"
+    com.noop.analytics.ScoreConfidence.CALIBRATING -> "Calibrando"
+}
+
+fun confidenceExplain(c: com.noop.analytics.ScoreConfidence, metric: String): String = when (c) {
+    com.noop.analytics.ScoreConfidence.SOLID -> "$metric tiene todos sus datos detrás: puedes fiarte del número."
+    com.noop.analytics.ScoreConfidence.BUILDING -> "$metric se ha calculado con datos incompletos (pocas noches de referencia, poco pulso registrado o una noche con poco movimiento captado). Tómalo como orientativo."
+    com.noop.analytics.ScoreConfidence.CALIBRATING -> "Aún no hay datos suficientes para calcular $metric. No te mostramos un número inventado."
+}
+
+/** Discreet certainty marker: a small dot (filled = reliable, half = estimate, hollow = calibrating) + label. */
+@Composable
+fun ConfidenceTag(c: com.noop.analytics.ScoreConfidence, modifier: Modifier = Modifier) {
+    Row(modifier, verticalAlignment = Alignment.CenterVertically) {
+        Canvas(Modifier.size(8.dp)) {
+            val r = size.minDimension / 2
+            when (c) {
+                com.noop.analytics.ScoreConfidence.SOLID -> drawCircle(PulseColors.accent, r)
+                com.noop.analytics.ScoreConfidence.BUILDING -> {
+                    drawCircle(PulseColors.textSecondary, r - 0.75.dp.toPx(), style = Stroke(1.5.dp.toPx()))
+                    drawArc(PulseColors.textSecondary, 90f, 180f, true)
+                }
+                com.noop.analytics.ScoreConfidence.CALIBRATING -> drawCircle(PulseColors.textTertiary, r - 0.75.dp.toPx(), style = Stroke(1.5.dp.toPx()))
+            }
+        }
+        Spacer(Modifier.width(4.dp))
+        Text(confidenceLabel(c).uppercase(), style = PulseText.chartAxis, color = PulseColors.textSecondary)
+    }
+}

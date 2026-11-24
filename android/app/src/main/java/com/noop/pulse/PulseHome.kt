@@ -130,9 +130,9 @@ fun PulseHomeScreen(vm: AppViewModel, showLiveHr: Boolean = false, actions: Home
         val rec = view.recovery
         val eff = view.effort21
         Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 24.dp)) {
-            RingTile("SUEÑO", sleep?.let { (it / 100).toFloat() }, PulseColors.sleep, PulseData.pct(sleep), Modifier.weight(1f), actions.openSleep)
-            RingTile("RECUPERACIÓN", rec?.let { (it / 100).toFloat() }, PulseColors.recovery(rec), PulseData.pct(rec), Modifier.weight(1f), actions.openRecovery)
-            RingTile("ESFUERZO", eff?.let { (it / 21).toFloat() }, PulseColors.strain, PulseData.oneDecimal(eff ?: 0.0), Modifier.weight(1f), actions.openEffort, large = true)
+            RingTile("SUEÑO", sleep?.let { (it / 100).toFloat() }, PulseColors.sleep, PulseData.pct(sleep), Modifier.weight(1f), actions.openSleep, confidence = view.sleepConfidence)
+            RingTile("RECUPERACIÓN", rec?.let { (it / 100).toFloat() }, PulseColors.recovery(rec), PulseData.pct(rec), Modifier.weight(1f), actions.openRecovery, confidence = view.recoveryConfidence)
+            RingTile("ESFUERZO", eff?.let { (it / 21).toFloat() }, PulseColors.strain, PulseData.oneDecimal(eff ?: 0.0), Modifier.weight(1f), actions.openEffort, large = true, confidence = view.effortConfidence)
         }
 
         val ctx = androidx.compose.ui.platform.LocalContext.current
@@ -308,6 +308,7 @@ private fun RingTile(
     modifier: Modifier,
     onClick: () -> Unit,
     large: Boolean = false,
+    confidence: com.noop.analytics.ScoreConfidence? = null,
 ) {
     Column(modifier.pulseClick(onClick), horizontalAlignment = Alignment.CenterHorizontally) {
         ScoreRing(fraction, color, value, large = large)
@@ -316,6 +317,7 @@ private fun RingTile(
             Text(label, style = PulseText.overline, color = PulseColors.text)
             Icon(Icons.Outlined.ChevronRight, null, tint = PulseColors.text, modifier = Modifier.size(12.dp))
         }
+        confidence?.let { ConfidenceTag(it, Modifier.padding(top = 4.dp)) }
     }
 }
 

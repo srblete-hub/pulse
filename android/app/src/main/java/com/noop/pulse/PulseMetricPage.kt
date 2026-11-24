@@ -113,6 +113,8 @@ fun MetricPage(
     charts: List<TrendChart>,
     middle: @Composable () -> Unit = {},
     heroCaption: String? = null,
+    confidence: com.noop.analytics.ScoreConfidence? = null,
+    confidenceMetric: String = "",
 ) {
     val context = LocalContext.current
     var tip by remember { mutableStateOf(!PulseTips.seen(context, tipKey)) }
@@ -135,6 +137,14 @@ fun MetricPage(
                     Text(heroValue, style = PulseText.bigNumber.copy(fontSize = heroValueSize.sp, lineHeight = heroValueSize.sp), color = PulseColors.text)
                     Spacer(Modifier.height(12.dp))
                     Text(heroLabel, style = PulseText.overline.copy(fontSize = 11.sp, lineHeight = 16.sp), color = PulseColors.text, textAlign = TextAlign.Center)
+                }
+            }
+            if (confidence != null) {
+                var open by remember { mutableStateOf(false) }
+                Column(Modifier.fillMaxWidth().padding(top = 8.dp).pulseClick { open = !open }, horizontalAlignment = Alignment.CenterHorizontally) {
+                    ConfidenceTag(confidence)
+                    if (open) Text(confidenceExplain(confidence, confidenceMetric), style = PulseText.body, color = PulseColors.textSecondary,
+                        textAlign = TextAlign.Center, modifier = Modifier.padding(start = 24.dp, end = 24.dp, top = 8.dp))
                 }
             }
             if (heroCaption != null) {
