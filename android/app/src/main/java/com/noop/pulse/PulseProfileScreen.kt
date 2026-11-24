@@ -476,12 +476,15 @@ fun PulseEditProfileScreen(onBack: () -> Unit) {
     var sex by rememberSaveable { mutableStateOf(profile.sex) }
     var height by rememberSaveable { mutableStateOf(profile.heightCm.roundToInt().toString()) }
     var weight by rememberSaveable { mutableStateOf(String.format(Locale.US, "%.1f", profile.weightKg)) }
+    var hrMax by rememberSaveable { mutableStateOf(if (profile.hrMaxOverride > 0) profile.hrMaxOverride.toString() else "") }
     fun save() {
         PulseProfile.setName(context, first, last)
         profile.dateOfBirthMillis = dob
         profile.sex = sex
         height.replace(',', '.').toDoubleOrNull()?.let { profile.heightCm = it }
         weight.replace(',', '.').toDoubleOrNull()?.let { profile.weightKg = it }
+        // Empty = noop's age formula; a value between 120 and 230 overrides it for zones and Effort.
+        profile.hrMaxOverride = hrMax.toIntOrNull()?.takeIf { it in 120..230 } ?: 0
         onBack()
     }
     Column(Modifier.fillMaxSize().background(PulseColors.screenBrush)) {
@@ -523,6 +526,14 @@ fun PulseEditProfileScreen(onBack: () -> Unit) {
                 Column(Modifier.weight(1f)) { FieldLabel("Altura (cm)"); PulseField(height, { height = it }, "175", KeyboardType.Decimal) }
                 Column(Modifier.weight(1f)) { FieldLabel("Peso (kg)"); PulseField(weight, { weight = it }, "72", KeyboardType.Decimal) }
             }
+            Spacer(Modifier.height(18.dp))
+            FieldLabel("Pulso máximo (opcional)")
+            PulseField(hrMax, { hrMax = it.filter { c -> c.isDigit() }.take(3) }, "${profile.hrMaxAuto} (por edad)", KeyboardType.Number)
+            Spacer(Modifier.height(6.dp))
+            Text(
+                "Si conoces tu pulso máximo real (de una prueba de esfuerzo o el más alto que hayas visto en un entreno muy duro), ponlo aquí: las zonas y el esfuerzo serán más precisos. Vacío = fórmula por edad.",
+                style = PulseText.body.copy(fontSize = 12.sp), color = PulseColors.textSecondary,
+            )
         }
     }
 }

@@ -20,6 +20,9 @@ import androidx.compose.material.icons.outlined.Timer
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -94,8 +97,20 @@ fun PulseEffortScreen(vm: AppViewModel, onBack: () -> Unit, onCoach: () -> Unit)
     val nights = PulseData.nightsWithSleep(days)
     val todayKey = PulseData.dayKey(0)
     val keys = (-6..0).map { PulseData.dayKey(it) }
-    val z = PulseActivity.zones(workouts, todayKey)
-    val zAvg = keys.mapNotNull { PulseActivity.zones(workouts, it) }
+    // Zones from the whole day's heart rate, scored exactly as noop scores Effort (EffortDiagnostics).
+    val context = androidx.compose.ui.platform.LocalContext.current
+    var diags by remember { mutableStateOf<Map<String, EffortDiag>>(emptyMap()) }
+    LaunchedEffect(days.size, today?.strain) {
+        val out = HashMap<String, EffortDiag>()
+        for (k in -6..0) {
+            val day = java.time.LocalDate.now().plusDays(k.toLong())
+            runCatching { EffortDiagnostics.forDay(context, vm, day) }.getOrNull()?.let { out[day.toString()] = it }
+        }
+        diags = out
+    }
+    var diagOffset by remember { mutableStateOf(0) }
+    val z = diags[todayKey]?.let { it.zones13 to it.zones45 }
+    val zAvg = keys.mapNotNull { diags[it]?.let { d -> d.zones13 to d.zones45 } }
     val str = PulseActivity.strengthMin(workouts, todayKey)
     val strAvg = keys.map { PulseActivity.strengthMin(workouts, it) }.average()
     val coach = when {
@@ -107,10 +122,13 @@ fun PulseEffortScreen(vm: AppViewModel, onBack: () -> Unit, onCoach: () -> Unit)
     MetricPage(
         tipKey = "effort",
         tipTitle = "Esfuerzo del día",
-        tipBody = "Mide la carga que ha soportado tu corazón a lo largo del día, entrenando y en tu vida normal. Cuanto más tiempo pasas con el pulso alto, más sube. Toca la «i» para ver cómo se calcula.",
+        tipBody = "Mide la carga que ha soportado tu corazón a lo largo del día, entrenando y en tu vida normal. Cuanto más tiempo pasas con el pulso alto, más sube. Abajo, en «Cómo se ha calculado», ves el pulso y los minutos por zona que lo explican.",
         heroIcon = Icons.Outlined.ShowChart, heroColor = PulseColors.strain,
         heroFraction = eff?.let { (it / 21).toFloat() }, heroValue = PulseData.oneDecimal(eff ?: 0.0), heroValueSize = 52, heroLabel = "ESFUERZO",
         notice = null,
+        middle = {
+            EffortDiagCard(diags[PulseData.dayKey(diagOffset)], if (diagOffset == 0) "HOY ›" else "‹ AYER", onToggleDay = { diagOffset = if (diagOffset == 0) -1 else 0 })
+        },
         rows = listOf(
             MetricRow(Icons.Outlined.FavoriteBorder, "ZONAS DE PULSO 1–3", PulseActivity.mmss(z?.first ?: 0.0), "media ${PulseActivity.mmss(zAvg.map { it.first }.takeIf { it.isNotEmpty() }?.average() ?: 0.0)}"),
             MetricRow(Icons.Outlined.MonitorHeart, "ZONAS DE PULSO 4–5", PulseActivity.mmss(z?.second ?: 0.0), "media ${PulseActivity.mmss(zAvg.map { it.second }.takeIf { it.isNotEmpty() }?.average() ?: 0.0)}"),
@@ -120,9 +138,9 @@ fun PulseEffortScreen(vm: AppViewModel, onBack: () -> Unit, onCoach: () -> Unit)
         coachLine = coach, onBack = onBack, onCoach = onCoach,
         charts = listOf(
             TrendChart("Esfuerzo", PulseColors.strain, 21.0, week(days) { PulseData.effort21(it) }, { String.format(Locale.US, "%.1f", it) }),
-            TrendChart("Zonas 1–3", PulseColors.stressLow, 120.0, keys.map { PulseActivity.zones(workouts, it)?.first }, { PulseActivity.mmss(it) },
+            TrendChart("Zonas 1–3", PulseColors.stressLow, 120.0, keys.map { diags[it]?.zones13 }, { PulseActivity.mmss(it) },
                 legend = listOf(LegendItem("ZONA 1", PulseColors.textSecondary), LegendItem("ZONA 2", PulseColors.stressLow), LegendItem("ZONA 3", PulseColors.recoveryGreen)), valueColor = PulseColors.text),
-            TrendChart("Zonas 4–5", PulseColors.stressHigh, 45.0, keys.map { PulseActivity.zones(workouts, it)?.second }, { PulseActivity.mmss(it) },
+            TrendChart("Zonas 4–5", PulseColors.stressHigh, 45.0, keys.map { diags[it]?.zones45 }, { PulseActivity.mmss(it) },
                 legend = listOf(LegendItem("ZONA 4", PulseColors.stressHigh), LegendItem("ZONA 5", PulseColors.recoveryRed)), valueColor = PulseColors.text),
             TrendChart("Pasos", PulseColors.accent, 15000.0, week(days) { it.steps?.toDouble() }, { PulseData.int(it.roundToInt()) }),
             TrendChart("Calorías", PulseColors.accent, 4000.0, week(days) { it.activeKcalEst }, { PulseData.int(it.roundToInt()) }),
