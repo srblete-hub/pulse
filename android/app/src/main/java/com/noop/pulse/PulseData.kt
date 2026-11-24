@@ -65,10 +65,13 @@ object PulseData {
 
     /** Sleep performance 0–100 from noop's rest composite. */
     /** Sleep score 0–100 as noop shows it (resolved `sleep_performance` series). */
-    fun sleepPct(d: DailyMetric?): Double? = d?.let { com.noop.pulse.engine.PulseSleepScore.values.value[it.day] }
+    fun sleepPct(d: DailyMetric?): Double? = d?.let { com.noop.pulse.engine.PulseCalibration.sleep(it.day, com.noop.pulse.engine.PulseSleepScore.values.value[it.day]) }
+
+    /** Recovery as displayed (calibrated to the user's WHOOP export when that is switched on). */
+    fun rec(d: DailyMetric?): Double? = d?.let { com.noop.pulse.engine.PulseCalibration.recovery(it.day, it.recovery) }
 
     /** Stored Effort is 0–100; Pulse shows it on the 0–21 scale. */
-    fun effort21(d: DailyMetric?): Double? = d?.strain?.let { it * 21.0 / 100.0 }
+    fun effort21(d: DailyMetric?): Double? = d?.let { com.noop.pulse.engine.PulseCalibration.effort100(it.day, it.strain) }?.let { it * 21.0 / 100.0 }
 
     fun nightsWithSleep(days: List<DailyMetric>): Int = days.count { (it.totalSleepMin ?: 0.0) > 0.0 }
 

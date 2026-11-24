@@ -183,6 +183,7 @@ fun PulseHealthScreen(vm: AppViewModel, actions: HealthActions) {
         HealthAlertCard(vm)
         TrainingLoadCardPulse(days)
         RhythmCard(vm, days)
+        CalibrationCard(vm)
         Spacer(Modifier.height(PulseMetrics.barClearance))
     }
 }

@@ -204,7 +204,7 @@ fun PulseRecoveryScreen(vm: AppViewModel, onBack: () -> Unit, onHabits: () -> Un
             HabitsCard(Icons.Outlined.CalendarMonth, onHabits)
         },
         charts = listOf(
-            TrendChart("Recuperación", PulseColors.recoveryGreen, 100.0, week(days) { it.recovery }, { "${it.roundToInt()}%" }),
+            TrendChart("Recuperación", PulseColors.recoveryGreen, 100.0, week(days) { PulseData.rec(it) }, { "${it.roundToInt()}%" }),
             TrendChart("VFC", PulseColors.accent, (avg30(days) { it.avgHrv } ?: 60.0) * 1.6, week(days) { it.avgHrv }, { "${it.roundToInt()}" }),
             TrendChart("Pulso en reposo", PulseColors.accent, 100.0, week(days) { it.restingHr?.toDouble() }, { "${it.roundToInt()}" }),
             TrendChart("Respiración", PulseColors.accent, 25.0, week(days) { it.respRateBpm }, { String.format(Locale.US, "%.1f", it) }),

@@ -112,7 +112,7 @@ fun buildCoachSnapshot(
     val week = (-6..0).map { byDay[PulseData.dayKey(it)] }
     val profile = ProfileStore.from(context)
     return CoachSnapshot(
-        recovery = view?.recovery ?: d?.recovery,
+        recovery = view?.recovery ?: PulseData.rec(d),
         sleepPct = view?.sleep ?: PulseData.sleepPct(d),
         sleepMin = d?.totalSleepMin?.takeIf { it > 0 },
         deepMin = d?.deepMin,
@@ -138,7 +138,7 @@ fun buildCoachSnapshot(
         age = profile.age,
         sex = profile.sex,
         pulseAge = pulseAge,
-        weekRecovery = week.map { it?.recovery },
+        weekRecovery = week.map { PulseData.rec(it) },
         weekSleepMin = week.map { it?.totalSleepMin?.takeIf { m -> m > 0 } },
         weekEffort = week.map { PulseData.effort21(it) },
         hour = LocalTime.now().hour,

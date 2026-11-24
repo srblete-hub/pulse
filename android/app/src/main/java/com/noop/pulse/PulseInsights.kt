@@ -208,3 +208,41 @@ fun RhythmCard(vm: AppViewModel, days: List<DailyMetric>) {
         }
     }
 }
+
+// ---------------- Parecido a tu WHOOP ----------------
+
+/** Personal calibration towards the user's own WHOOP export (see PulseCalibrationEngine). */
+@Composable
+fun CalibrationCard(vm: AppViewModel) {
+    val ctx = androidx.compose.ui.platform.LocalContext.current
+    val st by com.noop.pulse.engine.PulseCalibration.state.collectAsStateWithLifecycle()
+    PulseCard(cardPad) {
+        CardHeader("Ajustar a mi WHOOP", showChevron = false)
+        Spacer(Modifier.height(8.dp))
+        if (!st.anyFit) {
+            Text(
+                "Importa tu exportación de WHOOP (Ajustes → Importar datos) con días en los que también llevaste la pulsera con Pulse. " +
+                    "Con ${com.noop.pulse.engine.PulseCalibrationEngine.MIN_PAIRS} días o más en común, Pulse ajusta su escala a la de tu WHOOP" +
+                    (if (st.pairedDays > 0) " (ahora hay ${st.pairedDays})." else "."),
+                style = PulseText.body, color = PulseColors.textSecondary,
+            )
+            return@PulseCard
+        }
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text("Usar tu escala de WHOOP en los días que mide Pulse", style = PulseText.body, color = PulseColors.text, modifier = Modifier.weight(1f))
+            PulseSwitch(st.enabled) { com.noop.pulse.engine.PulseCalibration.setEnabled(ctx, it) }
+        }
+        listOf(Triple("ESFUERZO", st.effort, true), Triple("RECUPERACIÓN", st.recovery, false), Triple("SUEÑO", st.sleep, false)).forEach { (name, f, dec) ->
+            val v = if (f == null) "--" else if (dec) String.format(Locale.US, "±%.1f → ±%.1f", f.maeBefore, f.maeAfter)
+                else "±${f.maeBefore.roundToInt()} → ±${f.maeAfter.roundToInt()}"
+            val note = when {
+                f == null -> "Faltan días en común"
+                f.helps -> "Diferencia media con tu WHOOP antes → después (${f.n} días, comprobado con días que el ajuste no vio)"
+                else -> "El ajuste no mejora con tus datos: se queda como NOOP"
+            }
+            StatLine(name, v, note)
+        }
+        Text("Los días importados se muestran tal cual vienen de WHOOP. Los datos guardados no cambian: solo cómo se muestran.",
+            style = PulseText.body, color = PulseColors.textTertiary, modifier = Modifier.padding(top = 12.dp))
+    }
+}

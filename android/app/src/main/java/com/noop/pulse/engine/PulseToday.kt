@@ -103,7 +103,9 @@ fun pulseDayView(vm: AppViewModel, offset: Int = 0): PulseDayView {
             )
         }.getOrNull()
     }
-    val effort = StrainScorer.effectiveEffort(live = if (offset == 0) live else null, stored = metric?.strain)
+    val calib by PulseCalibration.state.collectAsStateWithLifecycle()
+    val effortRaw = StrainScorer.effectiveEffort(live = if (offset == 0) live else null, stored = metric?.strain)
+    val effort = PulseCalibration.effort100(metric?.day ?: PulseData.dayKey(offset), effortRaw).also { calib.hashCode() }
 
     val todayKey = maxOf(today?.day ?: "", LocalDate.now().toString())
     val carried = lastScoredRecoveryDay(
@@ -114,9 +116,10 @@ fun pulseDayView(vm: AppViewModel, offset: Int = 0): PulseDayView {
         isCalibrating = days.none { it.recovery != null },
         today = todayKey,
     )
-    val recoveryValue = metric?.recovery ?: carried?.recovery
     val recoveryRow = if (metric?.recovery != null) metric else carried
-    val sleepValue = PulseSleepScore.forDay(metric?.day ?: PulseData.dayKey(offset), offset == 0, sleepScores)
+    val recoveryValue = PulseCalibration.recovery(recoveryRow?.day, recoveryRow?.recovery)
+    val sleepDay = metric?.day ?: PulseData.dayKey(offset)
+    val sleepValue = PulseCalibration.sleep(sleepDay, PulseSleepScore.forDay(sleepDay, offset == 0, sleepScores))
     val sleepRow = metric?.takeIf { (it.totalSleepMin ?: 0.0) > 0 }
     val sleepConf = when {
         sleepValue == null -> ScoreConfidence.CALIBRATING
@@ -130,12 +133,12 @@ fun pulseDayView(vm: AppViewModel, offset: Int = 0): PulseDayView {
     }
     return PulseDayView(
         recoveryConfidence = if (recoveryValue == null) ScoreConfidence.CALIBRATING else chargeConfidenceTier(chargeBaselines, recoveryRow),
-        effortConfidence = ScoreConfidence.forEffort(effort, hrCount),
+        effortConfidence = ScoreConfidence.forEffort(effortRaw, hrCount),
         sleepConfidence = sleepConf,
         metric = metric,
         effort21 = effort?.let { it * 21.0 / 100.0 },
-        sleep = PulseSleepScore.forDay(metric?.day ?: PulseData.dayKey(offset), offset == 0, sleepScores),
-        recovery = metric?.recovery ?: carried?.recovery,
+        sleep = sleepValue,
+        recovery = recoveryValue,
         recoveryFromDay = if (metric?.recovery == null) carried?.day else null,
     )
 }

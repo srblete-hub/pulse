@@ -502,7 +502,7 @@ fun EffortRecoveryChart(days: List<com.noop.data.DailyMetric>, modifier: Modifie
                         val h = (e / 21.0).toFloat().coerceIn(0f, 1f) * size.height
                         drawRoundRect(PulseColors.strain, Offset(cx - barW / 2, size.height - h), Size(barW, h), androidx.compose.ui.geometry.CornerRadius(3.dp.toPx()))
                     }
-                    d?.recovery?.let { pts += Offset(cx, size.height - (it / 100.0).toFloat().coerceIn(0f, 1f) * size.height) }
+                    PulseData.rec(d)?.let { pts += Offset(cx, size.height - (it / 100.0).toFloat().coerceIn(0f, 1f) * size.height) }
                 }
                 if (pts.size >= 2) {
                     val p = Path().apply { moveTo(pts[0].x, pts[0].y); pts.drop(1).forEach { lineTo(it.x, it.y) } }
