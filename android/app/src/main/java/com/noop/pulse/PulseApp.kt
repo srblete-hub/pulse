@@ -131,6 +131,10 @@ fun PulseApp(vm: AppViewModel) {
     androidx.compose.runtime.LaunchedEffect(Unit) {
         if (!com.noop.ui.NoopPrefs.of(ctx).contains(com.noop.ui.NoopPrefs.KEY_BANISTER_EFFORT)) vm.setBanisterEffort(true)
     }
+    val pulseDaysState by com.noop.pulse.engine.pulseDays(vm)
+    androidx.compose.runtime.LaunchedEffect(syncState.lastSyncAt, pulseDaysState.size) {
+        runCatching { com.noop.pulse.engine.PulseNights.refresh(ctx, vm, pulseDaysState) }
+    }
     androidx.compose.runtime.LaunchedEffect(syncState.lastSyncAt) { runCatching { PulseAutoActivity.run(ctx, vm); vm.loadWorkouts() } }
     var liveHr by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(PulseLivePref.enabled(ctx)) }
     androidx.compose.runtime.DisposableEffect(liveHr) {

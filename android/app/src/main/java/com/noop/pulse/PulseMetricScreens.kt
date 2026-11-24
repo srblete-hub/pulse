@@ -1,5 +1,8 @@
 package com.noop.pulse
 
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -175,14 +178,17 @@ fun PulseRecoveryScreen(vm: AppViewModel, onBack: () -> Unit, onHabits: () -> Un
         notice = if (rec != null) null else calibrationNotice(nights) { "Duerme con la pulsera $it noches para calibrar del todo tu recuperación." },
         heroCaption = view.recoveryCaption,
         rows = listOf(
-            MetricRow(Icons.Outlined.ShowChart, "VFC", avgS(d?.avgHrv, " ms"), "media ${avgS(avg30(days) { it.avgHrv }, " ms")}"),
-            MetricRow(Icons.Outlined.FavoriteBorder, "PULSO EN REPOSO", avgS(d?.restingHr?.toDouble(), " lpm"), "media ${avgS(avg30(days) { it.restingHr?.toDouble() }, " lpm")}"),
+            MetricRow(Icons.Outlined.ShowChart, "VFC", avgS(view.own?.factors?.firstOrNull { it.key == "hrv" }?.value ?: d?.avgHrv, " ms"), "media ${avgS(avg30(days) { it.avgHrv }, " ms")}"),
+            MetricRow(Icons.Outlined.FavoriteBorder, "PULSO EN REPOSO", avgS(view.own?.factors?.firstOrNull { it.key == "rhr" }?.value ?: d?.restingHr?.toDouble(), " lpm"), "media ${avgS(avg30(days) { it.restingHr?.toDouble() }, " lpm")}"),
             MetricRow(Icons.Outlined.Air, "RESPIRACIÓN", avgS(d?.respRateBpm, " rpm", true), "media ${avgS(avg30(days) { it.respRateBpm }, " rpm", true)}"),
             MetricRow(Icons.Outlined.Bedtime, "RENDIMIENTO DEL SUEÑO", PulseData.pct(PulseData.sleepPct(d)).replace("--%", "--"), "media ${PulseData.pct(avg30(days) { PulseData.sleepPct(it) }).replace("--%", "--")}"),
         ),
         coachLine = if (rec == null) "Cuando tengas tu primera recuperación, te ayudo a interpretarla." else "Recuperación del ${rec.roundToInt()} %. Te explico qué la ha movido.",
         onBack = onBack, onCoach = onCoach,
-        middle = { HabitsCard(Icons.Outlined.CalendarMonth, onHabits) },
+        middle = {
+            OwnRecoveryCard(view.own)
+            HabitsCard(Icons.Outlined.CalendarMonth, onHabits)
+        },
         charts = listOf(
             TrendChart("Recuperación", PulseColors.recoveryGreen, 100.0, week(days) { it.recovery }, { "${it.roundToInt()}%" }),
             TrendChart("VFC", PulseColors.accent, (avg30(days) { it.avgHrv } ?: 60.0) * 1.6, week(days) { it.avgHrv }, { "${it.roundToInt()}" }),
@@ -262,4 +268,40 @@ fun PulseSleepScreen(vm: AppViewModel, onBack: () -> Unit, onCoach: () -> Unit) 
             TrendChart("Deuda de sueño", PulseColors.stressHigh, 180.0, (-6..0).map { debtByDay[PulseData.dayKey(it)] }, { PulseData.hoursMinutes(it) }),
         ),
     )
+}
+
+/** How Pulse's own recovery was built: each input against the user's baseline, plus the WHOOP check. */
+@Composable
+private fun OwnRecoveryCard(own: com.noop.pulse.engine.PulseRecoveryEngine.Result?) {
+    val nights by com.noop.pulse.engine.PulseNights.state.collectAsStateWithLifecycle()
+    androidx.compose.foundation.layout.Column(
+        Modifier.padding(start = 15.dp, end = 15.dp, top = 18.dp).fillMaxWidth()
+            .clip(androidx.compose.foundation.shape.RoundedCornerShape(13.dp)).background(PulseColors.overlay).padding(16.dp),
+    ) {
+        Text("CÓMO SE HA CALCULADO", style = PulseText.overline, color = PulseColors.textSecondary)
+        if (own == null) {
+            Text("Ahora mismo ves la recuperación de NOOP. La de Pulse empieza cuando tenga ${com.noop.pulse.engine.PulseRecoveryEngine.MIN_NIGHTS} noches con latidos limpios (llevo ${nights.nights.size}).",
+                style = PulseText.body, color = PulseColors.text, modifier = Modifier.padding(top = 8.dp))
+        } else {
+            Text("Cada dato comparado con tu propia media (${own.nights} noches, pesan más las recientes).",
+                style = PulseText.body, color = PulseColors.text, modifier = Modifier.padding(top = 8.dp))
+            val names = mapOf("hrv" to "VFC", "rhr" to "Pulso en reposo", "sleep" to "Sueño", "resp" to "Respiración")
+            val units = mapOf("hrv" to " ms", "rhr" to " lpm", "sleep" to " %", "resp" to " rpm")
+            own.factors.forEach { f ->
+                val arrow = when { f.z >= 0.5 -> "▲ a favor"; f.z <= -0.5 -> "▼ en contra"; else -> "≈ normal" }
+                val fmt = { v: Double -> if (f.key == "resp") String.format(Locale.US, "%.1f", v) else "${v.roundToInt()}" }
+                Text("${names[f.key]}: ${fmt(f.value)}${units[f.key]} (media ${fmt(f.mean)}) · $arrow",
+                    style = PulseText.body, color = PulseColors.textSecondary, modifier = Modifier.padding(top = 6.dp))
+            }
+        }
+        nights.validation?.let { v ->
+            val parts = listOfNotNull(
+                v.recoveryMae?.let { "recuperación ±${it.roundToInt()} puntos" },
+                v.hrvMae?.let { "VFC ±${it.roundToInt()} ms" },
+                v.rhrMae?.let { String.format(Locale.US, "pulso en reposo ±%.1f lpm", it) },
+            )
+            if (parts.isNotEmpty()) Text("Frente a tu exportación de WHOOP (${v.days} días): " + parts.joinToString(", ") + " de diferencia media.",
+                style = PulseText.body, color = PulseColors.textSecondary, modifier = Modifier.padding(top = 10.dp))
+        }
+    }
 }
