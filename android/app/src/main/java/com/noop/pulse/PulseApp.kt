@@ -93,6 +93,7 @@ object PulseRoute {
     const val editProfile = "profile/edit"
     const val coachMemory = "coach/memory"
     const val welcome = "welcome"
+    const val report = "report"
 
     // noop engine screens hosted inside the Pulse shell (device link, import, backup, alarms…).
     const val strap = "noop/devices"
@@ -166,6 +167,7 @@ fun PulseApp(vm: AppViewModel) {
                         openHrv = go(PulseRoute.recovery),
                         openSteps = go(PulseRoute.effort),
                         openCalories = go(PulseRoute.effort),
+                        openReport = go(PulseRoute.report),
                     ),
                 )
             }
@@ -311,6 +313,7 @@ fun PulseApp(vm: AppViewModel) {
             legacy(PulseRoute.sleepDetail, "Sueño", back) { SleepScreen(vm = vm, onOpenAlarms = { nav.navigate(PulseRoute.alarms) }) }
             legacy(PulseRoute.workouts, "Entrenamientos", back) { WorkoutsScreen(vm) }
             composable(PulseRoute.journal) { PulseJournalScreen(vm, onClose = back, onCoach = go(PulseRoute.coach)) }
+            composable(PulseRoute.report) { PulseReportScreen(vm, back) }
             composable(PulseRoute.habits) { PulseHabitsScreen(vm, back, onJournal = go(PulseRoute.journal)) }
             legacy(PulseRoute.notifications, "Notificaciones", back) { NotificationsSettingsScreen(vm) }
             legacy(PulseRoute.advanced, "Ajustes avanzados", back) {
@@ -343,6 +346,7 @@ private fun settingsGroups(go: (String) -> () -> Unit): List<Pair<String?, List<
             SettingsItem("Pulsera", icon = Icons.Outlined.Watch, onClick = go(PulseRoute.strap)),
             SettingsItem("Entrenamientos", icon = Icons.Outlined.FitnessCenter, onClick = go(PulseRoute.workouts)),
             SettingsItem("Diario", icon = Icons.Outlined.EditNote, onClick = go(PulseRoute.journal)),
+            SettingsItem("Informe semanal y mensual", icon = Icons.Outlined.ShowChart, onClick = go(PulseRoute.report)),
             SettingsItem("Horario de sueño", icon = Icons.Outlined.Bedtime, onClick = go(PulseRoute.alarms)),
             SettingsItem("Ciclo menstrual", icon = Icons.Outlined.WaterDrop, onClick = go(PulseRoute.advanced)),
             SettingsItem("Ocultar métricas", icon = Icons.Outlined.VisibilityOff, onClick = go(PulseRoute.advanced)),

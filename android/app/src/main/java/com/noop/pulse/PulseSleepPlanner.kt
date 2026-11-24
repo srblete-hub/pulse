@@ -116,11 +116,11 @@ object SleepSchedules {
     data class Tonight(val bedMin: Int, val wakeMin: Int, val mode: WakeMode, val on: Boolean)
 
     /** Tomorrow's wake time and tonight's recommended bedtime, or null when there is no schedule for tomorrow. */
-    fun tonight(c: Context): Tonight? {
+    fun tonight(c: Context, needMinOverride: Double? = null): Tonight? {
         val list = load(c)
         val idx = LocalDate.now().plusDays(1).dayOfWeek.value - 1
         val s = forDay(list, idx) ?: return null
-        val needMin = ((PulseNeed.hours(c)) * 60).toInt()
+        val needMin = needMinOverride?.toInt() ?: ((PulseNeed.hours(c)) * 60).toInt()
         val inBed = needMin + listOf(0, 30, -60)[goal(c).coerceIn(0, 2)] + 15
         return Tonight(s.minutes - inBed, s.minutes, s.mode, enabled(c))
     }

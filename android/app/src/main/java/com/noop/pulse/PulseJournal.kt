@@ -444,6 +444,8 @@ fun PulseHabitsScreen(vm: AppViewModel, onBack: () -> Unit, onJournal: () -> Uni
     val context = LocalContext.current
     val days by com.noop.pulse.engine.pulseDays(vm)
     var effects by remember { mutableStateOf<List<Pair<String, Double>>>(emptyList()) }
+    var sleepEffects by remember { mutableStateOf<List<Triple<String, Double, Int>>>(emptyList()) }
+    var counts by remember { mutableStateOf<Map<String, Int>>(emptyMap()) }
     LaunchedEffect(days.size) {
         val rows = runCatching { vm.repo.journal(JOURNAL_DEVICE_ID, "0000-01-01", "9999-12-31") }.getOrDefault(emptyList())
         val recNext = days.associate { it.day to it.recovery }.let { byDay ->
@@ -452,9 +454,16 @@ fun PulseHabitsScreen(vm: AppViewModel, onBack: () -> Unit, onJournal: () -> Uni
         val names = PulseHabits.all(context).associateBy { it.q }
         val yes = rows.filter { it.answeredYes }.groupBy { it.question }.mapValues { e -> e.value.map { it.day }.toSet() }
         val no = rows.filter { !it.answeredYes }.groupBy { it.question }.mapValues { e -> e.value.map { it.day }.toSet() }
-        effects = runCatching { EffectRanker.rankNoLag(yes, no, recNext, "recovery") }.getOrDefault(emptyList())
+        val ranked = runCatching { EffectRanker.rankNoLag(yes, no, recNext, "recovery") }.getOrDefault(emptyList())
             .filter { it.nWith >= 3 && it.nWithout >= 3 }
-            .map { (names[it.behavior]?.name ?: it.behavior) to (it.pctChange ?: 0.0) }
+        effects = ranked.map { (names[it.behavior]?.name ?: it.behavior) to (it.pctChange ?: 0.0) }
+        counts = ranked.associate { (names[it.behavior]?.name ?: it.behavior) to (it.nWith + it.nWithout) }
+        // Same comparison on the next night's Sleep score (noop's sleep_performance).
+        val sleepByDay = com.noop.pulse.engine.PulseSleepScore.values.value
+        val sleepNext = sleepByDay.mapNotNull { (d, v) -> runCatching { LocalDate.parse(d).minusDays(1).toString() }.getOrNull()?.let { it to v } }.toMap()
+        sleepEffects = runCatching { EffectRanker.rankNoLag(yes, no, sleepNext, "sleep") }.getOrDefault(emptyList())
+            .filter { it.nWith >= 3 && it.nWithout >= 3 }
+            .map { Triple(names[it.behavior]?.name ?: it.behavior, it.pctChange ?: 0.0, it.nWith + it.nWithout) }
     }
     Column(Modifier.fillMaxSize().background(PulseColors.screenBrush).verticalScroll(rememberScrollState()).statusBarsPadding().navigationBarsPadding()) {
         Row(Modifier.fillMaxWidth().padding(start = 8.dp, end = 8.dp, top = 16.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -498,8 +507,12 @@ fun PulseHabitsScreen(vm: AppViewModel, onBack: () -> Unit, onJournal: () -> Uni
                 }
                 Text("Orientación general, no datos tuyos. Tus efectos reales aparecerán aquí cuando lleves unas semanas apuntando hábitos.", style = PulseText.body.copy(fontSize = 11.sp), color = PulseColors.textTertiary, modifier = Modifier.padding(top = 16.dp))
             } else {
-                effects.forEach { (n, pct) -> EffectBar(n.uppercase(es), pct, "${if (pct >= 0) "+" else "−"}${kotlin.math.abs(pct).roundToInt()}%", scale = 20.0) }
+                effects.forEach { (n, pct) -> EffectBar(n.uppercase(es), pct, "${if (pct >= 0) "+" else "−"}${kotlin.math.abs(pct).roundToInt()}% · ${counts[n] ?: 0} días", scale = 20.0) }
                 Text("Comparación de tu recuperación los días después de hacerlo y de no hacerlo. Es una asociación, no una prueba de causa.", style = PulseText.body.copy(fontSize = 11.sp), color = PulseColors.textTertiary, modifier = Modifier.padding(top = 16.dp))
+                if (sleepEffects.isNotEmpty()) {
+                    Text("Efecto en tu sueño de esa noche", style = PulseText.cardTitle, color = PulseColors.text, modifier = Modifier.padding(top = 24.dp))
+                    sleepEffects.forEach { (n, pct, k) -> EffectBar(n.uppercase(es), pct, "${if (pct >= 0) "+" else "−"}${kotlin.math.abs(pct).roundToInt()}% · $k días", scale = 20.0) }
+                }
             }
         }
         Spacer(Modifier.height(40.dp))

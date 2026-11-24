@@ -80,6 +80,7 @@ class HomeActions(
     val openHrv: () -> Unit,
     val openSteps: () -> Unit,
     val openCalories: () -> Unit,
+    val openReport: () -> Unit = {},
 )
 
 @Composable
@@ -139,9 +140,14 @@ fun PulseHomeScreen(vm: AppViewModel, showLiveHr: Boolean = false, actions: Home
         // Re-read on every return to Home so a step opened elsewhere, or a schedule just saved, shows at once.
         var stepsTick by remember { mutableStateOf(0) }
         val hasSchedule = SleepSchedules.load(ctx).isNotEmpty()
-        val tonight = SleepSchedules.tonight(ctx)
-        if (tonight != null) {
+        // Tonight's need = personal base + debt repayment + extra for today's Effort (PulsePlanEngine).
+        val need = rememberTonightNeed(vm, days, if (offset == 0) view.effort21 else null)
+        val tonight = SleepSchedules.tonight(ctx, need?.totalMin)
+        if (offset == 0 && tonight != null) {
             TonightCard(tonight, Modifier.padding(start = PulseMetrics.gutter, end = PulseMetrics.gutter, top = 24.dp), actions.openSleepSchedule)
+            need?.let { NeedBreakdown(it, Modifier.padding(start = PulseMetrics.gutter, end = PulseMetrics.gutter, top = 8.dp)) }
+        } else if (offset == 0 && need != null) {
+            SleepPlanCard(vm, need, Modifier.padding(start = PulseMetrics.gutter, end = PulseMetrics.gutter, top = 24.dp), actions.openSleepSchedule)
         }
         fun open(key: String, go: () -> Unit) = { PulseTips.markSeen(ctx, "step_$key"); stepsTick++; go() }
         // Getting started is for brand-new users: it goes once the strap has sent ~2 h of data or after the first night.
@@ -201,6 +207,10 @@ fun PulseHomeScreen(vm: AppViewModel, showLiveHr: Boolean = false, actions: Home
 
         SectionTitle("Mi panel")
         Column(Modifier.padding(horizontal = PulseMetrics.gutter), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            if (nights >= 3) PulseCard(onClick = actions.openReport) {
+                CardHeader("Tu semana")
+                Text(PulseReportData.headline(PulseReportData.build(days, 7)), style = PulseText.body, color = PulseColors.textSecondary, modifier = Modifier.padding(top = 8.dp))
+            }
             if (nights < 5) {
                 Row(
                     Modifier.fillMaxWidth().clip(RoundedCornerShape(PulseMetrics.cardRadius))

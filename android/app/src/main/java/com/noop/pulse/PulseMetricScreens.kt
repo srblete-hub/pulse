@@ -133,6 +133,7 @@ fun PulseEffortScreen(vm: AppViewModel, onBack: () -> Unit, onCoach: () -> Unit)
         heroFraction = eff?.let { (it / 21).toFloat() }, heroValue = PulseData.oneDecimal(eff ?: 0.0), heroValueSize = 52, heroLabel = "ESFUERZO",
         notice = null,
         confidence = view.effortConfidence, confidenceMetric = "El esfuerzo",
+        heroCaption = effortTargetFor(days, view.recovery)?.let { "Objetivo de hoy: ${targetText(it)}. ${targetAdvice(it)}" },
         middle = {
             EffortDiagCard(diags[PulseData.dayKey(diagOffset)], if (diagOffset == 0) "HOY ›" else "‹ AYER", onToggleDay = { diagOffset = if (diagOffset == 0) -1 else 0 })
             val dayKey = PulseData.dayKey(diagOffset)
