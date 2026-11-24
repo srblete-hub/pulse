@@ -56,6 +56,8 @@ data class EffortDiag(
     /** Effort 0–21 recomputed now, and the stored value the rings show. */
     val effort21: Double?,
     val storedEffort21: Double?,
+    /** Raw accumulated load (TRIMP) behind [effort21], recovered exactly from noop's log map. */
+    val trimp: Double? = null,
 ) {
     val zones13: Double get() = zoneMin.getOrElse(1) { 0.0 } + zoneMin.getOrElse(2) { 0.0 } + zoneMin.getOrElse(3) { 0.0 }
     val zones45: Double get() = zoneMin.getOrElse(4) { 0.0 } + zoneMin.getOrElse(5) { 0.0 }
@@ -76,7 +78,10 @@ object EffortDiagnostics {
         val reserve = maxHr - rest
         val zones = if (hr.isEmpty() || reserve <= 0) List(6) { 0.0 } else StrainScorer.zoneMinutes(hr, rest, reserve, durations)
         val method = runCatching { NoopPrefs.effortMethod(context) }.getOrDefault(StrainScorer.Method.EDWARDS)
-        val effort = if (hr.isEmpty()) null else StrainScorer.strain(hr, maxHr, rest, method, profile.sex)?.let { it * 21.0 / 100.0 }
+        val strain100 = if (hr.isEmpty()) null else StrainScorer.strain(hr, maxHr, rest, method, profile.sex)
+        val effort = strain100?.let { it * 21.0 / 100.0 }
+        // noop maps load to 0–100 as 100·ln(TRIMP+1)/ln(D); invert it to show the load behind the number.
+        val trimp = strain100?.let { kotlin.math.exp(it / 100.0 * kotlin.math.ln(StrainScorer.logMapDenominator(method, profile.sex))) - 1.0 }
         val peak = if (hr.size >= 60) hr.map { it.bpm.toDouble() }.sorted().let { s -> s[((s.size - 1) * 0.995).toInt()] } else null
         EffortDiag(
             day = day.toString(),
@@ -90,6 +95,7 @@ object EffortDiagnostics {
             zoneStartBpm = listOf(50, 60, 70, 80, 90).map { (rest + reserve * it / 100.0).roundToInt() },
             effort21 = effort,
             storedEffort21 = row?.strain?.let { it * 21.0 / 100.0 },
+            trimp = trimp,
         )
     }
 }
@@ -141,6 +147,26 @@ fun EffortDiagCard(d: EffortDiag?, dayLabel: String, onToggleDay: () -> Unit) {
         Spacer(Modifier.height(8.dp))
         DiagRow("Esfuerzo con estos datos", d.effort21?.let { String.format(Locale.US, "%.1f", it) } ?: "--")
         d.storedEffort21?.let { DiagRow("Esfuerzo guardado", String.format(Locale.US, "%.1f", it)) }
+        d.trimp?.let { t ->
+            DiagRow("Carga acumulada (TRIMP)", "${t.roundToInt()} puntos")
+            Text(
+                "Cada minuto en zona 1 suma 1 punto, en zona 2 suma 2… y en zona 5 suma 5. Tus ${t.roundToInt()} puntos equivalen a unos " +
+                    "${t.roundToInt()} min en zona 1 o ${(t / 3).roundToInt()} min en zona 3.",
+                style = PulseText.body, color = PulseColors.textSecondary, modifier = Modifier.padding(top = 4.dp),
+            )
+        }
+        Text("ESCALA LOGARÍTMICA", style = PulseText.overline, color = PulseColors.textSecondary, modifier = Modifier.padding(top = 12.dp))
+        Text(
+            "El 0–21 comprime la carga: los primeros puntos son baratos y los últimos carísimos. Con la fórmula de NOOP:",
+            style = PulseText.body, color = PulseColors.textSecondary, modifier = Modifier.padding(top = 4.dp),
+        )
+        listOf(5 to "4,2", 10 to "5,7", 30 to "8,1", 60 to "9,7", 150 to "11,9", 500 to "14,7", 2500 to "18,5", 7200 to "21").forEach { (p, e) ->
+            DiagRow("$p puntos", e)
+        }
+        Text(
+            "Por eso media hora de pulso algo alto (andar rápido, subir escaleras, un recado con prisa) ya da un 8 sin haber hecho deporte, y para pasar de 18 a 21 hace falta casi 3 veces más carga.",
+            style = PulseText.body, color = PulseColors.textSecondary, modifier = Modifier.padding(top = 4.dp),
+        )
         Text(
             "Como en NOOP, el esfuerzo empieza a sumar en zona 1 (50 % de tu reserva de pulso: máximo menos reposo) y cada zona pesa más que la anterior.",
             style = PulseText.body.copy(fontSize = 11.5.sp, lineHeight = 16.sp), color = PulseColors.textTertiary, modifier = Modifier.padding(top = 8.dp),
