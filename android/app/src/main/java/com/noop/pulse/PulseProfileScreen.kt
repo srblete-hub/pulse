@@ -230,7 +230,12 @@ fun PulseProfileScreen(
                         Text("$level", style = PulseText.ringNumber.copy(fontSize = 14.sp, fontWeight = FontWeight.ExtraBold), color = PulseColors.text)
                     }
                 }, "NIVEL $level", "$recCount ${if (recCount == 1) "recuperación" else "recuperaciones"}")
-                val ageText = if (PulseData.dataDays(days) < PulseData.pulseAgeDays) "Faltan ${PulseData.pulseAgeDays - PulseData.dataDays(days)} días para calcularla." else "Ver tu edad fisiológica"
+                var ageReady by remember { mutableStateOf(false) }
+                LaunchedEffect(days.size) {
+                    ageReady = PulseData.dataDays(days) >= PulseData.pulseAgeDays &&
+                        runCatching { com.noop.pulse.engine.PulseAge.compute(context, vm, days, emptyList(), null) }.getOrNull() != null
+                }
+                val ageText = if (!ageReady) com.noop.pulse.engine.PulseAge.waitText(days) else "Ver tu edad fisiológica"
                 BigTile(Modifier.weight(1f), onAge, {
                     Box(Modifier.size(56.dp).clip(RoundedCornerShape(28.dp)).background(Brush.radialGradient(listOf(Color(0xFF4A4258), Color(0xFF2B2635)))), contentAlignment = Alignment.Center) {
                         DashedProgressRing(PulseData.dataDays(days).coerceAtMost(PulseData.pulseAgeDays) * 7 / PulseData.pulseAgeDays, 7, 52.dp)

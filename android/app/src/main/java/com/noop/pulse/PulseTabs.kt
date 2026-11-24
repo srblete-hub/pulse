@@ -122,7 +122,7 @@ fun PulseHealthScreen(vm: AppViewModel, actions: HealthActions) {
             Overline("Tu edad fisiológica", large = true)
             Spacer(Modifier.height(10.dp))
             Text(
-                if (age == null) "Faltan ${PulseData.pulseAgeDays - PulseData.dataDays(days)} días para calcular tu edad fisiológica."
+                if (age == null) com.noop.pulse.engine.PulseAge.waitText(days)
                 else String.format(Locale("es"), "%.1f años %s que tu edad real.", abs(age.yearsYounger), if (age.yearsYounger >= 0) "menos" else "más"),
                 style = PulseText.body, color = PulseColors.text,
             )

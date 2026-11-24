@@ -112,6 +112,7 @@ fun MetricPage(
     onCoach: () -> Unit,
     charts: List<TrendChart>,
     middle: @Composable () -> Unit = {},
+    heroCaption: String? = null,
 ) {
     val context = LocalContext.current
     var tip by remember { mutableStateOf(!PulseTips.seen(context, tipKey)) }
@@ -135,6 +136,10 @@ fun MetricPage(
                     Spacer(Modifier.height(12.dp))
                     Text(heroLabel, style = PulseText.overline.copy(fontSize = 11.sp, lineHeight = 16.sp), color = PulseColors.text, textAlign = TextAlign.Center)
                 }
+            }
+            if (heroCaption != null) {
+                Text(heroCaption, style = PulseText.body, color = PulseColors.textSecondary, textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth().padding(start = 24.dp, end = 24.dp, top = 6.dp))
             }
             if (notice != null) {
                 Column(Modifier.padding(start = 15.dp, end = 15.dp, top = 30.dp).fillMaxWidth().clip(RoundedCornerShape(13.dp)).background(noticeBg).padding(16.dp)) {

@@ -458,7 +458,7 @@ fun PulseAgeScreenV2(vm: AppViewModel, onBack: () -> Unit, onCoach: () -> Unit) 
                 Spacer(Modifier.height(12.dp))
                 Text(
                     if (ready && result != null) String.format(es, "%.1f años %s que tu edad", abs(result!!.yearsYounger), if (result!!.yearsYounger >= 0) "menos" else "más")
-                    else "Faltan ${PulseData.pulseAgeDays - PulseData.dataDays(days)} días para calcularla. Mientras, abajo ves cómo van tus hábitos.",
+                    else com.noop.pulse.engine.PulseAge.waitText(days) + " Mientras, abajo ves cómo van tus hábitos.",
                     style = PulseText.body, color = if (ready && (result?.yearsYounger ?: 0.0) >= 0) PulseColors.recoveryGreen else PulseColors.textSecondary, textAlign = TextAlign.Center,
                     modifier = Modifier.padding(horizontal = 30.dp),
                 )

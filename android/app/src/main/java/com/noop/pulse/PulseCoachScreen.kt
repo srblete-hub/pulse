@@ -104,6 +104,7 @@ fun buildCoachSnapshot(
     connected: Boolean,
     streak: Int,
     pulseAge: Double? = null,
+    view: com.noop.pulse.engine.PulseDayView? = null,
 ): CoachSnapshot {
     val d = today ?: days.lastOrNull { it.day == PulseData.dayKey(0) }
     val yesterday = days.lastOrNull { it.day == PulseData.dayKey(-1) }
@@ -113,7 +114,7 @@ fun buildCoachSnapshot(
     val week = (-6..0).map { byDay[PulseData.dayKey(it)] }
     val profile = ProfileStore.from(context)
     return CoachSnapshot(
-        recovery = d?.recovery,
+        recovery = view?.recovery ?: d?.recovery,
         sleepPct = PulseData.sleepPct(d),
         sleepMin = d?.totalSleepMin?.takeIf { it > 0 },
         deepMin = d?.deepMin,
@@ -127,7 +128,7 @@ fun buildCoachSnapshot(
         resp = d?.respRateBpm,
         respAvg = avg { it.respRateBpm },
         skinTempDev = d?.skinTempDevC,
-        effort = PulseData.effort21(d),
+        effort = view?.effort21 ?: PulseData.effort21(d),
         effortAvg = avg { PulseData.effort21(it) },
         yesterdayEffort = PulseData.effort21(yesterday),
         steps = d?.steps,
@@ -167,7 +168,8 @@ fun PulseCoachScreen(vm: AppViewModel, onBack: () -> Unit, onAction: (CoachActio
     LaunchedEffect(days.size, vo2) {
         if (PulseData.dataDays(days) >= PulseData.pulseAgeDays) pulseAge = runCatching { com.noop.pulse.engine.PulseAge.compute(context, vm, days, workouts, vo2)?.result?.pulseAge }.getOrNull()
     }
-    fun snapshot() = buildCoachSnapshot(context, today, days, stress, vo2, live.batteryPct, live.connected, streaks.current, pulseAge)
+    val dayView = com.noop.pulse.engine.pulseDayView(vm, 0)
+    fun snapshot() = buildCoachSnapshot(context, today, days, stress, vo2, live.batteryPct, live.connected, streaks.current, pulseAge, dayView)
 
     val lines = remember { mutableStateListOf<ChatLine>() }
     var started by remember { mutableStateOf(false) }

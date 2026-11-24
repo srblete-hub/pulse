@@ -92,8 +92,9 @@ fun PulseEffortScreen(vm: AppViewModel, onBack: () -> Unit, onCoach: () -> Unit)
     val days by com.noop.pulse.engine.pulseDays(vm)
     val workouts by vm.workouts.collectAsStateWithLifecycle()
     LaunchedEffect(Unit) { runCatching { vm.loadWorkouts() } }
-    val d = PulseData.metricFor(days, today, 0)
-    val eff = PulseData.effort21(d)
+    val view = com.noop.pulse.engine.pulseDayView(vm, 0)
+    val d = view.metric
+    val eff = view.effort21
     val nights = PulseData.nightsWithSleep(days)
     val todayKey = PulseData.dayKey(0)
     val keys = (-6..0).map { PulseData.dayKey(it) }
@@ -143,7 +144,7 @@ fun PulseEffortScreen(vm: AppViewModel, onBack: () -> Unit, onCoach: () -> Unit)
         ),
         coachLine = coach, onBack = onBack, onCoach = onCoach,
         charts = listOf(
-            TrendChart("Esfuerzo", PulseColors.strain, 21.0, week(days) { PulseData.effort21(it) }, { String.format(Locale.US, "%.1f", it) }),
+            TrendChart("Esfuerzo", PulseColors.strain, 21.0, week(days) { PulseData.effort21(it) }.dropLast(1) + eff, { String.format(Locale.US, "%.1f", it) }),
             TrendChart("Zonas 1–3", PulseColors.stressLow, 120.0, keys.map { diags[it]?.zones13 }, { PulseActivity.mmss(it) },
                 legend = listOf(LegendItem("ZONA 1", PulseColors.textSecondary), LegendItem("ZONA 2", PulseColors.stressLow), LegendItem("ZONA 3", PulseColors.recoveryGreen)), valueColor = PulseColors.text),
             TrendChart("Zonas 4–5", PulseColors.stressHigh, 45.0, keys.map { diags[it]?.zones45 }, { PulseActivity.mmss(it) },
@@ -159,8 +160,10 @@ fun PulseEffortScreen(vm: AppViewModel, onBack: () -> Unit, onCoach: () -> Unit)
 fun PulseRecoveryScreen(vm: AppViewModel, onBack: () -> Unit, onHabits: () -> Unit, onCoach: () -> Unit) {
     val today by com.noop.pulse.engine.pulseToday(vm)
     val days by com.noop.pulse.engine.pulseDays(vm)
-    val d = PulseData.metricFor(days, today, 0)
-    val rec = d?.recovery
+    val view = com.noop.pulse.engine.pulseDayView(vm, 0)
+    // With tonight not scored yet, noop carries over the last scored night: its vitals come with it.
+    val d = view.metric?.takeIf { it.recovery != null } ?: days.lastOrNull { it.day == view.recoveryFromDay } ?: view.metric
+    val rec = view.recovery
     val nights = PulseData.nightsWithSleep(days)
     fun avgS(v: Double?, unit: String, dec: Boolean = false) = v?.let { if (dec) String.format(Locale.US, "%.1f%s", it, unit) else "${it.roundToInt()}$unit" } ?: "--"
     MetricPage(
@@ -169,7 +172,8 @@ fun PulseRecoveryScreen(vm: AppViewModel, onBack: () -> Unit, onHabits: () -> Un
         tipBody = "Te dice cada mañana cómo de preparado está tu cuerpo. Se calcula como en NOOP: tu VFC (lo que más pesa), tu pulso en reposo, tu sueño, tu respiración y tu temperatura, comparados con tus propias medias.",
         heroIcon = Icons.Outlined.FavoriteBorder, heroColor = PulseColors.recovery(rec).takeIf { rec != null } ?: PulseColors.recoveryGreen,
         heroFraction = rec?.let { (it / 100).toFloat() }, heroValue = PulseData.pct(rec), heroValueSize = 46, heroLabel = "RECUPERACIÓN",
-        notice = calibrationNotice(nights) { "Duerme con la pulsera $it noches para calibrar del todo tu recuperación." },
+        notice = if (rec != null) null else calibrationNotice(nights) { "Duerme con la pulsera $it noches para calibrar del todo tu recuperación." },
+        heroCaption = view.recoveryCaption,
         rows = listOf(
             MetricRow(Icons.Outlined.ShowChart, "VFC", avgS(d?.avgHrv, " ms"), "media ${avgS(avg30(days) { it.avgHrv }, " ms")}"),
             MetricRow(Icons.Outlined.FavoriteBorder, "PULSO EN REPOSO", avgS(d?.restingHr?.toDouble(), " lpm"), "media ${avgS(avg30(days) { it.restingHr?.toDouble() }, " lpm")}"),

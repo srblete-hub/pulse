@@ -39,6 +39,16 @@ object PulseSleepNeed {
  * noop has no pace of ageing, so none is reported.
  */
 object PulseAge {
+    /** Why there is no age yet, as shown instead of a number. */
+    fun waitText(days: List<DailyMetric>): String {
+        val missing = PulseData.pulseAgeDays - PulseData.dataDays(days)
+        if (missing > 0) return "Faltan $missing ${if (missing == 1) "día" else "días"} de datos para calcularla."
+        val rhrNights = days.takeLast(7).count { it.restingHr != null }
+        val need = FitnessAgeEngine.minCoverageDays - rhrNights
+        return if (need > 0) "Necesita tu pulso en reposo de $need ${if (need == 1) "noche" else "noches"} más esta semana."
+        else "Calculándola con tus datos…"
+    }
+
     data class Out(val result: PulseAgeEngine.Result, val pace: Double?, val daysUsed: Int)
 
     suspend fun compute(
@@ -58,7 +68,8 @@ object PulseAge {
         val sex = profile.sex
         val week = upto.takeLast(7)
         val rhrs = week.mapNotNull { it.restingHr?.toDouble() }.sorted()
-        if (rhrs.isEmpty()) return@withContext null
+        // noop's readiness gate: resting HR on at least 4 of the last 7 nights, otherwise no age at all.
+        if (rhrs.size < FitnessAgeEngine.minCoverageDays) return@withContext null
         val rhr = if (rhrs.size % 2 == 1) rhrs[rhrs.size / 2] else (rhrs[rhrs.size / 2 - 1] + rhrs[rhrs.size / 2]) / 2
         val active = week.mapNotNull { it.strain }.filter { it >= 30.0 }
         val pai = FitnessAgeEngine.physicalActivityIndexFromStrain(active.size, if (active.isEmpty()) 0.0 else active.average())

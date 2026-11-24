@@ -57,8 +57,10 @@ object PulseData {
     fun dayOfMonth(day: String): String = runCatching { LocalDate.parse(day).dayOfMonth.toString() }.getOrDefault("")
 
     fun metricFor(days: List<DailyMetric>, today: DailyMetric?, offset: Int): DailyMetric? {
+        // noop's Today: offset 0 shows the live `today` analysis first, else the stored row.
         val key = dayKey(offset)
-        return days.lastOrNull { it.day == key } ?: if (offset == 0) today else null
+        val stored = days.lastOrNull { it.day == key }
+        return if (offset == 0) today ?: stored else stored
     }
 
     /** Sleep performance 0–100 from noop's rest composite. */
