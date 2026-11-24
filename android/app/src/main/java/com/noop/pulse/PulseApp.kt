@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.ShowChart
 import androidx.compose.material.icons.outlined.Groups
 import androidx.compose.material.icons.outlined.Bedtime
 import androidx.compose.material.icons.outlined.EditNote
@@ -125,6 +126,11 @@ fun PulseApp(vm: AppViewModel) {
     var communityIntro by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(!PulseTips.seen(ctx, "community_intro")) }
     // Automatic activity logging after every strap sync (and once at start).
     val syncState by vm.live.collectAsStateWithLifecycle()
+    // One-time switch to Banister for installs that never chose a method: persists the choice and
+    // re-scores the stored days, so history and today use the same recipe.
+    androidx.compose.runtime.LaunchedEffect(Unit) {
+        if (!com.noop.ui.NoopPrefs.of(ctx).contains(com.noop.ui.NoopPrefs.KEY_BANISTER_EFFORT)) vm.setBanisterEffort(true)
+    }
     androidx.compose.runtime.LaunchedEffect(syncState.lastSyncAt) { runCatching { PulseAutoActivity.run(ctx, vm); vm.loadWorkouts() } }
     var liveHr by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(PulseLivePref.enabled(ctx)) }
     androidx.compose.runtime.DisposableEffect(liveHr) {
@@ -173,7 +179,13 @@ fun PulseApp(vm: AppViewModel) {
                 ) else PulseCommunityScreen()
             }
             composable(PulseRoute.more) {
-                PulseSettingsScreen(vm, settingsGroups(::go), onCalibration = go(PulseRoute.calibration), onBackup = go(PulseRoute.backup))
+                var banister by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(com.noop.ui.NoopPrefs.banisterEffort(ctx)) }
+                val effortItem = SettingsItem(
+                    "Método de esfuerzo",
+                    if (banister) "Banister (exponencial) · toca para usar Edwards (zonas)" else "Edwards (zonas) · toca para usar Banister (exponencial)",
+                    Icons.Outlined.ShowChart,
+                ) { banister = !banister; vm.setBanisterEffort(banister) }
+                PulseSettingsScreen(vm, settingsGroups(::go, effortItem), onCalibration = go(PulseRoute.calibration), onBackup = go(PulseRoute.backup))
             }
 
             composable(PulseRoute.sleep) { PulseSleepScreen(vm, back, onCoach = go(PulseRoute.coach)) }
@@ -322,12 +334,13 @@ fun PulseApp(vm: AppViewModel) {
     }
 }
 
-private fun settingsGroups(go: (String) -> () -> Unit): List<Pair<String?, List<SettingsItem>>> {
+private fun settingsGroups(go: (String) -> () -> Unit, effortItem: SettingsItem): List<Pair<String?, List<SettingsItem>>> {
     return listOf(
         "Preferencias" to listOf(
             SettingsItem("Perfil", icon = Icons.Outlined.Person, onClick = go(PulseRoute.profile)),
             SettingsItem("Pulsera", icon = Icons.Outlined.Watch, onClick = go(PulseRoute.strap)),
             SettingsItem("Entrenamientos", icon = Icons.Outlined.FitnessCenter, onClick = go(PulseRoute.workouts)),
+            effortItem,
             SettingsItem("Diario", icon = Icons.Outlined.EditNote, onClick = go(PulseRoute.journal)),
             SettingsItem("Horario de sueño", icon = Icons.Outlined.Bedtime, onClick = go(PulseRoute.alarms)),
             SettingsItem("Ciclo menstrual", icon = Icons.Outlined.WaterDrop, onClick = go(PulseRoute.advanced)),

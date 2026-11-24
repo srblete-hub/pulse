@@ -317,7 +317,8 @@ object NoopPrefs {
      *  `PuffinExperiment.banisterEffortKey`. */
     const val KEY_BANISTER_EFFORT = "noop.banisterEffort"
 
-    fun banisterEffort(context: Context): Boolean = of(context).getBoolean(KEY_BANISTER_EFFORT, false)
+    // Pulse: Banister's exponential TRIMP is the default; Edwards stays selectable in Settings.
+    fun banisterEffort(context: Context): Boolean = of(context).getBoolean(KEY_BANISTER_EFFORT, true)
 
     /** The TRIMP recipe every Effort computation on this device should use. */
     fun effortMethod(context: Context): com.noop.analytics.StrainScorer.Method =
