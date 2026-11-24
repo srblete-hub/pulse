@@ -195,7 +195,7 @@ fun PulseScheduleIntro(onClose: () -> Unit, onDone: () -> Unit) {
             },
             IntroStep("Consulta tu próxima alarma en el planificador de sueño", emptyList(), kicker = "GESTIONA") {
                 Column(
-                    Modifier.align(Alignment.TopCenter).padding(start = 40.dp, end = 40.dp, top = 260.dp).fillMaxWidth().clip(RoundedCornerShape(18.dp)).background(Color(0xFF2A3036)).padding(16.dp),
+                    Modifier.align(Alignment.TopCenter).padding(start = 40.dp, end = 40.dp, top = 260.dp).fillMaxWidth().clip(RoundedCornerShape(18.dp)).background(PulseColors.divider).padding(16.dp),
                 ) {
                     Text("ALARMA", style = PulseText.overline.copy(fontSize = 11.sp), color = PulseColors.text, modifier = Modifier.align(Alignment.CenterHorizontally))
                     Spacer(Modifier.height(12.dp))
@@ -220,7 +220,7 @@ fun PulseScheduleIntro(onClose: () -> Unit, onDone: () -> Unit) {
 private fun BoxScope.ScheduleCards() {
     Column(Modifier.align(Alignment.TopCenter).padding(start = 40.dp, end = 40.dp, top = 220.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
         listOf("LUN – VIE" to "07:00", "SÁB – DOM" to "09:30").forEach { (d, t) ->
-            Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(Color(0xFF353C43)).padding(18.dp)) {
+            Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(PulseMetrics.cardRadius)).background(PulseColors.hairlineStrong).padding(18.dp)) {
                 Text(d, style = PulseText.overlineLg, color = PulseColors.textSecondary)
                 Spacer(Modifier.height(6.dp))
                 Text(t, style = PulseText.bigNumber.copy(fontSize = 26.sp), color = PulseColors.text)
@@ -237,7 +237,7 @@ private fun BoxScope.ScheduleCards() {
 
 @Composable
 private fun MiniCell(label: String, value: String, modifier: Modifier) {
-    Column(modifier.clip(RoundedCornerShape(10.dp)).background(Color(0xFF353C43)).padding(14.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+    Column(modifier.clip(RoundedCornerShape(10.dp)).background(PulseColors.hairlineStrong).padding(14.dp), horizontalAlignment = Alignment.CenterHorizontally) {
         Text(label, style = PulseText.overline.copy(fontSize = 9.sp), color = PulseColors.textSecondary, textAlign = TextAlign.Center)
         Spacer(Modifier.height(6.dp))
         Text(value, style = PulseText.small.copy(fontWeight = FontWeight.Bold), color = PulseColors.text, textAlign = TextAlign.Center)
@@ -246,7 +246,7 @@ private fun MiniCell(label: String, value: String, modifier: Modifier) {
 
 @Composable
 private fun BigSwitch(on: Boolean, onToggle: () -> Unit) {
-    Box(Modifier.width(56.dp).height(30.dp).clip(RoundedCornerShape(15.dp)).background(if (on) Color(0xFF4A3A66) else PulseColors.hairline).pulseClick(onToggle)) {
+    Box(Modifier.width(56.dp).height(30.dp).clip(RoundedCornerShape(15.dp)).background(if (on) PulseColors.hairlineStrong else PulseColors.hairline).pulseClick(onToggle)) {
         Box(Modifier.offset(x = if (on) 29.dp else 3.dp, y = 3.dp).size(24.dp).clip(RoundedCornerShape(12.dp)).background(if (on) PulseColors.accent else PulseColors.textTertiary))
     }
 }
@@ -302,7 +302,7 @@ fun PulseSleepPlannerScreen(vm: AppViewModel, onBack: () -> Unit) {
     val bed = wake - inBed
     val nights = PulseData.nightsWithSleep(days)
 
-    Box(Modifier.fillMaxSize().background(Brush.verticalGradient(0f to Color(0xFF2A3238), 0.45f to Color(0xFF1B1F23), 1f to Color(0xFF15181B))).statusBarsPadding()) {
+    Box(Modifier.fillMaxSize().background(Brush.verticalGradient(0f to PulseColors.divider, 0.45f to PulseColors.overlay, 1f to PulseColors.raised)).statusBarsPadding()) {
         when (view) {
             PlannerView.Planner, PlannerView.Sheet -> {
                 Column(Modifier.fillMaxSize()) {
@@ -317,7 +317,7 @@ fun PulseSleepPlannerScreen(vm: AppViewModel, onBack: () -> Unit) {
                         Text(
                             if (on) "ACTIVO" else "APAGADO", style = PulseText.overline.copy(fontSize = 9.5.sp),
                             color = if (on) PulseColors.accentHover else PulseColors.textSecondary,
-                            modifier = Modifier.clip(RoundedCornerShape(6.dp)).background(if (on) Color(0xFF3A2D52) else PulseColors.overlay).padding(horizontal = 8.dp, vertical = 3.dp),
+                            modifier = Modifier.clip(RoundedCornerShape(6.dp)).background(if (on) PulseColors.hairlineStrong else PulseColors.overlay).padding(horizontal = 8.dp, vertical = 3.dp),
                         )
                     }
                     Box(Modifier.align(Alignment.CenterHorizontally).padding(top = 10.dp).size(40.dp).border(1.5.dp, PulseColors.text, RoundedCornerShape(20.dp)), contentAlignment = Alignment.Center) {
@@ -334,7 +334,7 @@ fun PulseSleepPlannerScreen(vm: AppViewModel, onBack: () -> Unit) {
                             .pulseClick { goal = (goal + 1) % 3; SleepSchedules.setGoal(context, goal) }.padding(horizontal = 34.dp),
                         contentAlignment = Alignment.Center,
                     ) { Text(listOf("DORMIR LO NECESARIO", "RENDIR AL MÁXIMO", "DORMIR LO MÍNIMO")[goal], style = PulseText.overlineLg, color = PulseColors.text) }
-                    Column(Modifier.padding(top = 24.dp).fillMaxWidth().weight(1f).background(Color(0xFF12151A)).padding(horizontal = 24.dp, vertical = 20.dp)) {
+                    Column(Modifier.padding(top = 24.dp).fillMaxWidth().weight(1f).background(PulseColors.raised).padding(horizontal = 24.dp, vertical = 20.dp)) {
                         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                             TimeLabel(SleepSchedules.hm(bed), "HORA DE\nACOSTARTE")
                             TimeLabel(SleepSchedules.hm(wake), "HORA DE\nDESPERTAR")
@@ -351,7 +351,7 @@ fun PulseSleepPlannerScreen(vm: AppViewModel, onBack: () -> Unit) {
                             }
                             Text(
                                 SleepSchedules.hm(inBed), style = PulseText.small.copy(fontWeight = FontWeight.Bold), color = PulseColors.text,
-                                modifier = Modifier.clip(RoundedCornerShape(18.dp)).border(2.dp, PulseColors.text, RoundedCornerShape(18.dp)).background(Color(0xFF0C0E10)).padding(horizontal = 16.dp, vertical = 8.dp),
+                                modifier = Modifier.clip(RoundedCornerShape(18.dp)).border(2.dp, PulseColors.text, RoundedCornerShape(18.dp)).background(PulseColors.base).padding(horizontal = 16.dp, vertical = 8.dp),
                             )
                         }
                         Text(if (nights >= 3) "ÓPTIMO" else "ÓPTIMO", style = PulseText.overlineLg.copy(letterSpacing = PulseText.tabTitle.letterSpacing * 0.875f), color = PulseColors.stressLowLabel, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth().padding(top = 14.dp))
@@ -360,7 +360,7 @@ fun PulseSleepPlannerScreen(vm: AppViewModel, onBack: () -> Unit) {
                             style = PulseText.body.copy(fontSize = 11.5.sp), color = PulseColors.textTertiary, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth().padding(top = 6.dp),
                         )
                     }
-                    Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(topStart = 22.dp, topEnd = 22.dp)).background(Color(0xFF2A3036)).navigationBarsPadding().padding(start = 12.dp, end = 12.dp, top = 16.dp, bottom = 22.dp)) {
+                    Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(topStart = 22.dp, topEnd = 22.dp)).background(PulseColors.divider).navigationBarsPadding().padding(start = 12.dp, end = 12.dp, top = 16.dp, bottom = 22.dp)) {
                         Row(Modifier.fillMaxWidth().padding(horizontal = 6.dp), verticalAlignment = Alignment.CenterVertically) {
                             Icon(Icons.Outlined.Alarm, null, tint = PulseColors.text, modifier = Modifier.size(28.dp))
                             Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
@@ -397,7 +397,7 @@ fun PulseSleepPlannerScreen(vm: AppViewModel, onBack: () -> Unit) {
                     PulseSwitch(on) { on = it; persist() }
                 }
                 schedules.forEachIndexed { i, s ->
-                    Column(Modifier.padding(start = 18.dp, end = 18.dp, top = if (i == 0) 30.dp else 12.dp).fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(Color(0xFF353C43)).padding(18.dp)) {
+                    Column(Modifier.padding(start = 18.dp, end = 18.dp, top = if (i == 0) 30.dp else 12.dp).fillMaxWidth().clip(RoundedCornerShape(PulseMetrics.cardRadius)).background(PulseColors.hairlineStrong).padding(18.dp)) {
                         Text(SleepSchedules.daysLabel(s.days), style = PulseText.overlineLg.copy(letterSpacing = PulseText.overline.letterSpacing * 0.83f), color = PulseColors.textSecondary)
                         Row(Modifier.fillMaxWidth().padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                             Text(SleepSchedules.hm(s.minutes), style = PulseText.bigNumber.copy(fontSize = 26.sp), color = PulseColors.text, modifier = Modifier.weight(1f))
@@ -443,9 +443,9 @@ fun PulseSleepPlannerScreen(vm: AppViewModel, onBack: () -> Unit) {
             Box(Modifier.fillMaxSize().background(Color(0xB3000000)).pulseClick { view = PlannerView.Schedule })
             Column(
                 Modifier.align(Alignment.BottomCenter).fillMaxWidth().height(520.dp).clip(RoundedCornerShape(topStart = 22.dp, topEnd = 22.dp))
-                    .background(Brush.linearGradient(listOf(Color(0xFF323B43), Color(0xFF1E2328), Color(0xFF191D21)))).pulseClick { }.navigationBarsPadding(),
+                    .background(Brush.linearGradient(listOf(PulseColors.hairlineStrong, PulseColors.overlay, PulseColors.overlay))).pulseClick { }.navigationBarsPadding(),
             ) {
-                Box(Modifier.align(Alignment.CenterHorizontally).padding(top = 12.dp).width(60.dp).height(4.dp).clip(RoundedCornerShape(2.dp)).background(Color(0xFF6B737B)))
+                Box(Modifier.align(Alignment.CenterHorizontally).padding(top = 12.dp).width(60.dp).height(4.dp).clip(RoundedCornerShape(2.dp)).background(PulseColors.textTertiary))
                 Row(Modifier.fillMaxWidth().padding(start = 12.dp, end = 16.dp, top = 18.dp), verticalAlignment = Alignment.CenterVertically) {
                     Box(Modifier.size(40.dp).pulseClick {
                         when (sheet) { SheetStep.Days -> view = PlannerView.Schedule; SheetStep.Mode -> sheet = SheetStep.Days; SheetStep.Time -> sheet = SheetStep.Mode }
@@ -454,7 +454,7 @@ fun PulseSleepPlannerScreen(vm: AppViewModel, onBack: () -> Unit) {
                         when (sheet) { SheetStep.Days -> "ELIGE LOS DÍAS QUE SE REPITE"; SheetStep.Mode -> "ELIGE EL MODO DE ALARMA"; SheetStep.Time -> "HORA DE DESPERTAR" },
                         style = PulseText.overline.copy(fontSize = 11.5.sp, lineHeight = 17.sp), color = PulseColors.text, textAlign = TextAlign.Center, modifier = Modifier.weight(1f),
                     )
-                    Box(Modifier.size(28.dp).border(1.4.dp, PulseColors.textSecondary, RoundedCornerShape(14.dp)), contentAlignment = Alignment.Center) { Text("i", style = PulseText.overline, color = PulseColors.textSecondary) }
+                    Box(Modifier.size(28.dp).border(1.4.dp, PulseColors.textSecondary, RoundedCornerShape(PulseMetrics.cardRadius)), contentAlignment = Alignment.Center) { Text("i", style = PulseText.overline, color = PulseColors.textSecondary) }
                 }
                 Box(Modifier.fillMaxSize()) {
                     when (sheet) {
@@ -467,7 +467,7 @@ fun PulseSleepPlannerScreen(vm: AppViewModel, onBack: () -> Unit) {
                                         Box(
                                             Modifier.size(32.dp).clip(RoundedCornerShape(6.dp)).background(if (sel[i]) Color.White else PulseColors.hairline).pulseClick { sel[i] = !sel[i] },
                                             contentAlignment = Alignment.Center,
-                                        ) { Text(d, style = PulseText.small.copy(fontWeight = FontWeight.Bold), color = if (sel[i]) Color(0xFF15181B) else PulseColors.text) }
+                                        ) { Text(d, style = PulseText.small.copy(fontWeight = FontWeight.Bold), color = if (sel[i]) PulseColors.raised else PulseColors.text) }
                                     }
                                 }
                             }
@@ -534,13 +534,13 @@ private fun BoxScope.SheetButton(label: String, enabled: Boolean, onClick: () ->
         Modifier.align(Alignment.BottomCenter).padding(start = 24.dp, end = 24.dp, bottom = 40.dp).fillMaxWidth().height(48.dp).clip(RoundedCornerShape(24.dp))
             .border(2.dp, if (enabled) PulseColors.text else PulseColors.hairlineStrong, RoundedCornerShape(24.dp)).pulseClick { if (enabled) onClick() },
         contentAlignment = Alignment.Center,
-    ) { Text(label, style = PulseText.overlineLg, color = if (enabled) PulseColors.text else Color(0xFF6B737B)) }
+    ) { Text(label, style = PulseText.overlineLg, color = if (enabled) PulseColors.text else PulseColors.textTertiary) }
 }
 
 @Composable
 private fun Wheel(value: Int, modulo: Int, fmt: (Int) -> String, step: Int = 1, onChange: (Int) -> Unit) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(fmt((value - step + modulo) % modulo), style = PulseText.small.copy(fontSize = 16.sp), color = Color(0xFF6B737B), modifier = Modifier.pulseClick { onChange((value - step + modulo) % modulo) }.padding(8.dp))
+        Text(fmt((value - step + modulo) % modulo), style = PulseText.small.copy(fontSize = 16.sp), color = PulseColors.textTertiary, modifier = Modifier.pulseClick { onChange((value - step + modulo) % modulo) }.padding(8.dp))
         Spacer(Modifier.height(10.dp))
         Box(Modifier.width(70.dp)) {
             Column {
@@ -550,14 +550,14 @@ private fun Wheel(value: Int, modulo: Int, fmt: (Int) -> String, step: Int = 1, 
             }
         }
         Spacer(Modifier.height(10.dp))
-        Text(fmt((value + step) % modulo), style = PulseText.small.copy(fontSize = 16.sp), color = Color(0xFF6B737B), modifier = Modifier.pulseClick { onChange((value + step) % modulo) }.padding(8.dp))
+        Text(fmt((value + step) % modulo), style = PulseText.small.copy(fontSize = 16.sp), color = PulseColors.textTertiary, modifier = Modifier.pulseClick { onChange((value + step) % modulo) }.padding(8.dp))
     }
 }
 
 @Composable
 private fun SavingView(done: Boolean, onTap: () -> Unit) {
     Column(
-        Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color(0xFF262C32), PulseColors.base))).pulseClick(onTap),
+        Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(PulseColors.divider, PulseColors.base))).pulseClick(onTap),
         horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center,
     ) {
         if (done) {
@@ -576,6 +576,6 @@ private fun SavingView(done: Boolean, onTap: () -> Unit) {
         }
         Text(if (done) "¡LISTO!" else "GUARDANDO TU HORARIO…", style = PulseText.overline.copy(fontSize = 13.sp, letterSpacing = PulseText.tabTitle.letterSpacing * 0.875f), color = PulseColors.text, modifier = Modifier.padding(top = 28.dp))
         Text(if (done) "Tu horario se ha guardado." else "Mantén la pulsera cerca y conectada.", style = PulseText.body.copy(fontSize = 13.5.sp), color = PulseColors.textSecondary, modifier = Modifier.padding(top = 8.dp))
-        if (done) Text("(toca para continuar)", style = PulseText.body.copy(fontSize = 11.sp), color = Color(0xFF6B737B), modifier = Modifier.padding(top = 40.dp))
+        if (done) Text("(toca para continuar)", style = PulseText.body.copy(fontSize = 11.sp), color = PulseColors.textTertiary, modifier = Modifier.padding(top = 40.dp))
     }
 }

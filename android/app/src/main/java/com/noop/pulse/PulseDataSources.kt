@@ -155,7 +155,7 @@ fun StrapAdvancedPanel(vm: AppViewModel) {
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 18.dp, vertical = 16.dp).navigationBarsPadding()) {
         Text("MODELO", style = PulseText.overline, color = PulseColors.textSecondary)
         Spacer(Modifier.height(8.dp))
-        Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(Color(0xFF0C0E10)).padding(3.dp)) {
+        Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(PulseColors.base).padding(3.dp)) {
             WhoopModel.entries.forEach { m ->
                 Box(
                     Modifier.weight(1f).height(38.dp).clip(RoundedCornerShape(8.dp)).background(if (m == model) PulseColors.overlay else Color.Transparent)

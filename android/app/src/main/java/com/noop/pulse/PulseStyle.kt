@@ -34,11 +34,15 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import com.noop.R
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
@@ -48,80 +52,117 @@ import androidx.compose.ui.unit.sp
 import com.noop.ui.NoopType
 
 /**
- * Pulse design tokens, measured from the Pulse mockups (390 pt wide artboards → dp 1:1).
+ * Pulse design tokens — "Health Dashboard" design system (dark, data-first). The screen is near-black;
+ * colour appears only where it means something: green / yellow / red for a metric's state, blue for
+ * load, periwinkle for sleep, teal as the neutral accent. Depth comes from surface tone, not shadows.
  * Every Pulse screen reads colours, type and spacing from here and nowhere else.
  */
 object PulseColors {
-    val bgTop = Color(0xFF2A3036)
-    val bgMid = Color(0xFF1B1F23)
-    val base = Color(0xFF121518)
-    val raised = Color(0xFF262C31)
-    val overlay = Color(0xFF2C3238)
-    val inset = Color(0xFF1E2328)
-    val chip = Color(0xFF3D444B)
-    val track = Color(0xFF30373D)
-    val hairline = Color(0xFF3A424A)
-    val hairlineStrong = Color(0xFF454D55)
-    val text = Color(0xFFF2F4F5)
-    val textSecondary = Color(0xFFA9B0B6)
-    val textTertiary = Color(0xFF8E969D)
-    val textQuiet = Color(0xFFC9CED3)
-    val accent = Color(0xFFC78BF7)
-    val accentHover = Color(0xFFDDB4FB)
-    val violet = Color(0xFF8A5CF6)
-    val accentFillTop = Color(0xFF2E2638)
-    val accentFillBottom = Color(0xFF241E33)
-    val gold = Color(0xFFE8B04A)
-    val recoveryGreen = Color(0xFF3DDC84)
-    val recoveryYellow = Color(0xFFF5C542)
-    val recoveryRed = Color(0xFFFF5A5F)
-    val strain = Color(0xFF3B9CFF)
-    val sleep = Color(0xFF8C7CFF)
-    val stressLow = Color(0xFF5DA8FF)
-    val stressLowLabel = Color(0xFFA6CCFF)
-    val stressMid = Color(0xFFC78BF7)
-    val stressHigh = Color(0xFFF0A85A)
-    val onAccent = Color(0xFF101315)
+    // Surfaces
+    val base = Color(0xFF0A0A0C)
+    val raised = Color(0xFF16161A)
+    val overlay = Color(0xFF1F1F24)
+    val divider = Color(0xFF2A2A30)
+    val bgTop = base
+    val bgMid = base
+    val inset = Color(0xFF111114)
+    val chip = overlay
+    val track = divider
+    val hairline = divider
+    val hairlineStrong = Color(0xFF3A3A42)
 
-    val screenBrush = Brush.verticalGradient(0f to bgTop, 0.4f to bgMid, 1f to base)
-    val accentBrush = Brush.linearGradient(listOf(accent, violet))
-    val accentFill = Brush.linearGradient(listOf(accentFillTop, accentFillBottom))
+    // Text
+    val text = Color(0xFFFFFFFF)
+    val textSecondary = Color(0xFF9A9AA2)
+    val textTertiary = Color(0xFF5E5E66)
+    val textQuiet = Color(0xFFC8C8CE)
+
+    // Semantic — metric state only, never decoration
+    val statusHigh = Color(0xFF16EC06)
+    val statusMid = Color(0xFFFFDE00)
+    val statusLow = Color(0xFFFF0026)
+    val load = Color(0xFF0093E7)
+    val sleep = Color(0xFF7BA0FF)
+    val sleepDeep = Color(0xFF4F72E0)
+    val accent = Color(0xFF00E0C6)
+    val accentHover = Color(0xFF5CF0DE)
+    val onAccent = Color(0xFF0A0A0C)
+
+    // Aliases kept so every screen resolves through the tokens above.
+    val recoveryGreen = statusHigh
+    val recoveryYellow = statusMid
+    val recoveryRed = statusLow
+    val strain = load
+    val violet = accent
+    val gold = accent
+    val accentFillTop = raised
+    val accentFillBottom = raised
+    /** Stress is a metric too: calm → sleep blue, elevated → yellow, high → red. */
+    val stressLow = sleep
+    val stressLowLabel = sleep
+    val stressMid = statusMid
+    val stressHigh = statusLow
+
+    val screenBrush: Brush = SolidColor(base)
+    val accentBrush: Brush = SolidColor(accent)
+    val accentFill: Brush = SolidColor(raised)
 
     fun recovery(pct: Double?): Color = when {
         pct == null -> track
-        pct >= 67 -> recoveryGreen
-        pct >= 34 -> recoveryYellow
-        else -> recoveryRed
+        pct >= 67 -> statusHigh
+        pct >= 34 -> statusMid
+        else -> statusLow
     }
 }
 
+/** Inter (SIL Open Font License, see assets/licenses/Inter-OFL.txt); Inter Display for metric numbers. */
+object PulseType {
+    val sans = FontFamily(
+        Font(R.font.inter_400, FontWeight.Normal),
+        Font(R.font.inter_500, FontWeight.Medium),
+        Font(R.font.inter_600, FontWeight.SemiBold),
+        Font(R.font.inter_700, FontWeight.Bold),
+        Font(R.font.inter_700, FontWeight.ExtraBold),
+    )
+    val display = FontFamily(Font(R.font.inter_display_700, FontWeight.Bold), Font(R.font.inter_display_700, FontWeight.ExtraBold))
+}
+
 object PulseText {
-    private fun label(size: TextUnit, weight: FontWeight = FontWeight.Bold, tracking: Float = 0.12f) =
-        TextStyle(fontFamily = NoopType.label, fontWeight = weight, fontSize = size, letterSpacing = tracking.em)
+    private fun label(size: TextUnit, weight: FontWeight = FontWeight.Medium, tracking: Float = 0.08f) =
+        TextStyle(fontFamily = PulseType.sans, fontWeight = weight, fontSize = size, lineHeight = (size.value * 1.3f).sp, letterSpacing = tracking.em)
+    private fun num(size: TextUnit, weight: FontWeight = FontWeight.Bold) =
+        TextStyle(fontFamily = PulseType.display, fontWeight = weight, fontSize = size, lineHeight = size, letterSpacing = (-0.02f).em)
 
-    /** Uppercase labels: card overlines, ring captions, CTA links. */
-    val overline = label(10.sp)
-    val overlineLg = label(10.5.sp)
-    val tabTitle = label(11.sp, tracking = 0.16f)
-    val chartAxis = TextStyle(fontFamily = NoopType.label, fontWeight = FontWeight.Medium, fontSize = 9.sp)
-    val ringNumber = TextStyle(fontFamily = NoopType.label, fontWeight = FontWeight.Bold, fontSize = 19.sp)
-    val ringNumberLg = TextStyle(fontFamily = NoopType.label, fontWeight = FontWeight.Bold, fontSize = 22.sp)
-    val bigNumber = TextStyle(fontFamily = NoopType.label, fontWeight = FontWeight.ExtraBold, fontSize = 17.sp)
-    val heroNumber = TextStyle(fontFamily = NoopType.label, fontWeight = FontWeight.Bold, fontSize = 44.sp)
-    val wordmark = TextStyle(fontFamily = NoopType.label, fontWeight = FontWeight.Medium, fontSize = 17.sp, letterSpacing = 0.08.em)
-    val small = TextStyle(fontFamily = NoopType.label, fontWeight = FontWeight.SemiBold, fontSize = 12.sp)
+    /** label — uppercase metadata, ring captions, CTA links (12 sp, 500, +0.08 em). */
+    val overline = label(11.sp)
+    val overlineLg = label(12.sp)
+    val tabTitle = label(12.sp, FontWeight.SemiBold)
+    val chartAxis = label(10.sp, tracking = 0.02f)
+    val small = label(12.sp, FontWeight.SemiBold, 0.02f)
+    val wordmark = label(17.sp, FontWeight.SemiBold)
 
-    val sectionTitle = TextStyle(fontFamily = NoopType.sans, fontWeight = FontWeight.SemiBold, fontSize = 19.sp)
-    val cardTitle = TextStyle(fontFamily = NoopType.sans, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
-    val cardTitleLg = TextStyle(fontFamily = NoopType.sans, fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
-    val body = TextStyle(fontFamily = NoopType.sans, fontWeight = FontWeight.Normal, fontSize = 12.5.sp, lineHeight = 17.5.sp)
-    val bodyLg = TextStyle(fontFamily = NoopType.sans, fontWeight = FontWeight.Normal, fontSize = 14.sp, lineHeight = 20.sp)
-    val headline = TextStyle(fontFamily = NoopType.sans, fontWeight = FontWeight.Bold, fontSize = 24.sp, lineHeight = 30.sp)
+    /** Numbers — the protagonist of each view. */
+    val ringNumber = num(20.sp)
+    val ringNumberLg = num(24.sp)
+    val bigNumber = num(18.sp)
+    val heroNumber = num(48.sp)
+    /** metric-display (64 sp) — the one number at the centre of a detail screen's ring. */
+    val metric = num(64.sp)
+
+    val headline = TextStyle(fontFamily = PulseType.sans, fontWeight = FontWeight.SemiBold, fontSize = 24.sp, lineHeight = 29.sp, letterSpacing = (-0.01f).em)
+    val sectionTitle = TextStyle(fontFamily = PulseType.sans, fontWeight = FontWeight.SemiBold, fontSize = 20.sp, lineHeight = 24.sp)
+    val cardTitleLg = TextStyle(fontFamily = PulseType.sans, fontWeight = FontWeight.SemiBold, fontSize = 18.sp, lineHeight = 23.sp)
+    val cardTitle = TextStyle(fontFamily = PulseType.sans, fontWeight = FontWeight.SemiBold, fontSize = 15.sp, lineHeight = 20.sp)
+    val body = TextStyle(fontFamily = PulseType.sans, fontWeight = FontWeight.Normal, fontSize = 15.sp, lineHeight = 22.sp)
+    val bodyLg = TextStyle(fontFamily = PulseType.sans, fontWeight = FontWeight.Normal, fontSize = 16.sp, lineHeight = 24.sp)
 }
 
 object PulseMetrics {
-    val gutter = 15.dp
-    val cardRadius = 13.dp
+    val gutter = 16.dp
+    val cardRadius = 16.dp
+    val sheetRadius = 20.dp
+    val buttonRadius = 8.dp
+    val inputRadius = 12.dp
     val cardPad = 16.dp
     val sectionGap = 30.dp
     /** Space reserved at the bottom of scrolling tab screens so the floating bar never covers content. */

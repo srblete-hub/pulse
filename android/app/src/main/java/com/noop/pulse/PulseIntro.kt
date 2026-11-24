@@ -55,7 +55,7 @@ class IntroStep(
     val art: @Composable BoxScope.() -> Unit,
 )
 
-private val introBg = Brush.verticalGradient(0f to Color(0xFF262C32), 0.45f to Color(0xFF1B1F23), 1f to Color(0xFF15181B))
+private val introBg = Brush.verticalGradient(0f to PulseColors.divider, 0.45f to PulseColors.overlay, 1f to PulseColors.raised)
 
 /**
  * Multi-step introduction with the circular progress "next" button used by every Pulse intro
@@ -125,7 +125,7 @@ fun ProgressNextButton(fraction: Float?, done: Boolean = false, enabled: Boolean
         }
         Icon(
             if (done) Icons.Outlined.Check else Icons.AutoMirrored.Outlined.ArrowForward, null,
-            tint = if (fraction == null) Color(0xFF15121C) else if (enabled) PulseColors.text else PulseColors.textTertiary,
+            tint = if (fraction == null) PulseColors.raised else if (enabled) PulseColors.text else PulseColors.textTertiary,
             modifier = Modifier.size(if (done) 26.dp else 24.dp),
         )
     }

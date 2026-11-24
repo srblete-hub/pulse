@@ -135,7 +135,7 @@ fun PulseMonitorScreen(vm: AppViewModel, onBack: () -> Unit, onCoach: () -> Unit
     val d = today ?: days.lastOrNull { it.day == PulseData.dayKey(0) }
     var info by remember { mutableStateOf<Vital?>(null) }
 
-    Box(Modifier.fillMaxSize().background(Brush.verticalGradient(0f to Color(0xFF262C32), 0.4f to Color(0xFF1B1F23), 1f to PulseColors.base))) {
+    Box(Modifier.fillMaxSize().background(Brush.verticalGradient(0f to PulseColors.divider, 0.4f to PulseColors.overlay, 1f to PulseColors.base))) {
         Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).statusBarsPadding()) {
             Row(Modifier.fillMaxWidth().padding(start = 10.dp, end = 10.dp, top = 18.dp), verticalAlignment = Alignment.CenterVertically) {
                 Box(Modifier.size(44.dp).pulseClick(onBack), contentAlignment = Alignment.Center) { Icon(Icons.AutoMirrored.Outlined.ArrowBack, "Volver", tint = PulseColors.text, modifier = Modifier.size(22.dp)) }
@@ -147,9 +147,9 @@ fun PulseMonitorScreen(vm: AppViewModel, onBack: () -> Unit, onCoach: () -> Unit
                 Canvas(Modifier.fillMaxSize()) {
                     val step = 14.dp.toPx()
                     var x = 0f
-                    while (x < size.width) { drawLine(Color(0xFF2A3137), Offset(x, 0f), Offset(x, size.height), 1f); x += step }
+                    while (x < size.width) { drawLine(PulseColors.divider, Offset(x, 0f), Offset(x, size.height), 1f); x += step }
                     var y = 0f
-                    while (y < size.height) { drawLine(Color(0xFF2A3137), Offset(0f, y), Offset(size.width, y), 1f); y += step }
+                    while (y < size.height) { drawLine(PulseColors.divider, Offset(0f, y), Offset(size.width, y), 1f); y += step }
                     drawRect(Brush.horizontalGradient(0f to Color(0xF21B1F23), 0.45f to Color(0x661B1F23), 1f to Color(0x1A1B1F23)))
                     if (trace.size >= 2) {
                         val left = size.width - 300.dp.toPx() - 20.dp.toPx()
@@ -190,11 +190,11 @@ fun PulseMonitorScreen(vm: AppViewModel, onBack: () -> Unit, onCoach: () -> Unit
                 }
             }
             if (nights < PulseData.calibrationNights) {
-                Column(Modifier.padding(start = 15.dp, end = 15.dp, top = 24.dp).fillMaxWidth().clip(RoundedCornerShape(13.dp)).background(Color(0xFF34283F)).padding(16.dp)) {
+                Column(Modifier.padding(start = 15.dp, end = 15.dp, top = 24.dp).fillMaxWidth().clip(RoundedCornerShape(PulseMetrics.cardRadius)).background(PulseColors.divider).padding(16.dp)) {
                     Text("Duerme con la pulsera ${PulseData.calibrationNights - nights} noches más para calibrar tus rangos.", style = PulseText.body, color = PulseColors.text)
                     Spacer(Modifier.height(12.dp))
                     Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                        repeat(7) { i -> Box(Modifier.weight(1f).height(3.dp).clip(RoundedCornerShape(2.dp)).background(if (i < nights) PulseColors.accent else Color(0xFF5A4E66))) }
+                        repeat(7) { i -> Box(Modifier.weight(1f).height(3.dp).clip(RoundedCornerShape(2.dp)).background(if (i < nights) PulseColors.accent else PulseColors.textTertiary)) }
                     }
                 }
             }
@@ -229,7 +229,7 @@ fun PulseMonitorScreen(vm: AppViewModel, onBack: () -> Unit, onCoach: () -> Unit
 
 @Composable
 private fun VitalCard(v: Vital, value: Double?, status: VitalStatus, modifier: Modifier, onClick: () -> Unit) {
-    Column(modifier.height(132.dp).clip(RoundedCornerShape(13.dp)).background(Color(0xFF2A3036)).pulseClick(onClick).padding(14.dp)) {
+    Column(modifier.height(132.dp).clip(RoundedCornerShape(PulseMetrics.cardRadius)).background(PulseColors.divider).pulseClick(onClick).padding(14.dp)) {
         Row(verticalAlignment = Alignment.Top) {
             Icon(v.icon, null, tint = PulseColors.textSecondary, modifier = Modifier.size(17.dp))
             Spacer(Modifier.width(8.dp))
@@ -260,8 +260,8 @@ private fun VitalInfoSheet(v: Vital, status: VitalStatus, history: List<Double>,
     var how by remember { mutableStateOf(false) }
     Box(Modifier.fillMaxSize().background(Color(0x8C080A0C)).pulseClick(onClose)) {
         Column(
-            Modifier.align(Alignment.Center).padding(horizontal = 20.dp).fillMaxWidth().shadow(30.dp, RoundedCornerShape(14.dp)).clip(RoundedCornerShape(14.dp))
-                .background(Brush.linearGradient(listOf(Color(0xFF313A43), Color(0xFF232A31), Color(0xFF1D2329)))).pulseClick { }
+            Modifier.align(Alignment.Center).padding(horizontal = 20.dp).fillMaxWidth().shadow(30.dp, RoundedCornerShape(PulseMetrics.cardRadius)).clip(RoundedCornerShape(PulseMetrics.cardRadius))
+                .background(Brush.linearGradient(listOf(PulseColors.hairlineStrong, PulseColors.divider, PulseColors.overlay))).pulseClick { }
                 .padding(start = 24.dp, end = 24.dp, top = 26.dp, bottom = 28.dp),
         ) {
             Row {
@@ -272,12 +272,12 @@ private fun VitalInfoSheet(v: Vital, status: VitalStatus, history: List<Double>,
             Spacer(Modifier.height(14.dp))
             Text("${v.title.substringBefore(" (")}\n${status.label.uppercase()}", style = PulseText.overline.copy(fontSize = 11.5.sp, lineHeight = 17.sp), color = PulseColors.text)
             Spacer(Modifier.height(16.dp))
-            Text(v.info, style = PulseText.bodyLg.copy(lineHeight = 21.sp), color = Color(0xFFE2E5E8))
+            Text(v.info, style = PulseText.bodyLg.copy(lineHeight = 21.sp), color = PulseColors.text)
             Spacer(Modifier.height(14.dp))
             Text(
                 if (status == VitalStatus.Calibrating) "Tras 7 noches con la pulsera, Pulse conocerá tu rango habitual y cada mañana te dirá si estás por debajo, dentro o por encima de él."
                 else history.takeIf { it.isNotEmpty() }?.let { "Tu media de los últimos 30 días es ${v.format(it.average())} ${v.unit}." } ?: "",
-                style = PulseText.bodyLg.copy(lineHeight = 21.sp), color = Color(0xFFE2E5E8),
+                style = PulseText.bodyLg.copy(lineHeight = 21.sp), color = PulseColors.text,
             )
             if (how) {
                 Spacer(Modifier.height(14.dp))
@@ -290,7 +290,7 @@ private fun VitalInfoSheet(v: Vital, status: VitalStatus, history: List<Double>,
             Text("Pulse no es un dispositivo médico. Si tienes dudas sobre tu salud, consulta con un profesional sanitario.", style = PulseText.body.copy(fontSize = 11.sp, lineHeight = 16.sp), color = PulseColors.textSecondary)
             Spacer(Modifier.height(22.dp))
             Box(
-                Modifier.fillMaxWidth().height(44.dp).clip(RoundedCornerShape(10.dp)).border(1.5.dp, Color(0xFF6B737B), RoundedCornerShape(10.dp)).pulseClick { how = !how },
+                Modifier.fillMaxWidth().height(44.dp).clip(RoundedCornerShape(10.dp)).border(1.5.dp, PulseColors.textTertiary, RoundedCornerShape(10.dp)).pulseClick { how = !how },
                 contentAlignment = Alignment.Center,
             ) { Text("CÓMO LO CALCULA PULSE", style = PulseText.overline, color = PulseColors.text) }
         }

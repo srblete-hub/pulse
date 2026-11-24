@@ -127,10 +127,10 @@ object PulseProfile {
     }
 }
 
-private val welcomeBrush = Brush.verticalGradient(0f to Color(0xFF2A3036), 0.45f to Color(0xFF1B1F23), 1f to Color(0xFF15181B))
-private val fieldBg = Color(0xFF0C0E10)
-private val titleStyle = TextStyle(fontFamily = com.noop.ui.NoopType.sans, fontWeight = FontWeight.SemiBold, fontSize = 24.sp, lineHeight = 30.sp)
-private val leadStyle = TextStyle(fontFamily = com.noop.ui.NoopType.sans, fontSize = 14.sp, lineHeight = 20.sp)
+private val welcomeBrush = Brush.verticalGradient(0f to PulseColors.divider, 0.45f to PulseColors.overlay, 1f to PulseColors.raised)
+private val fieldBg = PulseColors.base
+private val titleStyle = TextStyle(fontFamily = PulseType.sans, fontWeight = FontWeight.SemiBold, fontSize = 24.sp, lineHeight = 30.sp)
+private val leadStyle = TextStyle(fontFamily = PulseType.sans, fontSize = 14.sp, lineHeight = 20.sp)
 
 private const val LAST_STEP = 8
 
@@ -337,9 +337,9 @@ fun PulseWelcome(vm: AppViewModel, onFinished: () -> Unit) {
                                 .border(2.dp, if (checks[i]) PulseColors.accent else PulseColors.text, RoundedCornerShape(5.dp))
                                 .background(if (checks[i]) PulseColors.accent else Color.Transparent),
                             contentAlignment = Alignment.Center,
-                        ) { if (checks[i]) Icon(Icons.Outlined.Check, null, tint = Color(0xFF15121C), modifier = Modifier.size(16.dp)) }
+                        ) { if (checks[i]) Icon(Icons.Outlined.Check, null, tint = PulseColors.raised, modifier = Modifier.size(16.dp)) }
                         Spacer(Modifier.width(14.dp))
-                        Text(t, style = leadStyle, color = Color(0xFFE2E5E8))
+                        Text(t, style = leadStyle, color = PulseColors.text)
                     }
                 }
             }
@@ -532,7 +532,7 @@ private fun BoxScope.PairingArt(bonded: Boolean) {
 private fun BoxScope.NotificationsArt() {
     Box(
         Modifier.align(Alignment.TopStart).padding(start = 110.dp, top = 150.dp).size(170.dp, 320.dp).rotate(8f)
-            .clip(RoundedCornerShape(28.dp)).border(2.dp, PulseColors.hairlineStrong, RoundedCornerShape(28.dp)).background(Color(0xFF1A1E22)),
+            .clip(RoundedCornerShape(28.dp)).border(2.dp, PulseColors.hairlineStrong, RoundedCornerShape(28.dp)).background(PulseColors.overlay),
     )
     Column(Modifier.align(Alignment.TopStart).padding(start = 50.dp, top = 250.dp).width(250.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         NotifCard(Icons.Outlined.NightsStay, "Hora de desconectar", "Acuéstate a las 22:30 para dormir 8 h.", 1f, 0.dp)
@@ -543,7 +543,7 @@ private fun BoxScope.NotificationsArt() {
 @Composable
 private fun NotifCard(icon: ImageVector, title: String, body: String, alpha: Float, indent: androidx.compose.ui.unit.Dp) {
     Row(
-        Modifier.padding(start = indent).fillMaxWidth().clip(RoundedCornerShape(14.dp))
+        Modifier.padding(start = indent).fillMaxWidth().clip(RoundedCornerShape(PulseMetrics.cardRadius))
             .background((if (alpha == 1f) PulseColors.overlay else PulseColors.raised).copy(alpha = alpha)).padding(12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {

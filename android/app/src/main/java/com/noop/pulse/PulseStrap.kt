@@ -63,7 +63,7 @@ object PulseLivePref {
     fun set(c: Context, v: Boolean) = prefs(c).edit().putBoolean("show_live_hr", v).apply()
 }
 
-private val strapBg = Brush.verticalGradient(0f to Color(0xFF2A3036), 0.4f to Color(0xFF181C20), 1f to Color(0xFF0E1013))
+private val strapBg = Brush.verticalGradient(0f to PulseColors.divider, 0.4f to PulseColors.overlay, 1f to PulseColors.base)
 
 @Composable
 fun PulseStrapScreen(vm: AppViewModel, onClose: () -> Unit, onCharging: () -> Unit, onImport: () -> Unit, liveEnabled: Boolean, onLiveChange: (Boolean) -> Unit) {
@@ -145,10 +145,10 @@ fun PulseStrapScreen(vm: AppViewModel, onClose: () -> Unit, onCharging: () -> Un
                     }
                     Row(
                         Modifier.align(Alignment.BottomCenter).navigationBarsPadding().padding(start = 10.dp, end = 10.dp, bottom = 24.dp).fillMaxWidth()
-                            .clip(RoundedCornerShape(14.dp)).background(PulseColors.raised).padding(16.dp),
+                            .clip(RoundedCornerShape(PulseMetrics.cardRadius)).background(PulseColors.raised).padding(16.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        Box(Modifier.size(38.dp).clip(RoundedCornerShape(19.dp)).background(Color(0xFF353C43)), contentAlignment = Alignment.Center) {
+                        Box(Modifier.size(38.dp).clip(RoundedCornerShape(19.dp)).background(PulseColors.hairlineStrong), contentAlignment = Alignment.Center) {
                             Icon(Icons.Outlined.Favorite, null, tint = PulseColors.recoveryRed, modifier = Modifier.size(18.dp, 16.dp))
                         }
                         Spacer(Modifier.width(14.dp))
@@ -171,13 +171,13 @@ fun PulseStrapScreen(vm: AppViewModel, onClose: () -> Unit, onCharging: () -> Un
                 Column(Modifier.align(Alignment.TopStart).statusBarsPadding().padding(start = 30.dp, end = 30.dp, top = 316.dp)) {
                     Text("Que no se te acabe la batería", style = PulseText.headline.copy(fontSize = 22.sp, fontWeight = FontWeight.SemiBold), color = PulseColors.text)
                     Spacer(Modifier.height(14.dp))
-                    Text("Cárgala cuando estés quieto un rato, por ejemplo en la ducha o en el sofá, para no perder datos ni de día ni de noche.", style = PulseText.bodyLg.copy(lineHeight = 21.sp), color = Color(0xFFE2E5E8))
+                    Text("Cárgala cuando estés quieto un rato, por ejemplo en la ducha o en el sofá, para no perder datos ni de día ni de noche.", style = PulseText.bodyLg.copy(lineHeight = 21.sp), color = PulseColors.text)
                     Spacer(Modifier.height(12.dp))
-                    Text("Toca la «i» de arriba para ver cómo cargarla.", style = PulseText.bodyLg.copy(lineHeight = 21.sp), color = Color(0xFFE2E5E8))
+                    Text("Toca la «i» de arriba para ver cómo cargarla.", style = PulseText.bodyLg.copy(lineHeight = 21.sp), color = PulseColors.text)
                     Spacer(Modifier.height(22.dp))
                     Box(
                         Modifier.height(42.dp).clip(RoundedCornerShape(21.dp)).border(2.dp, PulseColors.accentBrush, RoundedCornerShape(21.dp))
-                            .background(Color(0xFF0E1013)).pulseClick { PulseTips.markSeen(context, "strap"); tip = false }.padding(horizontal = 30.dp),
+                            .background(PulseColors.base).pulseClick { PulseTips.markSeen(context, "strap"); tip = false }.padding(horizontal = 30.dp),
                         contentAlignment = Alignment.Center,
                     ) { Text("ENTENDIDO", style = PulseText.overline.copy(fontSize = 11.sp), color = PulseColors.accentHover) }
                 }
@@ -189,7 +189,7 @@ fun PulseStrapScreen(vm: AppViewModel, onClose: () -> Unit, onCharging: () -> Un
 @Composable
 fun PulseSwitch(on: Boolean, onChange: (Boolean) -> Unit) {
     Box(
-        Modifier.width(46.dp).height(26.dp).clip(RoundedCornerShape(13.dp)).background(if (on) Color(0xFF4A3A66) else PulseColors.hairline).pulseClick { onChange(!on) },
+        Modifier.width(46.dp).height(26.dp).clip(RoundedCornerShape(PulseMetrics.cardRadius)).background(if (on) PulseColors.hairlineStrong else PulseColors.hairline).pulseClick { onChange(!on) },
     ) {
         Box(
             Modifier.offset(x = if (on) 23.dp else 3.dp, y = 3.dp).size(20.dp).clip(RoundedCornerShape(10.dp))

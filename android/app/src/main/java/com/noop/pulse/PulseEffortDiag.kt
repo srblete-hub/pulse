@@ -98,7 +98,7 @@ object EffortDiagnostics {
 @Composable
 fun EffortDiagCard(d: EffortDiag?, dayLabel: String, onToggleDay: () -> Unit) {
     Column(
-        Modifier.padding(start = 15.dp, end = 15.dp, top = 24.dp).fillMaxWidth().clip(RoundedCornerShape(14.dp))
+        Modifier.padding(start = 15.dp, end = 15.dp, top = 24.dp).fillMaxWidth().clip(RoundedCornerShape(PulseMetrics.cardRadius))
             .background(PulseColors.raised).padding(16.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -171,7 +171,7 @@ fun ActivitiesCard(
     fun clock(ts: Long) = java.time.Instant.ofEpochSecond(ts).atZone(ZoneId.systemDefault()).toLocalTime().format(fmt)
     var confirm by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<com.noop.data.WorkoutRow?>(null) }
     Column(
-        Modifier.padding(start = 15.dp, end = 15.dp, top = 12.dp).fillMaxWidth().clip(RoundedCornerShape(14.dp))
+        Modifier.padding(start = 15.dp, end = 15.dp, top = 12.dp).fillMaxWidth().clip(RoundedCornerShape(PulseMetrics.cardRadius))
             .background(PulseColors.raised).padding(16.dp),
     ) {
         Text("ACTIVIDADES", style = PulseText.overlineLg, color = PulseColors.text)
@@ -216,7 +216,7 @@ fun ActivitiesCard(
                 androidx.compose.foundation.layout.FlowRow(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(6.dp)) {
                     PulseSports.choices(ctx).forEach { label ->
                         Text(label, style = PulseText.body.copy(fontSize = 13.sp), color = if (label == w.sport) PulseColors.onAccent else PulseColors.text,
-                            modifier = Modifier.padding(top = 6.dp).clip(RoundedCornerShape(14.dp))
+                            modifier = Modifier.padding(top = 6.dp).clip(RoundedCornerShape(PulseMetrics.cardRadius))
                                 .background(if (label == w.sport) PulseColors.accent else PulseColors.overlay)
                                 .pulseClick { onLabel(w, label); picking = null; tick++ }.padding(horizontal = 12.dp, vertical = 6.dp))
                     }

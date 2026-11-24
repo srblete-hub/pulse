@@ -90,7 +90,7 @@ class PrefsCoachMemory(context: Context) : CoachMemory {
 private data class ChatLine(val fromUser: Boolean, val text: String, val reply: CoachReply? = null)
 
 private val sheetBrush = Brush.verticalGradient(
-    0f to Color(0xFF171A24), 0.6f to Color(0xFF0C0E12), 1f to Color(0xFF08090B),
+    0f to PulseColors.overlay, 0.6f to PulseColors.base, 1f to PulseColors.base,
 )
 private val inputBorder = Brush.horizontalGradient(listOf(PulseColors.violet, PulseColors.stressLow))
 
@@ -285,8 +285,8 @@ fun PulseCoachScreen(vm: AppViewModel, onBack: () -> Unit, onAction: (CoachActio
             }
             Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, bottom = 16.dp), verticalAlignment = Alignment.CenterVertically) {
                 Row(
-                    Modifier.weight(1f).height(46.dp).clip(RoundedCornerShape(14.dp)).border(1.5.dp, inputBorder, RoundedCornerShape(14.dp))
-                        .background(Color(0xFF15161F)).padding(start = 14.dp, end = 6.dp),
+                    Modifier.weight(1f).height(46.dp).clip(RoundedCornerShape(PulseMetrics.cardRadius)).border(1.5.dp, inputBorder, RoundedCornerShape(PulseMetrics.cardRadius))
+                        .background(PulseColors.raised).padding(start = 14.dp, end = 6.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Box(Modifier.weight(1f)) {

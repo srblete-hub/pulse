@@ -265,7 +265,7 @@ private fun HomeHeader(
             Box(Modifier.size(30.dp, 26.dp).pulseClick(onPrev), contentAlignment = Alignment.Center) {
                 Icon(Icons.Outlined.ChevronLeft, "Día anterior", tint = PulseColors.textTertiary, modifier = Modifier.size(16.dp))
             }
-            Box(Modifier.clip(RoundedCornerShape(13.dp)).background(PulseColors.chip).padding(horizontal = 15.dp, vertical = 6.dp)) {
+            Box(Modifier.clip(RoundedCornerShape(PulseMetrics.cardRadius)).background(PulseColors.chip).padding(horizontal = 15.dp, vertical = 6.dp)) {
                 Text(dayLabel, style = PulseText.overline.copy(letterSpacing = PulseText.tabTitle.letterSpacing), color = if (canGoForward) PulseColors.text else PulseColors.textTertiary)
             }
             Box(Modifier.size(30.dp, 26.dp).pulseClick(onNext), contentAlignment = Alignment.Center) {

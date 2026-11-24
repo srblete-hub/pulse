@@ -120,7 +120,7 @@ fun PulseCommunityIntro(onClose: () -> Unit, onDone: () -> Unit) {
             IntroStep("Apoyaos en los días buenos y en los malos", listOf("Comparte tu sueño, tu recuperación, tu esfuerzo y tus entrenos con tus seguidores.")) {
                 Row(Modifier.align(Alignment.TopCenter).padding(top = 220.dp), horizontalArrangement = Arrangement.spacedBy(14.dp)) {
                     listOf("12.5" to "Esfuerzo", "5:42/km" to "Ritmo medio", "48:10" to "Duración").forEach { (v, l) ->
-                        Column(Modifier.clip(RoundedCornerShape(14.dp)).background(PulseColors.raised).padding(14.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                        Column(Modifier.clip(RoundedCornerShape(PulseMetrics.cardRadius)).background(PulseColors.raised).padding(14.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                             Text(v, style = PulseText.bigNumber, color = PulseColors.text)
                             Text(l, style = PulseText.body.copy(fontSize = 11.sp), color = PulseColors.textSecondary)
                         }
@@ -215,7 +215,7 @@ fun PulseStartActivityScreen(vm: AppViewModel, onClose: () -> Unit) {
     }
     val locLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { ok -> if (!ok) route = false; start() }
 
-    Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color(0xFF2A3036), Color(0xFF0E1013)))).statusBarsPadding().navigationBarsPadding()) {
+    Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(PulseColors.divider, PulseColors.base))).statusBarsPadding().navigationBarsPadding()) {
         Box(Modifier.padding(start = 8.dp, top = 18.dp).size(44.dp).pulseClick(onClose), contentAlignment = Alignment.Center) {
             Icon(Icons.Outlined.Close, "Cerrar", tint = PulseColors.text, modifier = Modifier.size(20.dp))
         }
@@ -261,7 +261,7 @@ fun PulseStartActivityScreen(vm: AppViewModel, onClose: () -> Unit) {
                 }
                 Spacer(Modifier.weight(1f))
                 Box(
-                    Modifier.padding(start = 24.dp, end = 24.dp, bottom = 30.dp).fillMaxWidth().height(54.dp).clip(RoundedCornerShape(27.dp)).background(PulseColors.recoveryRed).pulseClick { finish() },
+                    Modifier.padding(start = 24.dp, end = 24.dp, bottom = 30.dp).fillMaxWidth().height(54.dp).clip(RoundedCornerShape(PulseMetrics.buttonRadius)).background(PulseColors.recoveryRed).pulseClick { finish() },
                     contentAlignment = Alignment.Center,
                 ) { Text("FINALIZAR ACTIVIDAD", style = PulseText.overline.copy(fontSize = 12.sp), color = PulseColors.text) }
             }
@@ -293,7 +293,7 @@ fun PulseStartActivityScreen(vm: AppViewModel, onClose: () -> Unit) {
             }
             Spacer(Modifier.weight(1f))
             Box(
-                Modifier.padding(start = 24.dp, end = 24.dp, bottom = 30.dp).fillMaxWidth().height(54.dp).clip(RoundedCornerShape(27.dp)).background(PulseColors.accentBrush).pulseClick {
+                Modifier.padding(start = 24.dp, end = 24.dp, bottom = 30.dp).fillMaxWidth().height(54.dp).clip(RoundedCornerShape(PulseMetrics.buttonRadius)).background(PulseColors.accentBrush).pulseClick {
                     if (route && act.distance && ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                         locLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
                     } else start()
@@ -343,7 +343,7 @@ private fun StrengthSummary(s: PulseStrength.Session, onChange: (PulseStrength.S
         )
         s.sets.forEachIndexed { idx, set ->
             val restBefore = s.sets.getOrNull(idx - 1)?.let { set.startTs - it.endTs }
-            Row(Modifier.padding(top = 14.dp).fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(PulseColors.overlay).padding(horizontal = 16.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+            Row(Modifier.padding(top = 14.dp).fillMaxWidth().clip(RoundedCornerShape(PulseMetrics.cardRadius)).background(PulseColors.overlay).padding(horizontal = 16.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
                     Text("Serie ${idx + 1}", style = PulseText.cardTitleLg, color = PulseColors.text)
                     Text("${set.endTs - set.startTs + 1} s" + (restBefore?.let { " · descanso ${it / 60}:%02d".format(it % 60) } ?: "") +
@@ -358,7 +358,7 @@ private fun StrengthSummary(s: PulseStrength.Session, onChange: (PulseStrength.S
         if (checked > 0) Text("Acierto exacto hasta ahora: $right de $checked series revisadas.", style = PulseText.body, color = PulseColors.textSecondary, modifier = Modifier.padding(top = 16.dp))
         Spacer(Modifier.height(24.dp))
         Box(
-            Modifier.padding(bottom = 30.dp).fillMaxWidth().height(54.dp).clip(RoundedCornerShape(27.dp)).background(PulseColors.accentBrush)
+            Modifier.padding(bottom = 30.dp).fillMaxWidth().height(54.dp).clip(RoundedCornerShape(PulseMetrics.buttonRadius)).background(PulseColors.accentBrush)
                 .pulseClick { PulseStrength.confirm(context, s.id); onClose() },
             contentAlignment = Alignment.Center,
         ) { Text("GUARDAR", style = PulseText.overline.copy(fontSize = 12.sp), color = PulseColors.onAccent) }
@@ -398,7 +398,7 @@ fun PulseCalibrationScreen(vm: AppViewModel, onBack: () -> Unit, onHealth: () ->
     Box(Modifier.fillMaxSize().background(PulseColors.base)) {
         Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
             Column(
-                Modifier.fillMaxWidth().background(Brush.verticalGradient(listOf(Color(0xFF4A2A66), Color(0xFF2A2036), PulseColors.base)))
+                Modifier.fillMaxWidth().background(Brush.verticalGradient(listOf(PulseColors.hairlineStrong, PulseColors.divider, PulseColors.base)))
                     .statusBarsPadding().padding(bottom = 30.dp),
             ) {
                 Row(Modifier.fillMaxWidth().padding(start = 10.dp, end = 10.dp, top = 18.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -460,13 +460,13 @@ private fun milestoneInfo(title: String) = when (title) {
 private fun MilestoneCard(m: Milestone, have: Int, bars: Boolean, onInfo: () -> Unit) {
     val done = have >= m.nights
     Box(Modifier.fillMaxWidth().clip(RoundedCornerShape(18.dp)).border(1.5.dp, PulseColors.overlay, RoundedCornerShape(18.dp)).padding(start = 18.dp, end = 18.dp, top = 22.dp, bottom = 26.dp)) {
-        Box(Modifier.align(Alignment.TopEnd).offset(y = (-8).dp).size(26.dp).border(1.3.dp, PulseColors.textSecondary, RoundedCornerShape(13.dp)).pulseClick(onInfo), contentAlignment = Alignment.Center) {
+        Box(Modifier.align(Alignment.TopEnd).offset(y = (-8).dp).size(26.dp).border(1.3.dp, PulseColors.textSecondary, RoundedCornerShape(PulseMetrics.cardRadius)).pulseClick(onInfo), contentAlignment = Alignment.Center) {
             Text("i", style = PulseText.overline.copy(fontSize = 12.sp), color = PulseColors.textSecondary)
         }
         Row(verticalAlignment = Alignment.CenterVertically) {
             Box(
                 Modifier.size(84.dp).clip(RoundedCornerShape(26.dp))
-                    .background(Brush.radialGradient(listOf(if (done) PulseColors.accent.copy(alpha = 0.35f) else Color(0xFF353C43), Color(0xFF1B1F23)))),
+                    .background(Brush.radialGradient(listOf(if (done) PulseColors.accent.copy(alpha = 0.35f) else PulseColors.hairlineStrong, PulseColors.overlay))),
                 contentAlignment = Alignment.Center,
             ) { Icon(m.icon, null, tint = if (done) PulseColors.accent else PulseColors.textTertiary, modifier = Modifier.size(38.dp)) }
             Spacer(Modifier.width(20.dp))
@@ -557,7 +557,7 @@ fun PulseAgeScreenV2(vm: AppViewModel, onBack: () -> Unit, onCoach: () -> Unit) 
             }
             Text(weekLabel, style = PulseText.overline, color = PulseColors.textSecondary, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth().padding(top = 12.dp))
             Column(Modifier.fillMaxWidth().padding(top = 18.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                Box(Modifier.size(170.dp).clip(RoundedCornerShape(85.dp)).background(Brush.radialGradient(listOf(Color(0xFF4A4258), Color(0xFF2B2635)))), contentAlignment = Alignment.Center) {
+                Box(Modifier.size(170.dp).clip(RoundedCornerShape(85.dp)).background(Brush.radialGradient(listOf(PulseColors.hairlineStrong, PulseColors.divider))), contentAlignment = Alignment.Center) {
                     if (ready && result != null) { val result = result!!
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Text(String.format(Locale.US, "%.1f", result.pulseAge), style = PulseText.bigNumber.copy(fontSize = 48.sp), color = PulseColors.text)
@@ -574,7 +574,7 @@ fun PulseAgeScreenV2(vm: AppViewModel, onBack: () -> Unit, onCoach: () -> Unit) 
                 )
             }
             // Pace of ageing: noop does not compute one, so the card only appears if a pace exists.
-            if (pace != null) Column(Modifier.padding(start = 15.dp, end = 15.dp, top = 22.dp).fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(PulseColors.raised).padding(16.dp)) {
+            if (pace != null) Column(Modifier.padding(start = 15.dp, end = 15.dp, top = 22.dp).fillMaxWidth().clip(RoundedCornerShape(PulseMetrics.cardRadius)).background(PulseColors.raised).padding(16.dp)) {
                 Text("RITMO DE ENVEJECIMIENTO", style = PulseText.overlineLg, color = PulseColors.text)
                 if (pace != null && pacePrev != null) {
                     Text(if (pace < pacePrev) "▼ más lento que la semana pasada" else "▲ más rápido que la semana pasada", style = PulseText.body.copy(fontSize = 12.sp), color = if (pace < pacePrev) PulseColors.accentHover else PulseColors.stressHigh, modifier = Modifier.padding(top = 4.dp))
@@ -596,7 +596,7 @@ fun PulseAgeScreenV2(vm: AppViewModel, onBack: () -> Unit, onCoach: () -> Unit) 
                 }
             }
             groups.forEach { (title, rows) ->
-                Column(Modifier.padding(start = 15.dp, end = 15.dp, top = 14.dp).fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(PulseColors.raised).padding(16.dp)) {
+                Column(Modifier.padding(start = 15.dp, end = 15.dp, top = 14.dp).fillMaxWidth().clip(RoundedCornerShape(PulseMetrics.cardRadius)).background(PulseColors.raised).padding(16.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(title, style = PulseText.cardTitleLg, color = PulseColors.text, modifier = Modifier.weight(1f))
                         Text("años", style = PulseText.body.copy(fontSize = 11.sp), color = PulseColors.textSecondary)
@@ -632,7 +632,7 @@ fun PulseAgeScreenV2(vm: AppViewModel, onBack: () -> Unit, onCoach: () -> Unit) 
                 }
             }
             // Evolution chart
-            Column(Modifier.padding(start = 15.dp, end = 15.dp, top = 14.dp).fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(PulseColors.raised).padding(16.dp)) {
+            Column(Modifier.padding(start = 15.dp, end = 15.dp, top = 14.dp).fillMaxWidth().clip(RoundedCornerShape(PulseMetrics.cardRadius)).background(PulseColors.raised).padding(16.dp)) {
                 Text("EVOLUCIÓN DE TU EDAD FISIOLÓGICA", style = PulseText.overlineLg, color = PulseColors.text)
                 Row(Modifier.padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(14.dp)) {
                     Legend(PulseColors.accent, "FISIOLÓGICA"); Legend(PulseColors.textSecondary, "REAL")

@@ -265,8 +265,8 @@ fun PulseSleepScreen(vm: AppViewModel, onBack: () -> Unit, onCoach: () -> Unit) 
             TrendChart("Rendimiento del sueño", PulseColors.sleep, 100.0, week(days) { PulseData.sleepPct(it) }, { "${it.roundToInt()}%" }),
             TrendChart("Horas vs. necesarias", PulseColors.sleep, needMin * 1.25, week(days) { it.totalSleepMin?.takeIf { m -> m > 0 } }, { PulseData.hoursMinutes(it) },
                 legend = listOf(LegendItem("DORMIDAS", PulseColors.sleep, round = true), LegendItem("NECESARIAS", PulseColors.textSecondary, round = true))),
-            TrendChart("Sueño reparador (horas)", Color(0xFF5D7BFF), 300.0, week(days) { ((it.deepMin ?: 0.0) + (it.remMin ?: 0.0)).takeIf { v -> v > 0 } }, { PulseData.hoursMinutes(it) },
-                legend = listOf(LegendItem("PROFUNDO", Color(0xFF5D7BFF)), LegendItem("REM", PulseColors.accent))),
+            TrendChart("Sueño reparador (horas)", PulseColors.sleepDeep, 300.0, week(days) { ((it.deepMin ?: 0.0) + (it.remMin ?: 0.0)).takeIf { v -> v > 0 } }, { PulseData.hoursMinutes(it) },
+                legend = listOf(LegendItem("PROFUNDO", PulseColors.sleepDeep), LegendItem("REM", PulseColors.accent))),
             TrendChart("Regularidad", PulseColors.sleep, 100.0, (-6..0).map { regularityAt(PulseData.dayKey(it)) }, { "${it.roundToInt()}%" },
                 locked = if (regularityLocked) "Duerme con la pulsera ${(3 - nights).coerceAtLeast(1)} noches más para desbloquearla." else null),
             TrendChart("Tiempo en la cama", PulseColors.sleep, 660.0, week(days) { inBed(it) }, { PulseData.hoursMinutes(it) }),
@@ -282,7 +282,7 @@ private fun OwnRecoveryCard(own: com.noop.pulse.engine.PulseRecoveryEngine.Resul
     val nights by com.noop.pulse.engine.PulseNights.state.collectAsStateWithLifecycle()
     androidx.compose.foundation.layout.Column(
         Modifier.padding(start = 15.dp, end = 15.dp, top = 18.dp).fillMaxWidth()
-            .clip(androidx.compose.foundation.shape.RoundedCornerShape(13.dp)).background(PulseColors.overlay).padding(16.dp),
+            .clip(androidx.compose.foundation.shape.RoundedCornerShape(PulseMetrics.cardRadius)).background(PulseColors.overlay).padding(16.dp),
     ) {
         Text("CÓMO SE HA CALCULADO", style = PulseText.overline, color = PulseColors.textSecondary)
         if (own == null) {

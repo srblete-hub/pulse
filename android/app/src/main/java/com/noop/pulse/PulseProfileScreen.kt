@@ -82,10 +82,10 @@ import java.time.format.TextStyle as JTextStyle
 import java.util.Locale
 import kotlin.math.roundToInt
 
-private val profileBrush = Brush.verticalGradient(0f to Color(0xFF2A2140), 0.22f to Color(0xFF1B1F23), 1f to PulseColors.base)
-private val segBg = Color(0xFF1A1E22)
-private val gold = Color(0xFFC9A45C)
-private val coachRowBrush = Brush.horizontalGradient(listOf(Color(0xFF2E2A45), Color(0xFF24303A)))
+private val profileBrush = Brush.verticalGradient(0f to PulseColors.divider, 0.22f to PulseColors.overlay, 1f to PulseColors.base)
+private val segBg = PulseColors.overlay
+private val gold = PulseColors.accent
+private val coachRowBrush = Brush.horizontalGradient(listOf(PulseColors.divider, PulseColors.divider))
 private val es = Locale("es", "ES")
 
 /** Profile-page statistics derived from the stored daily rows. Pure, unit-testable. */
@@ -185,9 +185,9 @@ fun PulseProfileScreen(
         Column(Modifier.padding(start = 16.dp, end = 16.dp, top = 30.dp)) {
             Box(Modifier.size(94.dp).clip(RoundedCornerShape(47.dp)).background(PulseColors.accentBrush), contentAlignment = Alignment.Center) {
                 if (initials.isNotEmpty()) {
-                    Text(initials, style = TextStyle(fontFamily = NoopType.label, fontWeight = FontWeight.ExtraBold, fontSize = 32.sp), color = Color(0xFF15121C))
+                    Text(initials, style = TextStyle(fontFamily = PulseType.sans, fontWeight = FontWeight.ExtraBold, fontSize = 32.sp), color = PulseColors.raised)
                 } else {
-                    Icon(androidx.compose.material.icons.Icons.Outlined.Edit, null, tint = Color(0xFF15121C), modifier = Modifier.size(30.dp))
+                    Icon(androidx.compose.material.icons.Icons.Outlined.Edit, null, tint = PulseColors.raised, modifier = Modifier.size(30.dp))
                 }
             }
             Row(Modifier.fillMaxWidth().padding(top = 18.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -237,13 +237,13 @@ fun PulseProfileScreen(
                 }
                 val ageText = if (!ageReady) com.noop.pulse.engine.PulseAge.waitText(days) else "Ver tu edad fisiológica"
                 BigTile(Modifier.weight(1f), onAge, {
-                    Box(Modifier.size(56.dp).clip(RoundedCornerShape(28.dp)).background(Brush.radialGradient(listOf(Color(0xFF4A4258), Color(0xFF2B2635)))), contentAlignment = Alignment.Center) {
+                    Box(Modifier.size(56.dp).clip(RoundedCornerShape(28.dp)).background(Brush.radialGradient(listOf(PulseColors.hairlineStrong, PulseColors.divider))), contentAlignment = Alignment.Center) {
                         DashedProgressRing(PulseData.dataDays(days).coerceAtMost(PulseData.pulseAgeDays) * 7 / PulseData.pulseAgeDays, 7, 52.dp)
                     }
                 }, "EDAD FISIOLÓGICA", ageText)
             }
             Row(
-                Modifier.padding(top = 12.dp).fillMaxWidth().height(54.dp).clip(RoundedCornerShape(14.dp)).background(PulseColors.overlay).pulseClick(onCalibration).padding(horizontal = 16.dp),
+                Modifier.padding(top = 12.dp).fillMaxWidth().height(54.dp).clip(RoundedCornerShape(PulseMetrics.cardRadius)).background(PulseColors.overlay).pulseClick(onCalibration).padding(horizontal = 16.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text("RACHA DE DÍAS", style = PulseText.overline.copy(fontSize = 11.sp), color = PulseColors.text, modifier = Modifier.weight(1f))
@@ -254,10 +254,10 @@ fun PulseProfileScreen(
                 Icon(Icons.Outlined.ChevronRight, null, tint = PulseColors.textSecondary, modifier = Modifier.size(16.dp))
             }
             Row(
-                Modifier.padding(top = 12.dp).fillMaxWidth().height(54.dp).clip(RoundedCornerShape(14.dp)).background(coachRowBrush).pulseClick(onCoachMemory).padding(horizontal = 16.dp),
+                Modifier.padding(top = 12.dp).fillMaxWidth().height(54.dp).clip(RoundedCornerShape(PulseMetrics.cardRadius)).background(coachRowBrush).pulseClick(onCoachMemory).padding(horizontal = 16.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Icon(Icons.Outlined.Psychology, null, tint = Color(0xFF8FB8FF), modifier = Modifier.size(20.dp))
+                Icon(Icons.Outlined.Psychology, null, tint = PulseColors.accent, modifier = Modifier.size(20.dp))
                 Spacer(Modifier.width(12.dp))
                 Text("LO QUE RECUERDA EL COACH", style = PulseText.overline.copy(fontSize = 11.sp), color = PulseColors.text, modifier = Modifier.weight(1f))
                 Icon(Icons.Outlined.ChevronRight, null, tint = PulseColors.textSecondary, modifier = Modifier.size(16.dp))
@@ -286,7 +286,7 @@ fun PulseProfileScreen(
         var bestRange by rememberSaveable { mutableStateOf(2) }
         Text("Tus mejores marcas", style = PulseText.sectionTitle, color = PulseColors.text, modifier = Modifier.padding(start = 20.dp, top = 22.dp, bottom = 16.dp))
         val bestDays = ProfileStats.inRange(days, listOf(1, 3, null)[bestRange])
-        Column(Modifier.padding(horizontal = 15.dp).fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(PulseColors.raised).padding(16.dp)) {
+        Column(Modifier.padding(horizontal = 15.dp).fillMaxWidth().clip(RoundedCornerShape(PulseMetrics.cardRadius)).background(PulseColors.raised).padding(16.dp)) {
             RangeTabs(bestRange) { bestRange = it }
             Row(Modifier.fillMaxWidth().padding(top = 22.dp)) {
                 val bs = bestDays.mapNotNull { PulseData.sleepPct(it) }.maxOrNull()
@@ -338,7 +338,7 @@ fun PulseProfileScreen(
         val grouped = ws.groupBy { sportLabel(it.sport) }
             .map { (k, v) -> Triple(k, v.mapNotNull { it.strain?.let { s -> s * 21 / 100 } }.takeIf { it.isNotEmpty() }?.average(), v.size) }
             .sortedByDescending { it.third }
-        Column(Modifier.padding(horizontal = 15.dp).fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(PulseColors.raised).padding(16.dp)) {
+        Column(Modifier.padding(horizontal = 15.dp).fillMaxWidth().clip(RoundedCornerShape(PulseMetrics.cardRadius)).background(PulseColors.raised).padding(16.dp)) {
             RangeTabs(actRange) { actRange = it }
             Text("${ws.size}", style = PulseText.bigNumber.copy(fontSize = 26.sp), color = PulseColors.text, modifier = Modifier.padding(top = 18.dp))
             Text("ACTIVIDADES EN TOTAL", style = PulseText.overline, color = PulseColors.textSecondary)
@@ -363,7 +363,7 @@ fun PulseProfileScreen(
             }
             if (grouped.size > 3) {
                 Row(
-                    Modifier.padding(top = 10.dp).fillMaxWidth().height(44.dp).clip(RoundedCornerShape(10.dp)).background(Color(0xFF353C43)).pulseClick { showAllActs = !showAllActs },
+                    Modifier.padding(top = 10.dp).fillMaxWidth().height(44.dp).clip(RoundedCornerShape(10.dp)).background(PulseColors.hairlineStrong).pulseClick { showAllActs = !showAllActs },
                     horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(if (showAllActs) "VER MENOS" else "VER TODAS", style = PulseText.overlineLg, color = PulseColors.text)
@@ -377,7 +377,7 @@ fun PulseProfileScreen(
 
 @Composable
 private fun BigTile(modifier: Modifier, onClick: () -> Unit, art: @Composable () -> Unit, title: String, subtitle: String) {
-    Box(modifier.height(170.dp).clip(RoundedCornerShape(14.dp)).background(PulseColors.overlay).pulseClick(onClick)) {
+    Box(modifier.height(170.dp).clip(RoundedCornerShape(PulseMetrics.cardRadius)).background(PulseColors.overlay).pulseClick(onClick)) {
         Icon(Icons.Outlined.ChevronRight, null, tint = PulseColors.textSecondary, modifier = Modifier.align(Alignment.TopEnd).padding(top = 14.dp, end = 14.dp).size(16.dp))
         Box(Modifier.align(Alignment.TopCenter).padding(top = 32.dp)) { art() }
         Column(Modifier.align(Alignment.BottomCenter).padding(start = 12.dp, end = 12.dp, bottom = 18.dp), horizontalAlignment = Alignment.CenterHorizontally) {

@@ -56,7 +56,7 @@ import java.util.Locale
 import kotlin.math.abs
 
 private val saludBrush = Brush.verticalGradient(
-    0f to Color(0xFF2A2436), 0.35f to Color(0xFF1A1A22), 1f to PulseColors.base,
+    0f to PulseColors.divider, 0.35f to PulseColors.overlay, 1f to PulseColors.base,
 )
 
 class HealthActions(
@@ -97,16 +97,16 @@ fun PulseHealthScreen(vm: AppViewModel, actions: HealthActions) {
         // Hero: physiological age
         Column(
             Modifier.padding(start = PulseMetrics.gutter, end = PulseMetrics.gutter, top = 24.dp).fillMaxWidth()
-                .clip(RoundedCornerShape(14.dp))
-                .border(1.5.dp, Brush.verticalGradient(0f to Color.Transparent, 0.4f to Color.Transparent, 1f to PulseColors.accent), RoundedCornerShape(14.dp))
-                .background(Brush.verticalGradient(0f to Color.Transparent, 0.55f to Color(0xFF2A2338), 1f to Color(0xFF241E31)))
+                .clip(RoundedCornerShape(PulseMetrics.cardRadius))
+                .border(1.5.dp, Brush.verticalGradient(0f to Color.Transparent, 0.4f to Color.Transparent, 1f to PulseColors.accent), RoundedCornerShape(PulseMetrics.cardRadius))
+                .background(Brush.verticalGradient(0f to Color.Transparent, 0.55f to PulseColors.divider, 1f to PulseColors.overlay))
                 .clickable(onClick = actions.openAge)
                 .padding(start = 16.dp, end = 16.dp, bottom = 18.dp),
         ) {
             Box(Modifier.fillMaxWidth().height(210.dp), contentAlignment = Alignment.Center) {
                 Box(
                     Modifier.size(150.dp).clip(RoundedCornerShape(75.dp))
-                        .background(Brush.radialGradient(listOf(Color(0xFF4A4258), Color(0xFF2B2635)))),
+                        .background(Brush.radialGradient(listOf(PulseColors.hairlineStrong, PulseColors.divider))),
                     contentAlignment = Alignment.Center,
                 ) {
                     if (age != null) {

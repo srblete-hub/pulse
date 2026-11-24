@@ -62,14 +62,14 @@ object PulseTips {
     fun markSeen(c: Context, key: String) = prefs(c).edit().putBoolean(key, true).apply()
 }
 
-private val pageBg = Color(0xFF15181B)
-private val pageBrush = Brush.verticalGradient(0f to Color(0xFF2A3036), 0.25f to Color(0xFF1B1F23), 1f to pageBg)
-private val topBrush = Brush.verticalGradient(listOf(Color(0xFF2A3036), Color(0xF52A3036)))
-private val noticeBg = Color(0xFF34283F)
-private val noticeSeg = Color(0xFF5A4E66)
-private val panelBrush = Brush.verticalGradient(listOf(Color(0xFF20252A), Color(0xFF1A1E22)))
-private val panelBorder = Color(0xFF2C3238)
-private val chartCardBrush = Brush.verticalGradient(listOf(Color(0xFF30373D), Color(0xFF262C31)))
+private val pageBg = PulseColors.raised
+private val pageBrush = Brush.verticalGradient(0f to PulseColors.divider, 0.25f to PulseColors.overlay, 1f to pageBg)
+private val topBrush = Brush.verticalGradient(listOf(PulseColors.divider, Color(0xF52A3036)))
+private val noticeBg = PulseColors.divider
+private val noticeSeg = PulseColors.textTertiary
+private val panelBrush = Brush.verticalGradient(listOf(PulseColors.overlay, PulseColors.overlay))
+private val panelBorder = PulseColors.divider
+private val chartCardBrush = Brush.verticalGradient(listOf(PulseColors.hairlineStrong, PulseColors.divider))
 private val tipScrim = Brush.verticalGradient(0f to Color(0x8C080A0C), 0.55f to Color(0xCC080A0C), 1f to Color(0xF5080A0C))
 private val coachBarBg = Color(0xF21C2028)
 
@@ -142,7 +142,7 @@ fun MetricPage(
                     modifier = Modifier.fillMaxWidth().padding(start = 24.dp, end = 24.dp, top = 6.dp))
             }
             if (notice != null) {
-                Column(Modifier.padding(start = 15.dp, end = 15.dp, top = 30.dp).fillMaxWidth().clip(RoundedCornerShape(13.dp)).background(noticeBg).padding(16.dp)) {
+                Column(Modifier.padding(start = 15.dp, end = 15.dp, top = 30.dp).fillMaxWidth().clip(RoundedCornerShape(PulseMetrics.cardRadius)).background(noticeBg).padding(16.dp)) {
                     Text(notice.first, style = PulseText.body, color = PulseColors.text)
                     Spacer(Modifier.height(12.dp))
                     Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -153,7 +153,7 @@ fun MetricPage(
             // Breakdown panel with the little pointer.
             Box(Modifier.padding(start = 15.dp, end = 15.dp, top = 24.dp).fillMaxWidth()) {
                 Column(
-                    Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).border(1.dp, panelBorder, RoundedCornerShape(14.dp))
+                    Modifier.fillMaxWidth().clip(RoundedCornerShape(PulseMetrics.cardRadius)).border(1.dp, panelBorder, RoundedCornerShape(PulseMetrics.cardRadius))
                         .background(panelBrush).padding(horizontal = 16.dp, vertical = 4.dp),
                 ) {
                     rows.forEachIndexed { i, r ->
@@ -171,7 +171,7 @@ fun MetricPage(
                 }
                 Box(
                     Modifier.align(Alignment.TopCenter).offset(y = (-6).dp).size(12.dp).rotate(45f)
-                        .background(Color(0xFF20252A)),
+                        .background(PulseColors.overlay),
                 )
             }
             middle()
@@ -241,7 +241,7 @@ fun BoxScope.FirstVisitTip(title: String, body: String, onDismiss: () -> Unit) {
         Column(Modifier.align(Alignment.BottomStart).navigationBarsPadding().padding(start = 30.dp, end = 30.dp, bottom = 120.dp)) {
             Text(title, style = PulseText.headline.copy(fontSize = 22.sp, fontWeight = FontWeight.SemiBold), color = PulseColors.text)
             Spacer(Modifier.height(12.dp))
-            Text(body, style = PulseText.bodyLg.copy(lineHeight = 21.sp), color = Color(0xFFE2E5E8))
+            Text(body, style = PulseText.bodyLg.copy(lineHeight = 21.sp), color = PulseColors.text)
             Spacer(Modifier.height(20.dp))
             Box(
                 Modifier.height(42.dp).clip(RoundedCornerShape(21.dp)).border(2.dp, PulseColors.accentBrush, RoundedCornerShape(21.dp))
@@ -256,7 +256,7 @@ fun BoxScope.FirstVisitTip(title: String, body: String, onDismiss: () -> Unit) {
 fun TrendCard(chart: TrendChart) {
     val keys = remember { (-6..0).map { PulseData.dayKey(it) } }
     val hasData = chart.values.any { it != null && it > 0 }
-    Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(13.dp)).background(chartCardBrush).padding(16.dp)) {
+    Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(PulseMetrics.cardRadius)).background(chartCardBrush).padding(16.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(chart.title.uppercase(), style = PulseText.overlineLg, color = PulseColors.text, modifier = Modifier.weight(1f))
             Icon(Icons.Outlined.ChevronRight, null, tint = PulseColors.textSecondary, modifier = Modifier.size(16.dp))
@@ -350,7 +350,7 @@ fun TrendCard(chart: TrendChart) {
 @Composable
 fun NightCard(label: String, value: String, avg: String?, info: String, locked: Pair<String, Int>? = null) {
     var open by remember { mutableStateOf(false) }
-    Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(13.dp)).background(Color(0xFF2A3036)).padding(16.dp)) {
+    Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(PulseMetrics.cardRadius)).background(PulseColors.divider).padding(16.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(label.uppercase(), style = PulseText.overlineLg, color = PulseColors.text, modifier = Modifier.weight(1f))
             Box(
@@ -386,7 +386,7 @@ fun NightCard(label: String, value: String, avg: String?, info: String, locked: 
 @Composable
 fun HabitsCard(icon: ImageVector, onClick: () -> Unit) {
     Row(
-        Modifier.padding(start = 15.dp, end = 15.dp, top = 24.dp).fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(PulseColors.raised).pulseClick(onClick).padding(18.dp),
+        Modifier.padding(start = 15.dp, end = 15.dp, top = 24.dp).fillMaxWidth().clip(RoundedCornerShape(PulseMetrics.cardRadius)).background(PulseColors.raised).pulseClick(onClick).padding(18.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(Modifier.weight(1f)) {
