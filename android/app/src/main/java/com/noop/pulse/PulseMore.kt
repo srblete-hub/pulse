@@ -78,6 +78,7 @@ import com.noop.analytics.WorkoutSport
 import com.noop.ui.AppViewModel
 import com.noop.ui.ProfileStore
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.TextStyle
 import java.util.Locale
@@ -191,9 +192,26 @@ fun PulseStartActivityScreen(vm: AppViewModel, onClose: () -> Unit) {
     var route by rememberSaveable { mutableStateOf(false) }
     DisposableEffect(Unit) { vm.requestRealtimeHr(); onDispose { vm.releaseRealtimeHr() } }
     val act = activities[i]
+    val scope = androidx.compose.runtime.rememberCoroutineScope()
+    // Strength: motion capture for set / repetition detection (WHOOP 5.0/MG).
+    var strengthOn by remember { mutableStateOf(PulseStrength.activeId(context) != null) }
+    var strengthNote by remember { mutableStateOf<String?>(null) }
+    var summary by remember { mutableStateOf<PulseStrength.Session?>(null) }
     fun start() {
         val sport = WorkoutSport.all.firstOrNull { it.name.equals(act.sport, true) } ?: WorkoutSport.all.firstOrNull { it.name.contains(act.sport, true) } ?: WorkoutSport.default
+        summary = null
         vm.startWorkout(sport, gpsEnabled = route && act.distance)
+        if (act.sport == "Strength") {
+            strengthOn = PulseStrength.start(context, vm)
+            strengthNote = if (strengthOn) null else "El conteo de series necesita una WHOOP 5.0/MG conectada."
+        }
+    }
+    fun finish() {
+        vm.endWorkout()
+        if (strengthOn) scope.launch {
+            summary = PulseStrength.stop(context, vm)
+            strengthOn = false
+        }
     }
     val locLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { ok -> if (!ok) route = false; start() }
 
@@ -232,6 +250,8 @@ fun PulseStartActivityScreen(vm: AppViewModel, onClose: () -> Unit) {
                     LiveStat(load?.kcalPerMin?.let { String.format(Locale.US, "%.1f", it) } ?: "--", "KCAL/MIN")
                     LiveStat(load?.met?.let { String.format(Locale.US, "%.1f", it) } ?: "--", "MET")
                 }
+                if (strengthOn) StrengthLive(vm)
+                strengthNote?.let { Text(it, style = PulseText.body, color = PulseColors.textSecondary, textAlign = TextAlign.Center, modifier = Modifier.padding(start = 24.dp, end = 24.dp, top = 18.dp)) }
                 load?.projectedEffort21?.let { p ->
                     Text(
                         "Si sigues ${com.noop.pulse.engine.PulseLiveLoad.PROJECT_MIN} min más a este ritmo: esfuerzo ${PulseData.oneDecimal(p)}",
@@ -241,10 +261,14 @@ fun PulseStartActivityScreen(vm: AppViewModel, onClose: () -> Unit) {
                 }
                 Spacer(Modifier.weight(1f))
                 Box(
-                    Modifier.padding(start = 24.dp, end = 24.dp, bottom = 30.dp).fillMaxWidth().height(54.dp).clip(RoundedCornerShape(27.dp)).background(PulseColors.recoveryRed).pulseClick { vm.endWorkout() },
+                    Modifier.padding(start = 24.dp, end = 24.dp, bottom = 30.dp).fillMaxWidth().height(54.dp).clip(RoundedCornerShape(27.dp)).background(PulseColors.recoveryRed).pulseClick { finish() },
                     contentAlignment = Alignment.Center,
                 ) { Text("FINALIZAR ACTIVIDAD", style = PulseText.overline.copy(fontSize = 12.sp), color = PulseColors.text) }
             }
+            return@Box
+        }
+        summary?.let { s ->
+            StrengthSummary(s, onChange = { summary = it }, onClose = { summary = null })
             return@Box
         }
         Column(Modifier.fillMaxSize().padding(top = 80.dp), horizontalAlignment = Alignment.CenterHorizontally) {
@@ -277,6 +301,67 @@ fun PulseStartActivityScreen(vm: AppViewModel, onClose: () -> Unit) {
                 contentAlignment = Alignment.Center,
             ) { Text("EMPEZAR ACTIVIDAD", style = PulseText.overline.copy(fontSize = 12.sp), color = PulseColors.onAccent) }
         }
+    }
+}
+
+@Composable
+private fun StrengthLive(vm: AppViewModel) {
+    val context = LocalContext.current
+    val live by vm.live.collectAsStateWithLifecycle()
+    var sets by remember { mutableStateOf<List<com.noop.pulse.engine.PulseRepEngine.DetectedSet>>(emptyList()) }
+    var covered by remember { mutableStateOf(0) }
+    LaunchedEffect(live.connected) { if (live.connected) PulseStrength.rearm(context, vm) }
+    LaunchedEffect(Unit) {
+        while (true) {
+            val id = PulseStrength.activeId(context) ?: break
+            covered = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { PulseStrength.coveredSeconds(context) }
+            sets = runCatching { PulseStrength.analyze(context, id) }.getOrDefault(emptyList())
+            delay(5_000)
+        }
+    }
+    Row(Modifier.padding(top = 22.dp), horizontalArrangement = Arrangement.spacedBy(30.dp)) {
+        LiveStat("${sets.size}", "SERIES")
+        LiveStat(sets.lastOrNull()?.reps?.toString() ?: "--", "REPS ÚLTIMA")
+    }
+    Text(
+        if (covered == 0) "Esperando el movimiento de la pulsera…" else "Movimiento recibido: ${covered / 60}:%02d".format(covered % 60),
+        style = PulseText.body, color = PulseColors.textSecondary, textAlign = TextAlign.Center,
+        modifier = Modifier.padding(start = 24.dp, end = 24.dp, top = 10.dp),
+    )
+}
+
+@Composable
+private fun StrengthSummary(s: PulseStrength.Session, onChange: (PulseStrength.Session) -> Unit, onClose: () -> Unit) {
+    val context = LocalContext.current
+    val (checked, right) = remember(s) { PulseStrength.accuracy(context) }
+    Column(Modifier.fillMaxSize().padding(top = 80.dp, start = 18.dp, end = 18.dp).verticalScroll(rememberScrollState()), horizontalAlignment = Alignment.CenterHorizontally) {
+        Text("SERIES DETECTADAS", style = PulseText.tabTitle, color = PulseColors.text)
+        Text(
+            if (s.sets.isEmpty()) "No he encontrado series claras. Puede que la pulsera no enviara el movimiento o que los ejercicios fueran sin ritmo (planchas, isométricos)."
+            else "Revisa los números y corrige los que no cuadren: así sé cuánto acierto.",
+            style = PulseText.body, color = PulseColors.textSecondary, textAlign = TextAlign.Center, modifier = Modifier.padding(top = 10.dp),
+        )
+        s.sets.forEachIndexed { idx, set ->
+            val restBefore = s.sets.getOrNull(idx - 1)?.let { set.startTs - it.endTs }
+            Row(Modifier.padding(top = 14.dp).fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(PulseColors.overlay).padding(horizontal = 16.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text("Serie ${idx + 1}", style = PulseText.cardTitleLg, color = PulseColors.text)
+                    Text("${set.endTs - set.startTs + 1} s" + (restBefore?.let { " · descanso ${it / 60}:%02d".format(it % 60) } ?: "") +
+                        (if (set.corrected != null && set.corrected != set.detected) " · Pulse contó ${set.detected}" else ""),
+                        style = PulseText.body, color = PulseColors.textSecondary)
+                }
+                Box(Modifier.size(36.dp).pulseClick { PulseStrength.correct(context, s.id, idx, set.reps - 1); PulseStrength.last(context)?.let(onChange) }, contentAlignment = Alignment.Center) { Text("−", style = PulseText.cardTitleLg, color = PulseColors.text) }
+                Text("${set.reps}", style = PulseText.bigNumber.copy(fontSize = 26.sp), color = PulseColors.text, modifier = Modifier.padding(horizontal = 8.dp))
+                Box(Modifier.size(36.dp).pulseClick { PulseStrength.correct(context, s.id, idx, set.reps + 1); PulseStrength.last(context)?.let(onChange) }, contentAlignment = Alignment.Center) { Text("+", style = PulseText.cardTitleLg, color = PulseColors.text) }
+            }
+        }
+        if (checked > 0) Text("Acierto exacto hasta ahora: $right de $checked series revisadas.", style = PulseText.body, color = PulseColors.textSecondary, modifier = Modifier.padding(top = 16.dp))
+        Spacer(Modifier.height(24.dp))
+        Box(
+            Modifier.padding(bottom = 30.dp).fillMaxWidth().height(54.dp).clip(RoundedCornerShape(27.dp)).background(PulseColors.accentBrush)
+                .pulseClick { PulseStrength.confirm(context, s.id); onClose() },
+            contentAlignment = Alignment.Center,
+        ) { Text("GUARDAR", style = PulseText.overline.copy(fontSize = 12.sp), color = PulseColors.onAccent) }
     }
 }
 

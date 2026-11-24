@@ -124,6 +124,12 @@ class ImuSessionFileStore(private val context: Context) {
             }
     }
 
+    /** Decoded seconds of a session in [from]..[to] (unix s), including not-yet-flushed ones: ts → the six
+     *  planar i16 columns (ax, ay, az, gx, gy, gz × [SAMPLE_RATE]). Used by Pulse's strength analysis. */
+    fun seconds(id: String, from: Long, to: Long): List<Pair<Long, ShortArray>> = synchronized(lock) {
+        readRecords(id, from, to, includePending = true).distinctBy { it.ts }.sortedBy { it.ts }.map { it.ts to it.columns }
+    }
+
     private fun readRecords(id: String, from: Long, to: Long, includePending: Boolean): List<Record> {
         val rows = segmentFiles(id).flatMap { decodeFile(it.readBytes()) }.filter { it.ts in from..to }.toMutableList()
         if (includePending) rows += pending.filterKeys { it.startsWith("$id/") }.values.flatten().filter { it.ts in from..to }
