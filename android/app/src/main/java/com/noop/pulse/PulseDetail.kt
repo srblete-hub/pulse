@@ -85,7 +85,7 @@ fun PulseInfoScreen(title: String, heading: String, paragraphs: List<String>, on
         Column(Modifier.padding(horizontal = 20.dp, vertical = 16.dp)) {
             Text(heading, style = PulseText.headline, color = PulseColors.text)
             paragraphs.forEach {
-                Spacer(Modifier.height(14.dp))
+                Spacer(Modifier.height(16.dp))
                 Text(it, style = PulseText.bodyLg, color = PulseColors.textSecondary)
             }
             if (cta != null) {

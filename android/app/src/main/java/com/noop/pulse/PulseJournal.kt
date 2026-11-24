@@ -117,37 +117,37 @@ fun PulseJournalIntro(onClose: () -> Unit, onDone: () -> Unit) {
         steps = listOf(
             IntroStep(
                 "Te damos la bienvenida a tu diario", listOf("Un minuto al día basta."), textTop = 600.dp,
-                background = Brush.verticalGradient(listOf(PulseColors.overlay, PulseColors.base)),
+                background = androidx.compose.ui.graphics.SolidColor(PulseColors.raised),
             ) {
-                Box(Modifier.align(Alignment.TopCenter).padding(top = 200.dp).size(150.dp).clip(RoundedCornerShape(75.dp)).background(Brush.radialGradient(listOf(PulseColors.violet.copy(alpha = 0.5f), Color.Transparent))), contentAlignment = Alignment.Center) {
+                Box(Modifier.align(Alignment.TopCenter).padding(top = 200.dp).size(150.dp).clip(RoundedCornerShape(75.dp)).background(androidx.compose.ui.graphics.SolidColor(Color.Transparent)), contentAlignment = Alignment.Center) {
                     Icon(Icons.Outlined.Edit, null, tint = PulseColors.accent, modifier = Modifier.size(60.dp))
                 }
             },
             IntroStep("Apunta tus hábitos y descubre cómo te afectan", emptyList()) {
                 Column(
-                    Modifier.align(Alignment.TopCenter).padding(start = 30.dp, end = 30.dp, top = 120.dp).fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(PulseColors.raised).padding(18.dp),
+                    Modifier.align(Alignment.TopCenter).padding(start = 32.dp, end = 32.dp, top = 120.dp).fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(PulseColors.raised).padding(16.dp),
                 ) {
                     Text("ÚLTIMOS 90 DÍAS", style = PulseText.overline, color = PulseColors.textSecondary)
-                    Spacer(Modifier.height(6.dp))
+                    Spacer(Modifier.height(8.dp))
                     Text("Qué afecta a tu recuperación", style = PulseText.cardTitleLg, color = PulseColors.text)
                     listOf("BEBER SUFICIENTE AGUA" to 11, "LEER ANTES DE DORMIR" to 8, "ESTIRAMIENTOS" to 4, "CENA TARDÍA" to -5, "ALCOHOL" to -12).forEach { (n, v) ->
                         EffectBar(n, v.toDouble(), "${if (v > 0) "+" else "−"}${kotlin.math.abs(v)}%")
                     }
-                    Spacer(Modifier.height(10.dp))
+                    Spacer(Modifier.height(8.dp))
                     Text("Ejemplo ilustrativo.", style = PulseText.body.copy(fontSize = 11.sp), color = PulseColors.textTertiary)
                 }
             },
-            IntroStep("Comprueba si tu nueva rutina de sueño funciona…", emptyList(), background = Brush.verticalGradient(listOf(PulseColors.overlay, PulseColors.base))) {
+            IntroStep("Comprueba si tu nueva rutina de sueño funciona…", emptyList(), background = androidx.compose.ui.graphics.SolidColor(PulseColors.raised)) {
                 Icon(androidx.compose.material.icons.Icons.Outlined.Check, null, tint = PulseColors.stressLow, modifier = Modifier.align(Alignment.TopCenter).padding(top = 240.dp).size(110.dp))
             },
-            IntroStep("…o cómo te pasa factura el estrés del trabajo", emptyList(), background = Brush.verticalGradient(listOf(PulseColors.divider, PulseColors.base))) {
+            IntroStep("…o cómo te pasa factura el estrés del trabajo", emptyList(), background = androidx.compose.ui.graphics.SolidColor(PulseColors.raised)) {
                 Icon(Icons.Outlined.Forum, null, tint = PulseColors.stressHigh, modifier = Modifier.align(Alignment.TopCenter).padding(top = 240.dp).size(110.dp))
             },
             IntroStep("Elige qué quieres registrar", listOf("Puedes cambiar tu lista cuando quieras. Todo se queda en tu teléfono.")) {
-                Column(Modifier.align(Alignment.TopCenter).padding(start = 30.dp, end = 30.dp, top = 160.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Column(Modifier.align(Alignment.TopCenter).padding(start = 32.dp, end = 32.dp, top = 160.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     listOf("Café", "Alcohol", "Meditación", "Pantallas en la cama", "Hidratación", "Siesta", "Cena tardía", "Estiramientos").chunked(2).forEach { row ->
-                        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                            row.forEach { Text(it, style = PulseText.body.copy(fontWeight = FontWeight.SemiBold), color = PulseColors.text, modifier = Modifier.clip(RoundedCornerShape(18.dp)).background(PulseColors.overlay).padding(horizontal = 16.dp, vertical = 10.dp)) }
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            row.forEach { Text(it, style = PulseText.body.copy(fontWeight = FontWeight.SemiBold), color = PulseColors.text, modifier = Modifier.clip(RoundedCornerShape(18.dp)).background(PulseColors.overlay).padding(horizontal = 16.dp, vertical = 8.dp)) }
                         }
                     }
                 }
@@ -159,12 +159,12 @@ fun PulseJournalIntro(onClose: () -> Unit, onDone: () -> Unit) {
 
 @Composable
 private fun EffectBar(name: String, value: Double, label: String, scale: Double = 15.0) {
-    Column(Modifier.padding(top = 14.dp)) {
+    Column(Modifier.padding(top = 16.dp)) {
         Row {
             Text(name, style = PulseText.overline, color = PulseColors.text, modifier = Modifier.weight(1f))
             Text(label, style = PulseText.small.copy(fontWeight = FontWeight.Bold), color = if (value >= 0) PulseColors.accent else PulseColors.stressHigh)
         }
-        Spacer(Modifier.height(6.dp))
+        Spacer(Modifier.height(8.dp))
         Row(Modifier.fillMaxWidth().height(6.dp)) {
             val f = (kotlin.math.abs(value) / scale).toFloat().coerceIn(0.03f, 1f)
             Box(Modifier.weight(1f).fillMaxSize(), contentAlignment = Alignment.CenterEnd) {
@@ -178,7 +178,7 @@ private fun EffectBar(name: String, value: Double, label: String, scale: Double 
     }
 }
 
-private val journalBg = Brush.verticalGradient(0f to PulseColors.hairlineStrong, 0.22f to PulseColors.divider, 0.5f to PulseColors.overlay, 1f to PulseColors.base)
+private val journalBg = androidx.compose.ui.graphics.SolidColor(PulseColors.raised)
 private val es = Locale("es", "ES")
 
 @Composable
@@ -229,7 +229,7 @@ fun PulseJournalScreen(vm: AppViewModel, onClose: () -> Unit, onCoach: () -> Uni
     val date = LocalDate.now().plusDays(offset.toLong())
 
     Box(Modifier.fillMaxSize().background(journalBg).imePadding()) {
-        Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).statusBarsPadding().padding(top = 70.dp, bottom = 120.dp)) {
+        Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).statusBarsPadding().padding(top = 72.dp, bottom = 120.dp)) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Outlined.ChevronLeft, "Día anterior", tint = PulseColors.text, modifier = Modifier.size(20.dp).pulseClick { if (offset > -6) offset-- })
                 Spacer(Modifier.width(56.dp))
@@ -237,19 +237,19 @@ fun PulseJournalScreen(vm: AppViewModel, onClose: () -> Unit, onCoach: () -> Uni
                 Spacer(Modifier.width(56.dp))
                 Icon(Icons.Outlined.ChevronRight, "Día siguiente", tint = if (offset < 0) PulseColors.text else PulseColors.textTertiary, modifier = Modifier.size(20.dp).pulseClick { if (offset < 0) offset++ })
             }
-            Row(Modifier.fillMaxWidth().padding(start = 12.dp, end = 12.dp, top = 16.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            Row(Modifier.fillMaxWidth().padding(start = 12.dp, end = 12.dp, top = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 (-6..0).forEach { o ->
                     val d = LocalDate.now().plusDays(o.toLong())
                     val selected = o == offset
                     Column(
                         Modifier.weight(1f).clip(RoundedCornerShape(22.dp)).background(Color(0x1AFFFFFF))
                             .border(2.dp, if (selected) PulseColors.text else Color.Transparent, RoundedCornerShape(22.dp)).pulseClick { offset = o }
-                            .padding(top = 8.dp, bottom = 10.dp),
+                            .padding(top = 8.dp, bottom = 8.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
                         Text(d.dayOfWeek.getDisplayName(TextStyle.SHORT, es).trimEnd('.').replaceFirstChar { it.uppercase() }, style = PulseText.body.copy(fontSize = 11.sp), color = PulseColors.textQuiet)
                         Text("${d.dayOfMonth}", style = PulseText.small.copy(fontSize = 14.sp, fontWeight = FontWeight.Bold), color = PulseColors.text)
-                        Spacer(Modifier.height(6.dp))
+                        Spacer(Modifier.height(8.dp))
                         Box(Modifier.size(12.dp).clip(RoundedCornerShape(6.dp)).background(if (d.toString() in answeredDays) PulseColors.accent else Color(0x59FFFFFF)))
                     }
                 }
@@ -257,15 +257,15 @@ fun PulseJournalScreen(vm: AppViewModel, onClose: () -> Unit, onCoach: () -> Uni
             Text(
                 "¿Qué tal ha ido ${if (offset == 0) "hoy" else "el día"}, ${date.dayOfMonth} de ${date.month.getDisplayName(TextStyle.FULL, es)}?",
                 style = PulseText.headline.copy(fontSize = 20.sp, fontWeight = FontWeight.SemiBold), color = PulseColors.text,
-                modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 22.dp),
+                modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 24.dp),
             )
             Column(
-                Modifier.padding(start = 15.dp, end = 15.dp, top = 18.dp).fillMaxWidth().clip(RoundedCornerShape(PulseMetrics.cardRadius))
-                    .background(Brush.linearGradient(listOf(PulseColors.violet.copy(alpha = 0.35f), PulseColors.stressLow.copy(alpha = 0.2f)))).padding(16.dp),
+                Modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp).fillMaxWidth().clip(RoundedCornerShape(PulseMetrics.cardRadius))
+                    .background(androidx.compose.ui.graphics.SolidColor(PulseColors.overlay)).padding(16.dp),
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Outlined.Forum, null, tint = PulseColors.stressLowLabel, modifier = Modifier.size(20.dp))
-                    Spacer(Modifier.width(10.dp))
+                    Spacer(Modifier.width(8.dp))
                     Text("Cuéntaselo al coach", style = PulseText.cardTitle, color = PulseColors.text)
                 }
                 Row(Modifier.padding(top = 12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -287,20 +287,20 @@ fun PulseJournalScreen(vm: AppViewModel, onClose: () -> Unit, onCoach: () -> Uni
                     ) { Text("HABLAR", style = PulseText.overlineLg, color = PulseColors.text) }
                 }
             }
-            Row(Modifier.padding(start = 15.dp, end = 15.dp, top = 26.dp, bottom = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+            Row(Modifier.padding(start = 16.dp, end = 16.dp, top = 24.dp, bottom = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text("HÁBITOS", style = PulseText.overline, color = PulseColors.textSecondary)
-                Spacer(Modifier.width(10.dp))
+                Spacer(Modifier.width(8.dp))
                 Box(Modifier.weight(1f).height(1.dp).background(PulseColors.hairline))
             }
-            Column(Modifier.padding(horizontal = 15.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 habits.filter { it.id in picked }.forEach { h ->
                     val a = answers[h.id]
-                    Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(PulseMetrics.cardRadius)).background(Color(0xB33A424A)).padding(start = 16.dp, end = 14.dp, top = 14.dp, bottom = 14.dp)) {
+                    Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(PulseMetrics.cardRadius)).background(Color(0xB33A424A)).padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 16.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(h.q, style = PulseText.bodyLg.copy(lineHeight = 19.sp), color = PulseColors.text, modifier = Modifier.weight(1f))
-                            Spacer(Modifier.width(10.dp))
+                            Spacer(Modifier.width(8.dp))
                             AnswerButton(Icons.Outlined.Remove, a == false, PulseColors.textTertiary, PulseColors.text) { if (a == false) answers.remove(h.id) else answers[h.id] = false; save(h) }
-                            Spacer(Modifier.width(10.dp))
+                            Spacer(Modifier.width(8.dp))
                             AnswerButton(Icons.Outlined.Check, a == true, PulseColors.accent, PulseColors.raised) { if (a == true) { answers.remove(h.id); save(h) } else { answers[h.id] = true; save(h) } }
                         }
                         if (a == true) {
@@ -310,20 +310,20 @@ fun PulseJournalScreen(vm: AppViewModel, onClose: () -> Unit, onCoach: () -> Uni
                     }
                 }
             }
-            Text("NOTAS", style = PulseText.overline, color = PulseColors.textSecondary, modifier = Modifier.padding(start = 15.dp, top = 26.dp, bottom = 8.dp))
-            Box(Modifier.padding(horizontal = 15.dp).fillMaxWidth().height(90.dp).clip(RoundedCornerShape(12.dp)).background(Color(0x0FFFFFFF)).border(1.dp, PulseColors.hairline, RoundedCornerShape(12.dp)).padding(12.dp)) {
+            Text("NOTAS", style = PulseText.overline, color = PulseColors.textSecondary, modifier = Modifier.padding(start = 16.dp, top = 24.dp, bottom = 8.dp))
+            Box(Modifier.padding(horizontal = 16.dp).fillMaxWidth().height(90.dp).clip(RoundedCornerShape(12.dp)).background(Color(0x0FFFFFFF)).border(1.dp, PulseColors.hairline, RoundedCornerShape(12.dp)).padding(12.dp)) {
                 if (notes.isEmpty()) Text("Algo más que quieras recordar de hoy…", style = PulseText.body, color = PulseColors.textTertiary)
                 BasicTextField(notes, { notes = it }, textStyle = PulseText.body.copy(color = PulseColors.text), cursorBrush = SolidColor(PulseColors.accent), modifier = Modifier.fillMaxSize())
             }
         }
-        Row(Modifier.fillMaxWidth().statusBarsPadding().padding(start = 10.dp, end = 12.dp, top = 16.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(Modifier.fillMaxWidth().statusBarsPadding().padding(start = 8.dp, end = 12.dp, top = 16.dp), verticalAlignment = Alignment.CenterVertically) {
             Box(Modifier.size(44.dp).pulseClick(onClose), contentAlignment = Alignment.Center) { Icon(Icons.Outlined.Close, "Cerrar", tint = PulseColors.text, modifier = Modifier.size(20.dp)) }
             Text("DIARIO", style = PulseText.tabTitle, color = PulseColors.text, textAlign = TextAlign.Center, modifier = Modifier.weight(1f))
             Box(Modifier.size(44.dp).pulseClick { selecting = true }, contentAlignment = Alignment.Center) { Icon(Icons.Outlined.Edit, "Editar hábitos", tint = PulseColors.text, modifier = Modifier.size(20.dp)) }
         }
         Box(
-            Modifier.align(Alignment.BottomCenter).fillMaxWidth().background(Brush.verticalGradient(0f to Color.Transparent, 0.4f to PulseColors.base))
-                .navigationBarsPadding().padding(start = 24.dp, end = 24.dp, top = 30.dp, bottom = 26.dp),
+            Modifier.align(Alignment.BottomCenter).fillMaxWidth().background(androidx.compose.ui.graphics.SolidColor(PulseColors.base))
+                .navigationBarsPadding().padding(start = 24.dp, end = 24.dp, top = 32.dp, bottom = 24.dp),
         ) {
             Box(
                 Modifier.fillMaxWidth().height(50.dp).clip(RoundedCornerShape(25.dp)).background(Color.White).pulseClick {
@@ -350,7 +350,7 @@ private fun AnswerButton(icon: androidx.compose.ui.graphics.vector.ImageVector, 
 
 @Composable
 private fun TimeSlider(value: Int, onChange: (Int) -> Unit) {
-    Column(Modifier.padding(top = 10.dp)) {
+    Column(Modifier.padding(top = 8.dp)) {
         androidx.compose.foundation.layout.BoxWithConstraints(Modifier.fillMaxWidth().height(22.dp)) {
             val w = maxWidth
             Box(Modifier.align(Alignment.CenterStart).fillMaxWidth().height(4.dp).clip(RoundedCornerShape(2.dp)).background(PulseColors.textTertiary))
@@ -358,7 +358,7 @@ private fun TimeSlider(value: Int, onChange: (Int) -> Unit) {
             Box(Modifier.offset(x = (w - 22.dp) * (value / 2f)).size(22.dp).clip(RoundedCornerShape(11.dp)).background(Color.White))
             Row(Modifier.fillMaxSize()) { repeat(3) { i -> Box(Modifier.weight(1f).fillMaxSize().pulseClick { onChange(i) }) } }
         }
-        Row(Modifier.fillMaxWidth().padding(top = 6.dp)) {
+        Row(Modifier.fillMaxWidth().padding(top = 8.dp)) {
             listOf("Mañana" to TextAlign.Start, "Tarde" to TextAlign.Center, "Noche" to TextAlign.End).forEachIndexed { i, (t, a) ->
                 Text(t, style = PulseText.body.copy(fontSize = 10.5.sp), color = if (i == value) PulseColors.text else PulseColors.textSecondary, textAlign = a, modifier = Modifier.weight(1f).pulseClick { onChange(i) })
             }
@@ -376,37 +376,37 @@ private fun BoxScope.HabitPicker(initial: List<String>, onClose: () -> Unit, onS
     var all by remember { mutableStateOf(PulseHabits.all(context)) }
     Box(Modifier.matchParentSize().background(Color(0x8C000000)).pulseClick(onClose))
     Column(
-        Modifier.fillMaxSize().statusBarsPadding().padding(top = 70.dp).clip(RoundedCornerShape(topStart = 22.dp, topEnd = 22.dp))
-            .background(Brush.linearGradient(listOf(PulseColors.hairlineStrong, PulseColors.overlay, PulseColors.overlay))).pulseClick { },
+        Modifier.fillMaxSize().statusBarsPadding().padding(top = 72.dp).clip(RoundedCornerShape(topStart = PulseMetrics.sheetRadius, topEnd = PulseMetrics.sheetRadius))
+            .background(androidx.compose.ui.graphics.SolidColor(PulseColors.raised)).pulseClick { },
     ) {
         Box(Modifier.align(Alignment.CenterHorizontally).padding(top = 12.dp).width(60.dp).height(4.dp).clip(RoundedCornerShape(2.dp)).background(PulseColors.textTertiary))
-        Row(Modifier.fillMaxWidth().padding(start = 10.dp, end = 12.dp, top = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(Modifier.fillMaxWidth().padding(start = 8.dp, end = 12.dp, top = 12.dp), verticalAlignment = Alignment.CenterVertically) {
             Box(Modifier.size(40.dp).pulseClick(onClose), contentAlignment = Alignment.Center) { Icon(Icons.Outlined.Close, "Cerrar", tint = PulseColors.text, modifier = Modifier.size(18.dp)) }
             Text("ELIGE TUS HÁBITOS", style = PulseText.overline.copy(fontSize = 11.5.sp, letterSpacing = PulseText.tabTitle.letterSpacing * 0.875f), color = PulseColors.text, textAlign = TextAlign.Center, modifier = Modifier.weight(1f).padding(end = 40.dp))
         }
-        Row(Modifier.horizontalScroll(rememberScrollState()).padding(start = 15.dp, top = 14.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(Modifier.horizontalScroll(rememberScrollState()).padding(start = 16.dp, top = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             PulseHabits.categories.forEach { c ->
                 Text(
                     c, style = PulseText.body.copy(fontWeight = FontWeight.SemiBold), color = if (c == cat) PulseColors.raised else PulseColors.text,
-                    modifier = Modifier.clip(RoundedCornerShape(16.dp)).background(if (c == cat) Color.White else Color(0x1FFFFFFF)).pulseClick { cat = c }.padding(horizontal = 14.dp, vertical = 8.dp),
+                    modifier = Modifier.clip(RoundedCornerShape(16.dp)).background(if (c == cat) Color.White else Color(0x1FFFFFFF)).pulseClick { cat = c }.padding(horizontal = 16.dp, vertical = 8.dp),
                 )
             }
-            Spacer(Modifier.width(15.dp))
+            Spacer(Modifier.width(16.dp))
         }
-        Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 15.dp)) {
-            Column(Modifier.padding(top = 16.dp).fillMaxWidth().clip(RoundedCornerShape(PulseMetrics.cardRadius)).background(Color(0x14FFFFFF)).padding(14.dp)) {
+        Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 16.dp)) {
+            Column(Modifier.padding(top = 16.dp).fillMaxWidth().clip(RoundedCornerShape(PulseMetrics.cardRadius)).background(Color(0x14FFFFFF)).padding(16.dp)) {
                 Text("Crea un hábito propio", style = PulseText.cardTitle, color = PulseColors.text)
                 if (creating) {
-                    Box(Modifier.padding(top = 10.dp).fillMaxWidth().height(44.dp).clip(RoundedCornerShape(10.dp)).background(PulseColors.base).padding(horizontal = 12.dp), contentAlignment = Alignment.CenterStart) {
+                    Box(Modifier.padding(top = 8.dp).fillMaxWidth().height(44.dp).clip(RoundedCornerShape(10.dp)).background(PulseColors.base).padding(horizontal = 12.dp), contentAlignment = Alignment.CenterStart) {
                         if (newName.isEmpty()) Text("Por ejemplo: Ducha fría", style = PulseText.body, color = PulseColors.textTertiary)
                         BasicTextField(newName, { newName = it }, singleLine = true, textStyle = PulseText.body.copy(color = PulseColors.text), cursorBrush = SolidColor(PulseColors.accent), modifier = Modifier.fillMaxWidth())
                     }
-                    Text("AÑADIR", style = PulseText.overlineLg, color = PulseColors.accent, modifier = Modifier.padding(top = 10.dp).pulseClick {
+                    Text("AÑADIR", style = PulseText.overlineLg, color = PulseColors.accent, modifier = Modifier.padding(top = 8.dp).pulseClick {
                         if (newName.isNotBlank()) { PulseHabits.addCustom(context, newName); all = PulseHabits.all(context); newName = ""; creating = false; cat = "Propios" }
                     })
                 } else {
-                    Row(Modifier.padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text("ESCRIBIR", style = PulseText.overline, color = PulseColors.text, modifier = Modifier.clip(RoundedCornerShape(10.dp)).background(Color(0x1FFFFFFF)).pulseClick { creating = true }.padding(horizontal = 16.dp, vertical = 10.dp))
+                    Row(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text("ESCRIBIR", style = PulseText.overline, color = PulseColors.text, modifier = Modifier.clip(RoundedCornerShape(10.dp)).background(Color(0x1FFFFFFF)).pulseClick { creating = true }.padding(horizontal = 16.dp, vertical = 8.dp))
                     }
                 }
             }
@@ -426,7 +426,7 @@ private fun BoxScope.HabitPicker(initial: List<String>, onClose: () -> Unit, onS
 
 @Composable
 private fun HabitRow(h: Habit, chosen: Boolean, onToggle: () -> Unit) {
-    Row(Modifier.padding(bottom = 8.dp).fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(Color(0x14FFFFFF)).pulseClick(onToggle).padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
+    Row(Modifier.padding(bottom = 8.dp).fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(Color(0x14FFFFFF)).pulseClick(onToggle).padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
         Column(Modifier.weight(1f)) {
             Text(h.name, style = PulseText.cardTitle, color = PulseColors.text)
             Text(h.q, style = PulseText.body.copy(fontSize = 12.sp), color = PulseColors.textSecondary)
@@ -457,28 +457,28 @@ fun PulseHabitsScreen(vm: AppViewModel, onBack: () -> Unit, onJournal: () -> Uni
             .map { (names[it.behavior]?.name ?: it.behavior) to (it.pctChange ?: 0.0) }
     }
     Column(Modifier.fillMaxSize().background(PulseColors.screenBrush).verticalScroll(rememberScrollState()).statusBarsPadding().navigationBarsPadding()) {
-        Row(Modifier.fillMaxWidth().padding(start = 10.dp, end = 10.dp, top = 18.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(Modifier.fillMaxWidth().padding(start = 8.dp, end = 8.dp, top = 16.dp), verticalAlignment = Alignment.CenterVertically) {
             Box(Modifier.size(44.dp).pulseClick(onBack), contentAlignment = Alignment.Center) { Icon(Icons.AutoMirrored.Outlined.ArrowBack, "Volver", tint = PulseColors.text, modifier = Modifier.size(22.dp)) }
             Text("HÁBITOS QUE INFLUYEN", style = PulseText.tabTitle, color = PulseColors.text, textAlign = TextAlign.Center, modifier = Modifier.weight(1f))
             Spacer(Modifier.width(44.dp))
         }
         Text("Apunta tus hábitos y descubre qué te sienta bien", style = PulseText.headline.copy(fontSize = 22.sp, fontWeight = FontWeight.SemiBold), color = PulseColors.text, modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 24.dp))
-        Text("Prueba pequeños cambios en tu día a día, en comida, descanso o trabajo, y Pulse irá viendo cómo afectan a tu recuperación.", style = PulseText.bodyLg, color = PulseColors.textSecondary, modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 10.dp))
-        AccentCard(Modifier.padding(start = 15.dp, end = 15.dp, top = 20.dp), onClick = onJournal) {
+        Text("Prueba pequeños cambios en tu día a día, en comida, descanso o trabajo, y Pulse irá viendo cómo afectan a tu recuperación.", style = PulseText.bodyLg, color = PulseColors.textSecondary, modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 8.dp))
+        AccentCard(Modifier.padding(start = 16.dp, end = 16.dp, top = 20.dp), onClick = onJournal) {
             Text(if (effects.isEmpty()) "¿Con ganas de empezar?" else "Sigue apuntando", style = PulseText.cardTitleLg, color = PulseColors.text)
-            Spacer(Modifier.height(6.dp))
+            Spacer(Modifier.height(8.dp))
             Text(
                 if (effects.isEmpty()) "Vuelve mañana, después de tu primera noche con la pulsera, y apunta tus hábitos en el diario." else "Cuantos más días apuntes, más fiables serán estos efectos.",
                 style = PulseText.body, color = PulseColors.textSecondary,
             )
-            Spacer(Modifier.height(6.dp))
+            Spacer(Modifier.height(8.dp))
             CtaLink("Abrir diario", onClick = onJournal)
         }
         Text(
             if (effects.isEmpty()) "HÁBITOS PARA EMPEZAR" else "TUS HÁBITOS", style = PulseText.overlineLg, color = PulseColors.textSecondary,
-            modifier = Modifier.padding(start = 20.dp, top = 30.dp),
+            modifier = Modifier.padding(start = 20.dp, top = 32.dp),
         )
-        Column(Modifier.padding(start = 15.dp, end = 15.dp, top = 12.dp).fillMaxWidth().clip(RoundedCornerShape(PulseMetrics.cardRadius)).background(PulseColors.raised).padding(16.dp)) {
+        Column(Modifier.padding(start = 16.dp, end = 16.dp, top = 12.dp).fillMaxWidth().clip(RoundedCornerShape(PulseMetrics.cardRadius)).background(PulseColors.raised).padding(16.dp)) {
             Text(if (effects.isEmpty()) "Lo que dice la investigación sobre el sueño" else "Efecto en tu recuperación de la mañana siguiente", style = PulseText.cardTitle, color = PulseColors.text)
             Row(Modifier.fillMaxWidth().padding(top = 12.dp)) {
                 Text("▼ PERJUDICA", style = PulseText.overline.copy(fontSize = 9.sp), color = PulseColors.stressHigh, modifier = Modifier.weight(1f))

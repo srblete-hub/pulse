@@ -127,7 +127,7 @@ object PulseProfile {
     }
 }
 
-private val welcomeBrush = Brush.verticalGradient(0f to PulseColors.divider, 0.45f to PulseColors.overlay, 1f to PulseColors.raised)
+private val welcomeBrush = androidx.compose.ui.graphics.SolidColor(PulseColors.raised)
 private val fieldBg = PulseColors.base
 private val titleStyle = TextStyle(fontFamily = PulseType.sans, fontWeight = FontWeight.SemiBold, fontSize = 24.sp, lineHeight = 30.sp)
 private val leadStyle = TextStyle(fontFamily = PulseType.sans, fontSize = 14.sp, lineHeight = 20.sp)
@@ -236,7 +236,7 @@ fun PulseWelcome(vm: AppViewModel, onFinished: () -> Unit) {
             1 -> StepBody(Icons.Outlined.Person, "¿Cómo te llamas?", "Lo usamos para saludarte y en tu perfil.") {
                 FieldLabel("Nombre")
                 PulseField(first, { first = it }, "Tu nombre")
-                Spacer(Modifier.height(18.dp))
+                Spacer(Modifier.height(16.dp))
                 FieldLabel("Apellido (opcional)")
                 PulseField(last, { last = it }, "Tu apellido")
             }
@@ -244,7 +244,7 @@ fun PulseWelcome(vm: AppViewModel, onFinished: () -> Unit) {
                 val fmt = remember { DateTimeFormatter.ofPattern("dd/MM/yyyy") }
                 val shown = dob?.let { Instant.ofEpochMilli(it).atZone(ZoneId.systemDefault()).toLocalDate().format(fmt) } ?: "--/--/----"
                 Row(
-                    Modifier.fillMaxWidth().height(52.dp).clip(RoundedCornerShape(12.dp)).border(1.dp, PulseColors.hairline, RoundedCornerShape(12.dp))
+                    Modifier.fillMaxWidth().height(48.dp).clip(RoundedCornerShape(PulseMetrics.buttonRadius)).border(1.dp, PulseColors.hairline, RoundedCornerShape(PulseMetrics.buttonRadius))
                         .pulseClick {
                             val start = dob?.let { Instant.ofEpochMilli(it).atZone(ZoneId.systemDefault()).toLocalDate() } ?: LocalDate.now().minusYears(30)
                             DatePickerDialog(context, { _, y, m, d ->
@@ -277,7 +277,7 @@ fun PulseWelcome(vm: AppViewModel, onFinished: () -> Unit) {
                 }
             }
             3 -> StepBody(Icons.Outlined.Straighten, "Altura y peso", "Para estimar calorías y tu forma física. Puedes cambiarlos cuando quieras.") {
-                Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(fieldBg).padding(3.dp)) {
+                Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(fieldBg).padding(4.dp)) {
                     listOf(true to "IMPERIAL", false to "MÉTRICO").forEach { (imp, label) ->
                         Box(
                             Modifier.weight(1f).height(38.dp).clip(RoundedCornerShape(8.dp))
@@ -286,7 +286,7 @@ fun PulseWelcome(vm: AppViewModel, onFinished: () -> Unit) {
                         ) { Text(label, style = PulseText.overline, color = PulseColors.text) }
                     }
                 }
-                Spacer(Modifier.height(22.dp))
+                Spacer(Modifier.height(24.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     Column(Modifier.weight(1f)) {
                         FieldLabel("Altura (${if (imperial) "pies" else "cm"})")
@@ -313,14 +313,14 @@ fun PulseWelcome(vm: AppViewModel, onFinished: () -> Unit) {
                     else -> "Pulsa EMPAREJAR para buscar tu pulsera"
                 }
                 BottomText("Empareja tu pulsera", "Acércala al teléfono y activa el Bluetooth. Compatible con los modelos 4.0 y 5.0 / MG.", null) {
-                    Spacer(Modifier.height(18.dp))
+                    Spacer(Modifier.height(16.dp))
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Box(Modifier.size(8.dp).clip(RoundedCornerShape(4.dp)).background(if (live.bonded) PulseColors.recoveryGreen else PulseColors.accent))
-                        Spacer(Modifier.width(10.dp))
+                        Spacer(Modifier.width(8.dp))
                         Text(status, style = leadStyle.copy(fontSize = 13.sp), color = PulseColors.accentHover)
                     }
                     if (!live.bonded) {
-                        Spacer(Modifier.height(14.dp))
+                        Spacer(Modifier.height(16.dp))
                         ModelPicker(vm) { requestScan() }
                     }
                 }
@@ -331,14 +331,14 @@ fun PulseWelcome(vm: AppViewModel, onFinished: () -> Unit) {
                     "Entiendo que Pulse no es un dispositivo médico.",
                     "Haré copias de seguridad yo mismo, porque no hay nube.",
                 ).forEachIndexed { i, t ->
-                    Row(Modifier.fillMaxWidth().padding(bottom = 14.dp).pulseClick { checks[i] = !checks[i] }) {
+                    Row(Modifier.fillMaxWidth().padding(bottom = 16.dp).pulseClick { checks[i] = !checks[i] }) {
                         Box(
                             Modifier.size(24.dp).clip(RoundedCornerShape(5.dp))
                                 .border(2.dp, if (checks[i]) PulseColors.accent else PulseColors.text, RoundedCornerShape(5.dp))
                                 .background(if (checks[i]) PulseColors.accent else Color.Transparent),
                             contentAlignment = Alignment.Center,
                         ) { if (checks[i]) Icon(Icons.Outlined.Check, null, tint = PulseColors.raised, modifier = Modifier.size(16.dp)) }
-                        Spacer(Modifier.width(14.dp))
+                        Spacer(Modifier.width(16.dp))
                         Text(t, style = leadStyle, color = PulseColors.text)
                     }
                 }
@@ -356,7 +356,7 @@ fun PulseWelcome(vm: AppViewModel, onFinished: () -> Unit) {
 
         if (step > 0) {
             Box(
-                Modifier.align(Alignment.TopStart).padding(start = 12.dp, top = 18.dp).size(44.dp).pulseClick { step-- },
+                Modifier.align(Alignment.TopStart).padding(start = 12.dp, top = 16.dp).size(44.dp).pulseClick { step-- },
                 contentAlignment = Alignment.Center,
             ) { Icon(Icons.AutoMirrored.Outlined.ArrowBack, "Atrás", tint = PulseColors.text, modifier = Modifier.size(22.dp)) }
         }
@@ -399,11 +399,11 @@ private fun NextButton(step: Int, enabled: Boolean, onClick: () -> Unit) {
 
 @Composable
 private fun BoxScope.WelcomeHero() {
-    Box(Modifier.fillMaxSize().background(Brush.radialGradient(listOf(PulseColors.violet.copy(alpha = 0.4f), Color.Transparent), radius = 700f)))
+    Box(Modifier.fillMaxSize().background(androidx.compose.ui.graphics.SolidColor(Color.Transparent)))
     Box(Modifier.align(Alignment.TopCenter).padding(top = 200.dp)) { CoachOrb(diameter = 120.dp) }
-    Column(Modifier.align(Alignment.TopStart).padding(start = 24.dp, end = 24.dp, top = 470.dp)) {
+    Column(Modifier.align(Alignment.TopStart).padding(start = 24.dp, end = 24.dp, top = 472.dp)) {
         Text("Te damos la bienvenida a Pulse", style = titleStyle, color = PulseColors.text)
-        Spacer(Modifier.height(10.dp))
+        Spacer(Modifier.height(8.dp))
         Text("Sin cuentas ni servidores: todo lo que mide tu pulsera se queda en este teléfono. Necesitamos unos datos para que los cálculos sean correctos.", style = leadStyle, color = PulseColors.textQuiet)
     }
 }
@@ -411,10 +411,10 @@ private fun BoxScope.WelcomeHero() {
 @Composable
 private fun StepBody(icon: ImageVector, title: String, lead: String, content: @Composable () -> Unit) {
     Column(
-        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(start = 24.dp, end = 24.dp, top = 150.dp, bottom = 140.dp),
+        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(start = 24.dp, end = 24.dp, top = 152.dp, bottom = 140.dp),
     ) {
         Icon(icon, null, tint = PulseColors.textTertiary, modifier = Modifier.size(80.dp))
-        Spacer(Modifier.height(30.dp))
+        Spacer(Modifier.height(32.dp))
         Text(title, style = titleStyle, color = PulseColors.text)
         Spacer(Modifier.height(8.dp))
         Text(lead, style = leadStyle, color = PulseColors.textQuiet)
@@ -425,12 +425,12 @@ private fun StepBody(icon: ImageVector, title: String, lead: String, content: @C
 
 @Composable
 private fun BoxScope.BottomText(title: String, lead: String, status: String?, extra: @Composable () -> Unit = {}) {
-    Column(Modifier.align(Alignment.BottomStart).padding(start = 24.dp, end = 24.dp, bottom = 130.dp)) {
+    Column(Modifier.align(Alignment.BottomStart).padding(start = 24.dp, end = 24.dp, bottom = 128.dp)) {
         Text(title, style = titleStyle, color = PulseColors.text)
         Spacer(Modifier.height(8.dp))
         Text(lead, style = leadStyle, color = PulseColors.textQuiet)
         if (status != null) {
-            Spacer(Modifier.height(10.dp))
+            Spacer(Modifier.height(8.dp))
             Text(status, style = leadStyle.copy(fontSize = 13.sp), color = PulseColors.accentHover)
         }
         extra()
@@ -441,7 +441,7 @@ private fun BoxScope.BottomText(title: String, lead: String, status: String?, ex
 private fun BoxScope.SkipButton(text: String, onClick: () -> Unit) {
     Text(
         text.uppercase(), style = PulseText.overline.copy(fontSize = 11.sp), color = PulseColors.text,
-        modifier = Modifier.align(Alignment.TopEnd).padding(top = 30.dp, end = 18.dp).pulseClick(onClick),
+        modifier = Modifier.align(Alignment.TopEnd).padding(top = 32.dp, end = 16.dp).pulseClick(onClick),
     )
 }
 
@@ -472,7 +472,7 @@ internal fun PulseField(value: String, onChange: (String) -> Unit, placeholder: 
 @Composable
 private fun ModelPicker(vm: AppViewModel, rescan: () -> Unit) {
     val selected by vm.selectedModel.collectAsStateWithLifecycle()
-    Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(fieldBg).padding(3.dp)) {
+    Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(fieldBg).padding(4.dp)) {
         WhoopModel.entries.forEach { m ->
             Box(
                 Modifier.weight(1f).height(36.dp).clip(RoundedCornerShape(8.dp))
@@ -492,7 +492,7 @@ private fun ModelPicker(vm: AppViewModel, rescan: () -> Unit) {
 
 @Composable
 private fun BoxScope.HealthConnectArt() {
-    Box(Modifier.align(Alignment.TopCenter).padding(top = 130.dp).size(width = 390.dp, height = 360.dp)) {
+    Box(Modifier.align(Alignment.TopCenter).padding(top = 128.dp).size(width = 390.dp, height = 360.dp)) {
         Canvas(Modifier.fillMaxSize()) {
             val hub = Offset(size.width * 0.38f, size.height / 2)
             val nodes = listOf(Offset(size.width * 0.85f, size.height * 0.22f), Offset(size.width * 0.88f, size.height * 0.49f), Offset(size.width * 0.82f, size.height * 0.75f))
@@ -501,7 +501,7 @@ private fun BoxScope.HealthConnectArt() {
                 drawCircle(PulseColors.raised, 26.dp.toPx(), it)
                 drawCircle(PulseColors.hairlineStrong, 26.dp.toPx(), it, style = Stroke(1.dp.toPx()))
             }
-            drawCircle(Brush.linearGradient(listOf(PulseColors.accent, PulseColors.violet)), 56.dp.toPx(), hub)
+            drawCircle(androidx.compose.ui.graphics.SolidColor(PulseColors.accent), 56.dp.toPx(), hub)
         }
         Icon(Icons.Outlined.Favorite, null, tint = PulseColors.onAccent, modifier = Modifier.align(Alignment.CenterStart).padding(start = 128.dp).size(40.dp))
     }
@@ -531,10 +531,10 @@ private fun BoxScope.PairingArt(bonded: Boolean) {
 @Composable
 private fun BoxScope.NotificationsArt() {
     Box(
-        Modifier.align(Alignment.TopStart).padding(start = 110.dp, top = 150.dp).size(170.dp, 320.dp).rotate(8f)
+        Modifier.align(Alignment.TopStart).padding(start = 112.dp, top = 152.dp).size(170.dp, 320.dp).rotate(8f)
             .clip(RoundedCornerShape(28.dp)).border(2.dp, PulseColors.hairlineStrong, RoundedCornerShape(28.dp)).background(PulseColors.overlay),
     )
-    Column(Modifier.align(Alignment.TopStart).padding(start = 50.dp, top = 250.dp).width(250.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+    Column(Modifier.align(Alignment.TopStart).padding(start = 48.dp, top = 248.dp).width(250.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         NotifCard(Icons.Outlined.NightsStay, "Hora de desconectar", "Acuéstate a las 22:30 para dormir 8 h.", 1f, 0.dp)
         NotifCard(Icons.Outlined.Favorite, "Tu recuperación: 78 %", "Buen día para entrenar fuerte.", 0.8f, 20.dp)
     }
@@ -550,7 +550,7 @@ private fun NotifCard(icon: ImageVector, title: String, body: String, alpha: Flo
         Box(Modifier.size(34.dp).border(1.5.dp, PulseColors.accent, RoundedCornerShape(17.dp)), contentAlignment = Alignment.Center) {
             Icon(icon, null, tint = PulseColors.accent, modifier = Modifier.size(18.dp))
         }
-        Spacer(Modifier.width(10.dp))
+        Spacer(Modifier.width(8.dp))
         Column {
             Text(title, style = leadStyle.copy(fontSize = 12.sp, fontWeight = FontWeight.Bold), color = PulseColors.text)
             Text(body, style = leadStyle.copy(fontSize = 12.sp), color = PulseColors.textSecondary)
@@ -567,7 +567,7 @@ private fun BoxScope.FirstWeekArt() {
             val seg = 360f / 7
             for (i in 0 until 7) {
                 drawArc(
-                    Brush.linearGradient(listOf(PulseColors.accent, PulseColors.violet)),
+                    androidx.compose.ui.graphics.SolidColor(PulseColors.accent),
                     -90f + i * seg + 4f, seg - 8f, false, tl, Size(r * 2, r * 2),
                     alpha = 0.35f + 0.65f * (i + 1) / 7f, style = Stroke(10.dp.toPx(), cap = StrokeCap.Round),
                 )

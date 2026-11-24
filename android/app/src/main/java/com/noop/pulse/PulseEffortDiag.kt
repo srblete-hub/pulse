@@ -98,7 +98,7 @@ object EffortDiagnostics {
 @Composable
 fun EffortDiagCard(d: EffortDiag?, dayLabel: String, onToggleDay: () -> Unit) {
     Column(
-        Modifier.padding(start = 15.dp, end = 15.dp, top = 24.dp).fillMaxWidth().clip(RoundedCornerShape(PulseMetrics.cardRadius))
+        Modifier.padding(start = 16.dp, end = 16.dp, top = 24.dp).fillMaxWidth().clip(RoundedCornerShape(PulseMetrics.cardRadius))
             .background(PulseColors.raised).padding(16.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -106,10 +106,10 @@ fun EffortDiagCard(d: EffortDiag?, dayLabel: String, onToggleDay: () -> Unit) {
             Text(dayLabel, style = PulseText.overline, color = PulseColors.accent, modifier = Modifier.pulseClick(onToggleDay))
         }
         if (d == null) {
-            Text("Calculando…", style = PulseText.body, color = PulseColors.textSecondary, modifier = Modifier.padding(top = 10.dp))
+            Text("Calculando…", style = PulseText.body, color = PulseColors.textSecondary, modifier = Modifier.padding(top = 8.dp))
             return@Column
         }
-        Spacer(Modifier.height(10.dp))
+        Spacer(Modifier.height(8.dp))
         val warning = when {
             d.samples == 0 -> "No hay pulso registrado ese día. Si llevabas la pulsera, aún no se ha descargado: abre Pulse con la pulsera cerca para que sincronice."
             d.coveredHours < 12 && LocalDate.parse(d.day).isBefore(LocalDate.now()) ->
@@ -119,31 +119,31 @@ fun EffortDiagCard(d: EffortDiag?, dayLabel: String, onToggleDay: () -> Unit) {
         }
         warning?.let {
             Text(it, style = PulseText.body, color = PulseColors.stressHigh)
-            Spacer(Modifier.height(10.dp))
+            Spacer(Modifier.height(8.dp))
         }
         DiagRow("Pulso registrado", "${String.format(Locale("es"), "%.1f", d.coveredHours)} h (${d.samples} lecturas)")
         DiagRow("Pulso en reposo usado", "${d.restingHr.roundToInt()} lpm")
         DiagRow("Pulso máximo usado", "${d.maxHr.roundToInt()} lpm · ${d.maxHrSource}")
         d.peakHr?.let { DiagRow("Pulso más alto mantenido", "${it.roundToInt()} lpm") }
-        Spacer(Modifier.height(10.dp))
+        Spacer(Modifier.height(8.dp))
         Text("MINUTOS POR ZONA", style = PulseText.overline, color = PulseColors.textSecondary)
         val labels = listOf("Por debajo de zona 1", "Zona 1", "Zona 2", "Zona 3", "Zona 4", "Zona 5")
         val colors = listOf(PulseColors.textTertiary, PulseColors.textSecondary, PulseColors.stressLow, PulseColors.recoveryGreen, PulseColors.stressHigh, PulseColors.recoveryRed)
         d.zoneMin.forEachIndexed { i, m ->
             val from = if (i == 0) "< ${d.zoneStartBpm[0]} lpm" else "desde ${d.zoneStartBpm[i - 1]} lpm"
-            Row(Modifier.fillMaxWidth().padding(top = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+            Row(Modifier.fillMaxWidth().padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                 Box(Modifier.width(10.dp).height(10.dp).clip(RoundedCornerShape(3.dp)).background(colors[i]))
                 Spacer(Modifier.width(8.dp))
                 Text("${labels[i]} ($from)", style = PulseText.body.copy(fontSize = 12.sp), color = PulseColors.text, modifier = Modifier.weight(1f))
                 Text(PulseActivity.mmss(m), style = PulseText.small.copy(fontWeight = FontWeight.Bold), color = PulseColors.text)
             }
         }
-        Spacer(Modifier.height(10.dp))
+        Spacer(Modifier.height(8.dp))
         DiagRow("Esfuerzo con estos datos", d.effort21?.let { String.format(Locale.US, "%.1f", it) } ?: "--")
         d.storedEffort21?.let { DiagRow("Esfuerzo guardado", String.format(Locale.US, "%.1f", it)) }
         Text(
             "Como en NOOP, el esfuerzo empieza a sumar en zona 1 (50 % de tu reserva de pulso: máximo menos reposo) y cada zona pesa más que la anterior.",
-            style = PulseText.body.copy(fontSize = 11.5.sp, lineHeight = 16.sp), color = PulseColors.textTertiary, modifier = Modifier.padding(top = 10.dp),
+            style = PulseText.body.copy(fontSize = 11.5.sp, lineHeight = 16.sp), color = PulseColors.textTertiary, modifier = Modifier.padding(top = 8.dp),
         )
     }
 }
@@ -171,7 +171,7 @@ fun ActivitiesCard(
     fun clock(ts: Long) = java.time.Instant.ofEpochSecond(ts).atZone(ZoneId.systemDefault()).toLocalTime().format(fmt)
     var confirm by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<com.noop.data.WorkoutRow?>(null) }
     Column(
-        Modifier.padding(start = 15.dp, end = 15.dp, top = 12.dp).fillMaxWidth().clip(RoundedCornerShape(PulseMetrics.cardRadius))
+        Modifier.padding(start = 16.dp, end = 16.dp, top = 12.dp).fillMaxWidth().clip(RoundedCornerShape(PulseMetrics.cardRadius))
             .background(PulseColors.raised).padding(16.dp),
     ) {
         Text("ACTIVIDADES", style = PulseText.overlineLg, color = PulseColors.text)
@@ -213,16 +213,16 @@ fun ActivitiesCard(
             if (picking == w && onLabel != null) {
                 var custom by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf("") }
                 @OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
-                androidx.compose.foundation.layout.FlowRow(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(6.dp)) {
+                androidx.compose.foundation.layout.FlowRow(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp)) {
                     PulseSports.choices(ctx).forEach { label ->
                         Text(label, style = PulseText.body.copy(fontSize = 13.sp), color = if (label == w.sport) PulseColors.onAccent else PulseColors.text,
-                            modifier = Modifier.padding(top = 6.dp).clip(RoundedCornerShape(PulseMetrics.cardRadius))
+                            modifier = Modifier.padding(top = 8.dp).clip(RoundedCornerShape(PulseMetrics.cardRadius))
                                 .background(if (label == w.sport) PulseColors.accent else PulseColors.overlay)
-                                .pulseClick { onLabel(w, label); picking = null; tick++ }.padding(horizontal = 12.dp, vertical = 6.dp))
+                                .pulseClick { onLabel(w, label); picking = null; tick++ }.padding(horizontal = 12.dp, vertical = 8.dp))
                     }
                 }
                 Row(Modifier.fillMaxWidth().padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                    androidx.compose.material3.OutlinedTextField(custom, { custom = it.take(30) }, Modifier.weight(1f), singleLine = true,
+                    androidx.compose.material3.OutlinedTextField(custom, { custom = it.take(30) }, Modifier.weight(1f), singleLine = true, shape = RoundedCornerShape(PulseMetrics.inputRadius),
                         placeholder = { Text("Otro deporte…", style = PulseText.body, color = PulseColors.textTertiary) },
                         textStyle = PulseText.body.copy(color = PulseColors.text))
                     Spacer(Modifier.width(8.dp))

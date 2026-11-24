@@ -383,14 +383,14 @@ private fun androidx.navigation.NavGraphBuilder.legacy(
 
 @Composable
 private fun PulseBottomBar(current: String, onSelect: (String) -> Unit, onCoach: () -> Unit, modifier: Modifier = Modifier) {
-    val barColor = Color(0xF0282E34)
+    val barColor = PulseColors.overlay.copy(alpha = 0.94f)
     val shape = RoundedCornerShape(24.dp)
     Row(
-        modifier.fillMaxWidth().navigationBarsPadding().padding(start = 12.dp, end = 10.dp, bottom = 18.dp),
+        modifier.fillMaxWidth().navigationBarsPadding().padding(start = 12.dp, end = 8.dp, bottom = 16.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Row(
-            Modifier.weight(1f).height(66.dp).shadow(18.dp, shape).clip(shape).background(barColor).border(1.dp, PulseColors.hairline, shape),
+            Modifier.weight(1f).height(66.dp).shadow(8.dp, shape).clip(shape).background(barColor).border(1.dp, PulseColors.hairline, shape),
         ) {
             BarItem("Inicio", Icons.Outlined.Home, current == PulseRoute.home, Modifier.weight(1f)) { onSelect(PulseRoute.home) }
             BarItem("Salud", Icons.Outlined.MonitorHeart, current == PulseRoute.health, Modifier.weight(1f)) { onSelect(PulseRoute.health) }
@@ -398,7 +398,7 @@ private fun PulseBottomBar(current: String, onSelect: (String) -> Unit, onCoach:
             BarItem("Más", Icons.Outlined.Menu, current == PulseRoute.more, Modifier.weight(1f)) { onSelect(PulseRoute.more) }
         }
         Box(
-            Modifier.size(66.dp).shadow(18.dp, shape).clip(shape).background(barColor).border(1.dp, PulseColors.hairline, shape).pulseClick(onCoach),
+            Modifier.size(66.dp).shadow(8.dp, shape).clip(shape).background(barColor).border(1.dp, PulseColors.hairline, shape).pulseClick(onCoach),
             contentAlignment = Alignment.Center,
         ) { CoachOrb(diameter = 40.dp) }
     }

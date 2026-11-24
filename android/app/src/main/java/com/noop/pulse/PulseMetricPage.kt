@@ -63,15 +63,15 @@ object PulseTips {
 }
 
 private val pageBg = PulseColors.raised
-private val pageBrush = Brush.verticalGradient(0f to PulseColors.divider, 0.25f to PulseColors.overlay, 1f to pageBg)
-private val topBrush = Brush.verticalGradient(listOf(PulseColors.divider, Color(0xF52A3036)))
+private val pageBrush = androidx.compose.ui.graphics.SolidColor(PulseColors.raised)
+private val topBrush = androidx.compose.ui.graphics.SolidColor(PulseColors.raised)
 private val noticeBg = PulseColors.divider
 private val noticeSeg = PulseColors.textTertiary
-private val panelBrush = Brush.verticalGradient(listOf(PulseColors.overlay, PulseColors.overlay))
+private val panelBrush = androidx.compose.ui.graphics.SolidColor(PulseColors.raised)
 private val panelBorder = PulseColors.divider
-private val chartCardBrush = Brush.verticalGradient(listOf(PulseColors.hairlineStrong, PulseColors.divider))
-private val tipScrim = Brush.verticalGradient(0f to Color(0x8C080A0C), 0.55f to Color(0xCC080A0C), 1f to Color(0xF5080A0C))
-private val coachBarBg = Color(0xF21C2028)
+private val chartCardBrush = androidx.compose.ui.graphics.SolidColor(PulseColors.raised)
+private val tipScrim = Brush.verticalGradient(0f to PulseColors.base.copy(alpha = 0.55f), 0.55f to PulseColors.base.copy(alpha = 0.80f), 1f to PulseColors.base.copy(alpha = 0.96f))
+private val coachBarBg = PulseColors.overlay.copy(alpha = 0.95f)
 
 data class MetricRow(val icon: ImageVector, val label: String, val value: String, val base: String)
 
@@ -131,7 +131,7 @@ fun MetricPage(
                 }
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Icon(heroIcon, null, tint = heroColor, modifier = Modifier.size(25.dp))
-                    Spacer(Modifier.height(10.dp))
+                    Spacer(Modifier.height(8.dp))
                     Text(heroValue, style = PulseText.bigNumber.copy(fontSize = heroValueSize.sp, lineHeight = heroValueSize.sp), color = PulseColors.text)
                     Spacer(Modifier.height(12.dp))
                     Text(heroLabel, style = PulseText.overline.copy(fontSize = 11.sp, lineHeight = 16.sp), color = PulseColors.text, textAlign = TextAlign.Center)
@@ -139,10 +139,10 @@ fun MetricPage(
             }
             if (heroCaption != null) {
                 Text(heroCaption, style = PulseText.body, color = PulseColors.textSecondary, textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth().padding(start = 24.dp, end = 24.dp, top = 6.dp))
+                    modifier = Modifier.fillMaxWidth().padding(start = 24.dp, end = 24.dp, top = 8.dp))
             }
             if (notice != null) {
-                Column(Modifier.padding(start = 15.dp, end = 15.dp, top = 30.dp).fillMaxWidth().clip(RoundedCornerShape(PulseMetrics.cardRadius)).background(noticeBg).padding(16.dp)) {
+                Column(Modifier.padding(start = 16.dp, end = 16.dp, top = 32.dp).fillMaxWidth().clip(RoundedCornerShape(PulseMetrics.cardRadius)).background(noticeBg).padding(16.dp)) {
                     Text(notice.first, style = PulseText.body, color = PulseColors.text)
                     Spacer(Modifier.height(12.dp))
                     Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -151,7 +151,7 @@ fun MetricPage(
                 }
             }
             // Breakdown panel with the little pointer.
-            Box(Modifier.padding(start = 15.dp, end = 15.dp, top = 24.dp).fillMaxWidth()) {
+            Box(Modifier.padding(start = 16.dp, end = 16.dp, top = 24.dp).fillMaxWidth()) {
                 Column(
                     Modifier.fillMaxWidth().clip(RoundedCornerShape(PulseMetrics.cardRadius)).border(1.dp, panelBorder, RoundedCornerShape(PulseMetrics.cardRadius))
                         .background(panelBrush).padding(horizontal = 16.dp, vertical = 4.dp),
@@ -175,33 +175,33 @@ fun MetricPage(
                 )
             }
             middle()
-            Text("Tendencias de la semana", style = PulseText.sectionTitle, color = PulseColors.text, modifier = Modifier.padding(start = 20.dp, top = 36.dp, bottom = 14.dp))
-            Column(Modifier.padding(horizontal = 15.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Text("Tendencias de la semana", style = PulseText.sectionTitle, color = PulseColors.text, modifier = Modifier.padding(start = 20.dp, top = 36.dp, bottom = 16.dp))
+            Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 charts.forEach { TrendCard(it) }
             }
-            Spacer(Modifier.height(110.dp))
+            Spacer(Modifier.height(112.dp))
             Spacer(Modifier.navigationBarsPadding())
         }
 
         // Fixed top bar
         Row(
-            Modifier.fillMaxWidth().background(topBrush).statusBarsPadding().height(80.dp).padding(start = 10.dp, end = 12.dp, bottom = 10.dp),
+            Modifier.fillMaxWidth().background(topBrush).statusBarsPadding().height(80.dp).padding(start = 8.dp, end = 12.dp, bottom = 8.dp),
             verticalAlignment = Alignment.Bottom,
         ) {
             Box(Modifier.size(44.dp).pulseClick(onBack), contentAlignment = Alignment.Center) {
                 Icon(Icons.AutoMirrored.Outlined.ArrowBack, "Volver", tint = PulseColors.text, modifier = Modifier.size(22.dp))
             }
-            Text("HOY", style = PulseText.tabTitle.copy(letterSpacing = PulseText.overline.letterSpacing * 1.16f), color = PulseColors.text, textAlign = TextAlign.Center, modifier = Modifier.weight(1f).padding(bottom = 14.dp))
+            Text("HOY", style = PulseText.tabTitle.copy(letterSpacing = PulseText.overline.letterSpacing * 1.16f), color = PulseColors.text, textAlign = TextAlign.Center, modifier = Modifier.weight(1f).padding(bottom = 16.dp))
             Box(
-                Modifier.padding(bottom = 5.dp).size(34.dp).clip(RoundedCornerShape(17.dp)).border(1.5.dp, PulseColors.textSecondary, RoundedCornerShape(17.dp)).pulseClick { tip = true },
+                Modifier.padding(bottom = 4.dp).size(34.dp).clip(RoundedCornerShape(17.dp)).border(1.5.dp, PulseColors.textSecondary, RoundedCornerShape(17.dp)).pulseClick { tip = true },
                 contentAlignment = Alignment.Center,
             ) { Text("i", style = PulseText.ringNumber.copy(fontSize = 14.sp), color = PulseColors.textQuiet) }
         }
 
         // Fixed coach bar
         Row(
-            Modifier.align(Alignment.BottomCenter).navigationBarsPadding().padding(start = 12.dp, end = 12.dp, bottom = 18.dp)
-                .fillMaxWidth().height(66.dp).shadow(18.dp, RoundedCornerShape(24.dp)).clip(RoundedCornerShape(24.dp))
+            Modifier.align(Alignment.BottomCenter).navigationBarsPadding().padding(start = 12.dp, end = 12.dp, bottom = 16.dp)
+                .fillMaxWidth().height(66.dp).shadow(8.dp, RoundedCornerShape(24.dp)).clip(RoundedCornerShape(24.dp))
                 .background(coachBarBg).border(1.dp, PulseColors.hairline, RoundedCornerShape(24.dp)).pulseClick {
                     CoachLaunch.offer(
                         coachLine,
@@ -216,7 +216,7 @@ fun MetricPage(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             CoachOrb(diameter = 40.dp)
-            Spacer(Modifier.width(14.dp))
+            Spacer(Modifier.width(16.dp))
             Text(coachLine, style = PulseText.body.copy(fontSize = 13.5.sp, lineHeight = 18.sp), color = PulseColors.text, modifier = Modifier.weight(1f))
             Icon(Icons.AutoMirrored.Outlined.ArrowForward, null, tint = PulseColors.text, modifier = Modifier.size(16.dp))
         }
@@ -235,17 +235,17 @@ fun MetricPage(
 fun BoxScope.FirstVisitTip(title: String, body: String, onDismiss: () -> Unit) {
     Box(Modifier.matchParentSize().background(tipScrim).pulseClick { }) {
         Box(
-            Modifier.align(Alignment.TopEnd).statusBarsPadding().padding(top = 32.dp, end = 9.dp).size(46.dp)
+            Modifier.align(Alignment.TopEnd).statusBarsPadding().padding(top = 32.dp, end = 8.dp).size(46.dp)
                 .background(Brush.radialGradient(listOf(Color(0x59FFFFFF), Color.Transparent)), RoundedCornerShape(23.dp)),
         )
-        Column(Modifier.align(Alignment.BottomStart).navigationBarsPadding().padding(start = 30.dp, end = 30.dp, bottom = 120.dp)) {
+        Column(Modifier.align(Alignment.BottomStart).navigationBarsPadding().padding(start = 32.dp, end = 32.dp, bottom = 120.dp)) {
             Text(title, style = PulseText.headline.copy(fontSize = 22.sp, fontWeight = FontWeight.SemiBold), color = PulseColors.text)
             Spacer(Modifier.height(12.dp))
             Text(body, style = PulseText.bodyLg.copy(lineHeight = 21.sp), color = PulseColors.text)
             Spacer(Modifier.height(20.dp))
             Box(
                 Modifier.height(42.dp).clip(RoundedCornerShape(21.dp)).border(2.dp, PulseColors.accentBrush, RoundedCornerShape(21.dp))
-                    .background(PulseColors.base).pulseClick(onDismiss).padding(horizontal = 30.dp),
+                    .background(PulseColors.base).pulseClick(onDismiss).padding(horizontal = 32.dp),
                 contentAlignment = Alignment.Center,
             ) { Text("ENTENDIDO", style = PulseText.overline.copy(fontSize = 11.sp, letterSpacing = PulseText.tabTitle.letterSpacing * 0.875f), color = PulseColors.accentHover) }
         }
@@ -262,18 +262,18 @@ fun TrendCard(chart: TrendChart) {
             Icon(Icons.Outlined.ChevronRight, null, tint = PulseColors.textSecondary, modifier = Modifier.size(16.dp))
         }
         if (chart.legend.isNotEmpty()) {
-            Row(Modifier.fillMaxWidth().padding(top = 12.dp), horizontalArrangement = Arrangement.spacedBy(14.dp, Alignment.End)) {
+            Row(Modifier.fillMaxWidth().padding(top = 12.dp), horizontalArrangement = Arrangement.spacedBy(16.dp, Alignment.End)) {
                 chart.legend.forEach { l ->
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         if (l.round) Box(Modifier.size(8.dp).border(2.dp, l.color, RoundedCornerShape(4.dp)))
                         else Box(Modifier.size(10.dp).clip(RoundedCornerShape(3.dp)).background(l.color))
-                        Spacer(Modifier.width(6.dp))
+                        Spacer(Modifier.width(8.dp))
                         Text(l.name, style = PulseText.overline.copy(fontSize = 9.5.sp), color = PulseColors.text)
                     }
                 }
             }
         }
-        Box(Modifier.fillMaxWidth().padding(top = 14.dp)) {
+        Box(Modifier.fillMaxWidth().padding(top = 16.dp)) {
             // Today's column highlight runs behind the bars and the day labels.
             Box(
                 Modifier.align(Alignment.TopEnd).offset(y = (-6).dp).fillMaxWidth(0.13f).height(170.dp + 6.dp + 48.dp)
@@ -315,23 +315,23 @@ fun TrendCard(chart: TrendChart) {
                     if (!hasData && chart.locked == null) {
                         Column(Modifier.align(Alignment.Center), horizontalAlignment = Alignment.CenterHorizontally) {
                             Icon(Icons.Outlined.BarChart, null, tint = PulseColors.textSecondary, modifier = Modifier.size(24.dp))
-                            Spacer(Modifier.height(6.dp))
+                            Spacer(Modifier.height(8.dp))
                             Text("SIN DATOS", style = PulseText.overline, color = PulseColors.textSecondary)
                         }
                     }
                     if (chart.locked != null) {
                         Column(
-                            Modifier.align(Alignment.Center).padding(horizontal = 4.dp).fillMaxWidth().clip(RoundedCornerShape(11.dp)).background(PulseColors.inset).padding(14.dp),
+                            Modifier.align(Alignment.Center).padding(horizontal = 4.dp).fillMaxWidth().clip(RoundedCornerShape(11.dp)).background(PulseColors.inset).padding(16.dp),
                         ) {
                             Text(chart.locked, style = PulseText.body, color = PulseColors.text)
-                            Spacer(Modifier.height(10.dp))
+                            Spacer(Modifier.height(8.dp))
                             Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                                 repeat(4) { Box(Modifier.width(40.dp).height(3.dp).clip(RoundedCornerShape(2.dp)).background(PulseColors.hairlineStrong)) }
                             }
                         }
                     }
                 }
-                Row(Modifier.fillMaxWidth().padding(top = 10.dp)) {
+                Row(Modifier.fillMaxWidth().padding(top = 8.dp)) {
                     keys.forEachIndexed { i, k ->
                         val isToday = i == keys.lastIndex
                         Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
@@ -362,18 +362,18 @@ fun NightCard(label: String, value: String, avg: String?, info: String, locked: 
             Spacer(Modifier.height(8.dp))
             Text(info, style = PulseText.body, color = PulseColors.textSecondary)
         }
-        Row(Modifier.padding(top = 10.dp), verticalAlignment = Alignment.Bottom) {
+        Row(Modifier.padding(top = 8.dp), verticalAlignment = Alignment.Bottom) {
             Text(value, style = PulseText.bigNumber.copy(fontSize = 26.sp), color = PulseColors.text)
             if (avg != null) {
-                Spacer(Modifier.width(10.dp))
-                Text("media 30 días: $avg", style = PulseText.body, color = PulseColors.textSecondary, modifier = Modifier.padding(bottom = 3.dp))
+                Spacer(Modifier.width(8.dp))
+                Text("media 30 días: $avg", style = PulseText.body, color = PulseColors.textSecondary, modifier = Modifier.padding(bottom = 4.dp))
             }
         }
         if (locked != null) {
             Spacer(Modifier.height(12.dp))
-            Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(11.dp)).background(PulseColors.inset).padding(14.dp)) {
+            Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(11.dp)).background(PulseColors.inset).padding(16.dp)) {
                 Text(locked.first, style = PulseText.body, color = PulseColors.text)
-                Spacer(Modifier.height(10.dp))
+                Spacer(Modifier.height(8.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                     repeat(4) { i -> Box(Modifier.width(40.dp).height(3.dp).clip(RoundedCornerShape(2.dp)).background(if (i < locked.second) PulseColors.accent else PulseColors.hairlineStrong)) }
                 }
@@ -386,14 +386,14 @@ fun NightCard(label: String, value: String, avg: String?, info: String, locked: 
 @Composable
 fun HabitsCard(icon: ImageVector, onClick: () -> Unit) {
     Row(
-        Modifier.padding(start = 15.dp, end = 15.dp, top = 24.dp).fillMaxWidth().clip(RoundedCornerShape(PulseMetrics.cardRadius)).background(PulseColors.raised).pulseClick(onClick).padding(18.dp),
+        Modifier.padding(start = 16.dp, end = 16.dp, top = 24.dp).fillMaxWidth().clip(RoundedCornerShape(PulseMetrics.cardRadius)).background(PulseColors.raised).pulseClick(onClick).padding(16.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(Modifier.weight(1f)) {
             Text("Descubre qué te ayuda a recuperarte", style = PulseText.cardTitleLg, color = PulseColors.text)
-            Spacer(Modifier.height(6.dp))
+            Spacer(Modifier.height(8.dp))
             Text("Apunta tus hábitos en el diario y verás cuáles suben o bajan tu recuperación.", style = PulseText.body, color = PulseColors.textSecondary)
-            Spacer(Modifier.height(10.dp))
+            Spacer(Modifier.height(8.dp))
             CtaLink("Ver hábitos que influyen", onClick = onClick)
         }
         Spacer(Modifier.width(12.dp))

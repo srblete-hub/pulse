@@ -120,7 +120,7 @@ fun PulseHomeScreen(vm: AppViewModel, showLiveHr: Boolean = false, actions: Home
             verticalAlignment = Alignment.CenterVertically,
         ) {
             PulseMark(size = 17.dp)
-            Spacer(Modifier.width(6.dp))
+            Spacer(Modifier.width(8.dp))
             Text("PULSE", style = PulseText.wordmark, color = PulseColors.text)
         }
 
@@ -129,7 +129,7 @@ fun PulseHomeScreen(vm: AppViewModel, showLiveHr: Boolean = false, actions: Home
         val view = com.noop.pulse.engine.pulseDayView(vm, offset)
         val rec = view.recovery
         val eff = view.effort21
-        Row(Modifier.fillMaxWidth().padding(start = 14.dp, end = 14.dp, top = 22.dp)) {
+        Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 24.dp)) {
             RingTile("SUEÑO", sleep?.let { (it / 100).toFloat() }, PulseColors.sleep, PulseData.pct(sleep), Modifier.weight(1f), actions.openSleep)
             RingTile("RECUPERACIÓN", rec?.let { (it / 100).toFloat() }, PulseColors.recovery(rec), PulseData.pct(rec), Modifier.weight(1f), actions.openRecovery)
             RingTile("ESFUERZO", eff?.let { (it / 21).toFloat() }, PulseColors.strain, PulseData.oneDecimal(eff ?: 0.0), Modifier.weight(1f), actions.openEffort, large = true)
@@ -141,7 +141,7 @@ fun PulseHomeScreen(vm: AppViewModel, showLiveHr: Boolean = false, actions: Home
         val hasSchedule = SleepSchedules.load(ctx).isNotEmpty()
         val tonight = SleepSchedules.tonight(ctx)
         if (tonight != null) {
-            TonightCard(tonight, Modifier.padding(start = PulseMetrics.gutter, end = PulseMetrics.gutter, top = 26.dp), actions.openSleepSchedule)
+            TonightCard(tonight, Modifier.padding(start = PulseMetrics.gutter, end = PulseMetrics.gutter, top = 24.dp), actions.openSleepSchedule)
         }
         fun open(key: String, go: () -> Unit) = { PulseTips.markSeen(ctx, "step_$key"); stepsTick++; go() }
         // Getting started is for brand-new users: it goes once the strap has sent ~2 h of data or after the first night.
@@ -193,7 +193,7 @@ fun PulseHomeScreen(vm: AppViewModel, showLiveHr: Boolean = false, actions: Home
                         "Duerme con la pulsera cada noche y vuelve aquí para ver tu línea base personal.",
                         style = PulseText.body, color = PulseColors.textSecondary, modifier = Modifier.weight(1f),
                     )
-                    Spacer(Modifier.width(14.dp))
+                    Spacer(Modifier.width(16.dp))
                     DashedProgressRing(nights.coerceAtMost(PulseData.calibrationNights), PulseData.calibrationNights)
                 }
             }
@@ -204,12 +204,12 @@ fun PulseHomeScreen(vm: AppViewModel, showLiveHr: Boolean = false, actions: Home
             if (nights < 5) {
                 Row(
                     Modifier.fillMaxWidth().clip(RoundedCornerShape(PulseMetrics.cardRadius))
-                        .border(1.dp, PulseColors.hairline, RoundedCornerShape(PulseMetrics.cardRadius)).padding(18.dp),
+                        .border(1.dp, PulseColors.hairline, RoundedCornerShape(PulseMetrics.cardRadius)).padding(16.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Column(Modifier.weight(1f)) {
                         Text("Aprendiendo de ti", style = PulseText.cardTitle, color = PulseColors.text)
-                        Spacer(Modifier.height(6.dp))
+                        Spacer(Modifier.height(8.dp))
                         Text("Con cada día de datos, aquí aparecerán tus tendencias.", style = PulseText.body, color = PulseColors.textSecondary)
                     }
                     MiniSparkline(listOf(10f, 18f, 14f, 26f, 22f, 34f), Modifier.size(80.dp, 48.dp))
@@ -240,12 +240,12 @@ private fun HomeHeader(
     onBattery: () -> Unit,
 ) {
     Row(
-        Modifier.fillMaxWidth().padding(start = 18.dp, end = 18.dp, top = 22.dp),
+        Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 24.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
         Row(
-            Modifier.height(30.dp).clip(RoundedCornerShape(16.dp)).background(PulseColors.overlay).pulseClick(onProfile).padding(end = 10.dp),
+            Modifier.height(30.dp).clip(RoundedCornerShape(16.dp)).background(PulseColors.overlay).pulseClick(onProfile).padding(end = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             val initials = PulseProfile.initials(androidx.compose.ui.platform.LocalContext.current)
@@ -255,17 +255,17 @@ private fun HomeHeader(
             }
             Spacer(Modifier.width(8.dp))
             Icon(Icons.Outlined.Whatshot, null, tint = PulseColors.gold, modifier = Modifier.size(13.dp))
-            Spacer(Modifier.width(6.dp))
+            Spacer(Modifier.width(8.dp))
             Text("$streak", style = PulseText.small, color = PulseColors.text)
         }
         Row(
-            Modifier.clip(RoundedCornerShape(16.dp)).background(PulseColors.overlay).padding(3.dp),
+            Modifier.clip(RoundedCornerShape(16.dp)).background(PulseColors.overlay).padding(4.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Box(Modifier.size(30.dp, 26.dp).pulseClick(onPrev), contentAlignment = Alignment.Center) {
                 Icon(Icons.Outlined.ChevronLeft, "Día anterior", tint = PulseColors.textTertiary, modifier = Modifier.size(16.dp))
             }
-            Box(Modifier.clip(RoundedCornerShape(PulseMetrics.cardRadius)).background(PulseColors.chip).padding(horizontal = 15.dp, vertical = 6.dp)) {
+            Box(Modifier.clip(RoundedCornerShape(PulseMetrics.cardRadius)).background(PulseColors.chip).padding(horizontal = 16.dp, vertical = 8.dp)) {
                 Text(dayLabel, style = PulseText.overline.copy(letterSpacing = PulseText.tabTitle.letterSpacing), color = if (canGoForward) PulseColors.text else PulseColors.textTertiary)
             }
             Box(Modifier.size(30.dp, 26.dp).pulseClick(onNext), contentAlignment = Alignment.Center) {
@@ -277,10 +277,10 @@ private fun HomeHeader(
                 Icon(Icons.Outlined.MonitorHeart, null, tint = PulseColors.recoveryRed, modifier = Modifier.size(13.dp))
                 Spacer(Modifier.width(4.dp))
                 Text("$heartRate", style = PulseText.small, color = PulseColors.text)
-                Spacer(Modifier.width(10.dp))
+                Spacer(Modifier.width(8.dp))
             }
             Text(battery?.let { "${it.roundToInt()}%" } ?: "--%", style = PulseText.small, color = PulseColors.text)
-            Spacer(Modifier.width(7.dp))
+            Spacer(Modifier.width(8.dp))
             Box(Modifier.size(19.dp, 25.dp)) {
                 Box(
                     Modifier.align(Alignment.BottomStart).size(15.dp, 21.dp)
@@ -288,7 +288,7 @@ private fun HomeHeader(
                     contentAlignment = Alignment.BottomCenter,
                 ) {
                     val f = ((battery ?: 0.0) / 100.0).toFloat().coerceIn(0f, 1f)
-                    Box(Modifier.padding(3.dp).fillMaxWidth().height((15 * f).dp).clip(RoundedCornerShape(1.5.dp)).background(PulseColors.text))
+                    Box(Modifier.padding(4.dp).fillMaxWidth().height((15 * f).dp).clip(RoundedCornerShape(1.5.dp)).background(PulseColors.text))
                 }
                 Box(
                     Modifier.align(Alignment.TopEnd).size(6.dp).clip(RoundedCornerShape(3.dp))
@@ -332,16 +332,16 @@ private fun StepCard(
         Row(verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
                 Text(title, style = PulseText.cardTitle, color = PulseColors.text)
-                Spacer(Modifier.height(6.dp))
+                Spacer(Modifier.height(8.dp))
                 Text(body, style = PulseText.body, color = PulseColors.textSecondary)
-                Spacer(Modifier.height(6.dp))
+                Spacer(Modifier.height(8.dp))
                 CtaLink(cta, onClick = onClick)
             }
-            Spacer(Modifier.width(10.dp))
+            Spacer(Modifier.width(8.dp))
             if (highlighted) {
                 Box(
                     Modifier.size(70.dp).clip(RoundedCornerShape(18.dp))
-                        .background(Brush.linearGradient(listOf(PulseColors.hairline, PulseColors.inset))),
+                        .background(androidx.compose.ui.graphics.SolidColor(PulseColors.raised)),
                     contentAlignment = Alignment.Center,
                 ) { Icon(icon, null, tint = PulseColors.accent, modifier = Modifier.size(36.dp)) }
             } else {
@@ -412,7 +412,7 @@ private fun StressCard(points: List<StressPoint>, nights: Int, onClick: () -> Un
             Spacer(Modifier.width(8.dp))
             Text(PulseData.oneDecimal(last?.level), style = PulseText.bigNumber, color = PulseColors.text)
         }
-        Row(Modifier.fillMaxWidth().height(130.dp).padding(top = 14.dp)) {
+        Row(Modifier.fillMaxWidth().height(130.dp).padding(top = 16.dp)) {
             Column(Modifier.width(24.dp).fillMaxSize(), verticalArrangement = Arrangement.SpaceBetween) {
                 listOf("3.0", "2.0", "1.0", "0.0").forEach { Text(it, style = PulseText.chartAxis, color = PulseColors.textSecondary) }
             }
@@ -439,7 +439,7 @@ private fun StressCard(points: List<StressPoint>, nights: Int, onClick: () -> Un
             }
         }
         if (valid.size >= 2) {
-            Row(Modifier.fillMaxWidth().padding(start = 24.dp, top = 6.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+            Row(Modifier.fillMaxWidth().padding(start = 24.dp, top = 8.dp), horizontalArrangement = Arrangement.SpaceBetween) {
                 val first = valid.first().ts
                 val lastTs = valid.last().ts
                 listOf(0.0, 0.33, 0.66).forEach { f -> Text(hhmm(first + ((lastTs - first) * f).toLong()), style = PulseText.chartAxis, color = PulseColors.textSecondary) }
@@ -447,7 +447,7 @@ private fun StressCard(points: List<StressPoint>, nights: Int, onClick: () -> Un
             }
         }
         if (nights < PulseData.recoverySeedNights) {
-            Spacer(Modifier.height(14.dp))
+            Spacer(Modifier.height(16.dp))
             UnlockPanel(
                 "Duerme con la pulsera ${PulseData.recoverySeedNights - nights} noches para calibrar",
                 nights, PulseData.recoverySeedNights, fixedSegments = true,
@@ -467,19 +467,19 @@ fun EffortRecoveryChart(days: List<com.noop.data.DailyMetric>, modifier: Modifie
                 contentAlignment = Alignment.Center,
             ) { Text("i", style = PulseText.overline, color = PulseColors.textSecondary) }
         })
-        Row(Modifier.padding(top = 12.dp), horizontalArrangement = Arrangement.spacedBy(14.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(Modifier.padding(top = 12.dp), horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(Modifier.size(10.dp).clip(RoundedCornerShape(3.dp)).background(PulseColors.strain))
-                Spacer(Modifier.width(5.dp))
+                Spacer(Modifier.width(4.dp))
                 Text("ESFUERZO", style = PulseText.overline.copy(fontSize = 9.sp), color = PulseColors.textQuiet)
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(Modifier.size(10.dp).border(2.dp, PulseColors.recoveryGreen, RoundedCornerShape(5.dp)))
-                Spacer(Modifier.width(5.dp))
+                Spacer(Modifier.width(4.dp))
                 Text("RECUPERACIÓN", style = PulseText.overline.copy(fontSize = 9.sp), color = PulseColors.textQuiet)
             }
         }
-        Row(Modifier.fillMaxWidth().height(170.dp).padding(top = 14.dp)) {
+        Row(Modifier.fillMaxWidth().height(170.dp).padding(top = 16.dp)) {
             Column(Modifier.width(22.dp).fillMaxSize(), verticalArrangement = Arrangement.SpaceBetween) {
                 listOf("21", "14", "7", "0").forEach { Text(it, style = PulseText.chartAxis.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.Bold), color = PulseColors.strain) }
             }
@@ -515,7 +515,7 @@ fun EffortRecoveryChart(days: List<com.noop.data.DailyMetric>, modifier: Modifie
                 listOf("100%", "66%", "33%", "0%").forEach { Text(it, style = PulseText.chartAxis.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.Bold), color = PulseColors.recoveryGreen) }
             }
         }
-        Row(Modifier.fillMaxWidth().padding(start = 22.dp, end = 34.dp, top = 8.dp)) {
+        Row(Modifier.fillMaxWidth().padding(start = 24.dp, end = 32.dp, top = 8.dp)) {
             keys.forEachIndexed { i, k ->
                 Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
                     val isToday = i == keys.lastIndex
@@ -532,14 +532,14 @@ fun EffortRecoveryChart(days: List<com.noop.data.DailyMetric>, modifier: Modifie
 private fun TonightCard(t: SleepSchedules.Tonight, modifier: Modifier, onEdit: () -> Unit) {
     PulseCard(modifier, onClick = onEdit) {
         CardHeader("Sueño de esta noche")
-        Row(Modifier.fillMaxWidth().padding(top = 18.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(Modifier.fillMaxWidth().padding(top = 16.dp), verticalAlignment = Alignment.CenterVertically) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Outlined.Bedtime, null, tint = PulseColors.textSecondary, modifier = Modifier.size(20.dp))
                     Spacer(Modifier.width(8.dp))
                     Text(SleepSchedules.hm(t.bedMin), style = PulseText.bigNumber.copy(fontSize = 26.sp), color = PulseColors.text)
                 }
-                Spacer(Modifier.height(6.dp))
+                Spacer(Modifier.height(8.dp))
                 Text("HORA DE\nACOSTARTE", style = PulseText.overline.copy(lineHeight = 14.sp), color = PulseColors.textSecondary, textAlign = TextAlign.Center)
             }
             Text("- - - - -", style = PulseText.small, color = PulseColors.textTertiary, textAlign = TextAlign.Center, modifier = Modifier.weight(1f))
@@ -549,11 +549,11 @@ private fun TonightCard(t: SleepSchedules.Tonight, modifier: Modifier, onEdit: (
                     Spacer(Modifier.width(8.dp))
                     Text(SleepSchedules.hm(t.wakeMin), style = PulseText.bigNumber.copy(fontSize = 26.sp), color = PulseColors.text)
                 }
-                Spacer(Modifier.height(6.dp))
+                Spacer(Modifier.height(8.dp))
                 val alarmOn = t.on && t.mode != WakeMode.None
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(Modifier.size(7.dp).clip(RoundedCornerShape(4.dp)).background(if (alarmOn) PulseColors.recoveryGreen else PulseColors.textTertiary))
-                    Spacer(Modifier.width(6.dp))
+                    Spacer(Modifier.width(8.dp))
                     Text(if (alarmOn) "ALARMA ACTIVADA" else "ALARMA APAGADA", style = PulseText.overline, color = if (alarmOn) PulseColors.recoveryGreen else PulseColors.textSecondary)
                 }
                 Text(if (alarmOn) t.mode.label else "SIN ALARMA", style = PulseText.overline, color = PulseColors.textSecondary)
@@ -564,7 +564,7 @@ private fun TonightCard(t: SleepSchedules.Tonight, modifier: Modifier, onEdit: (
             horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically,
         ) {
             Icon(Icons.Outlined.Edit, null, tint = PulseColors.text, modifier = Modifier.size(18.dp))
-            Spacer(Modifier.width(10.dp))
+            Spacer(Modifier.width(8.dp))
             Text("EDITAR ALARMA", style = PulseText.overlineLg, color = PulseColors.text)
         }
     }

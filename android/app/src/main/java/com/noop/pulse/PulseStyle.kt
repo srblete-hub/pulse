@@ -153,7 +153,7 @@ object PulseText {
     val sectionTitle = TextStyle(fontFamily = PulseType.sans, fontWeight = FontWeight.SemiBold, fontSize = 20.sp, lineHeight = 24.sp)
     val cardTitleLg = TextStyle(fontFamily = PulseType.sans, fontWeight = FontWeight.SemiBold, fontSize = 18.sp, lineHeight = 23.sp)
     val cardTitle = TextStyle(fontFamily = PulseType.sans, fontWeight = FontWeight.SemiBold, fontSize = 15.sp, lineHeight = 20.sp)
-    val body = TextStyle(fontFamily = PulseType.sans, fontWeight = FontWeight.Normal, fontSize = 15.sp, lineHeight = 22.sp)
+    val body = TextStyle(fontFamily = PulseType.sans, fontWeight = FontWeight.Normal, fontSize = 16.sp, lineHeight = 24.sp)
     val bodyLg = TextStyle(fontFamily = PulseType.sans, fontWeight = FontWeight.Normal, fontSize = 16.sp, lineHeight = 24.sp)
 }
 
@@ -164,7 +164,10 @@ object PulseMetrics {
     val buttonRadius = 8.dp
     val inputRadius = 12.dp
     val cardPad = 16.dp
-    val sectionGap = 30.dp
+    val pillRadius = 999.dp
+    val sectionGap = 32.dp
+    val tileGap = 12.dp
+    val screenPad = 16.dp
     /** Space reserved at the bottom of scrolling tab screens so the floating bar never covers content. */
     val barClearance = 110.dp
 }
@@ -183,7 +186,7 @@ fun Overline(text: String, modifier: Modifier = Modifier, color: Color = PulseCo
 @Composable
 fun SectionTitle(text: String, modifier: Modifier = Modifier, trailing: (@Composable () -> Unit)? = null) {
     Row(
-        modifier.fillMaxWidth().padding(start = 20.dp, end = 16.dp, top = PulseMetrics.sectionGap, bottom = 14.dp),
+        modifier.fillMaxWidth().padding(start = 20.dp, end = 16.dp, top = PulseMetrics.sectionGap, bottom = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(text, style = PulseText.sectionTitle, color = PulseColors.text, modifier = Modifier.weight(1f))
@@ -250,7 +253,7 @@ fun CardHeader(title: String, showChevron: Boolean = true, trailing: (@Composabl
 fun CtaLink(text: String, modifier: Modifier = Modifier, onClick: () -> Unit) {
     Row(modifier.pulseClick(onClick).padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
         Text(text.uppercase(), style = PulseText.overline, color = PulseColors.accent)
-        Spacer(Modifier.width(6.dp))
+        Spacer(Modifier.width(8.dp))
         Icon(Icons.AutoMirrored.Outlined.ArrowForward, null, tint = PulseColors.accent, modifier = Modifier.size(14.dp))
     }
 }
@@ -338,10 +341,10 @@ fun SegmentProgress(done: Int, total: Int, modifier: Modifier = Modifier, segmen
 @Composable
 fun UnlockPanel(text: String, done: Int, total: Int, fixedSegments: Boolean = false) {
     Column(
-        Modifier.fillMaxWidth().clip(RoundedCornerShape(11.dp)).background(PulseColors.inset).padding(14.dp),
+        Modifier.fillMaxWidth().clip(RoundedCornerShape(11.dp)).background(PulseColors.inset).padding(16.dp),
     ) {
         Text(text, style = PulseText.body, color = PulseColors.text)
-        Spacer(Modifier.height(10.dp))
+        Spacer(Modifier.height(8.dp))
         SegmentProgress(done, total, segmentWidth = if (fixedSegments) 38.dp else null)
     }
 }
@@ -369,14 +372,14 @@ fun TabTitle(text: String) {
         style = PulseText.tabTitle,
         color = PulseColors.text,
         textAlign = TextAlign.Center,
-        modifier = Modifier.fillMaxWidth().statusBarsPadding().padding(top = 26.dp),
+        modifier = Modifier.fillMaxWidth().statusBarsPadding().padding(top = 24.dp),
     )
 }
 
 /** A small grey pill ("PRÓXIMAMENTE", "ESTIMADO"…). */
 @Composable
 fun Pill(text: String, color: Color = PulseColors.hairlineStrong, textColor: Color = PulseColors.text) {
-    Box(Modifier.clip(RoundedCornerShape(10.dp)).background(color).padding(horizontal = 9.dp, vertical = 4.dp)) {
+    Box(Modifier.clip(RoundedCornerShape(10.dp)).background(color).padding(horizontal = 8.dp, vertical = 4.dp)) {
         Text(text.uppercase(), style = PulseText.overline.copy(fontSize = 9.sp), color = textColor)
     }
 }

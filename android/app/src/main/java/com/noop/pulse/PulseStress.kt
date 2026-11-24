@@ -117,14 +117,14 @@ fun PulseStressIntro(onClose: () -> Unit, onDone: () -> Unit) {
                 "Conoce tu nivel de estrés",
                 listOf("Mira cómo reacciona tu cuerpo a lo largo del día, en el trabajo, entrenando o descansando.", "Y bájalo cuando lo necesites con ejercicios de respiración guiados."),
                 textTop = 610.dp,
-                background = Brush.radialGradient(listOf(PulseColors.violet.copy(alpha = 0.55f), PulseColors.base), radius = 900f),
+                background = androidx.compose.ui.graphics.SolidColor(PulseColors.base),
             ) {
-                Canvas(Modifier.align(Alignment.TopCenter).padding(top = 140.dp, start = 30.dp, end = 30.dp).fillMaxWidth().height(300.dp)) {
+                Canvas(Modifier.align(Alignment.TopCenter).padding(top = 140.dp, start = 32.dp, end = 32.dp).fillMaxWidth().height(300.dp)) {
                     drawStressCurve(demoCurve(), 4.dp.toPx())
                 }
             },
             IntroStep("Una escala de 0 a 3", listOf("Tu nivel de estrés resume cómo está activado tu cuerpo ahora mismo. No es bueno ni malo: bajo te ayuda a descansar y alto te prepara para rendir.")) {
-                Column(Modifier.align(Alignment.TopStart).padding(start = 40.dp, end = 40.dp, top = 170.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                Column(Modifier.align(Alignment.TopStart).padding(start = 40.dp, end = 40.dp, top = 168.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                     listOf(
                         Triple("3.0", "ALTO", PulseColors.stressHigh to 0.86f),
                         Triple("2.0", "MEDIO", PulseColors.accent to 0.64f),
@@ -146,26 +146,26 @@ fun PulseStressIntro(onClose: () -> Unit, onDone: () -> Unit) {
             IntroStep("Sigue tu estrés en directo", listOf("Recorre la gráfica del día para descubrir qué situaciones te activan y cuáles te ayudan a calmarte.")) {
                 Column(Modifier.align(Alignment.TopCenter).padding(start = 40.dp, end = 40.dp, top = 120.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                     Text("1.2", style = PulseText.bigNumber.copy(fontSize = 54.sp, lineHeight = 54.sp), color = PulseColors.text)
-                    Spacer(Modifier.height(6.dp))
+                    Spacer(Modifier.height(8.dp))
                     Text("Hoy a las 10:05", style = PulseText.body, color = PulseColors.textSecondary)
-                    Spacer(Modifier.height(18.dp))
+                    Spacer(Modifier.height(16.dp))
                     StressGauge(1.2)
-                    Spacer(Modifier.height(30.dp))
+                    Spacer(Modifier.height(32.dp))
                     Canvas(Modifier.fillMaxWidth().height(140.dp)) { drawStressCurve(demoCurve(), 3.dp.toPx()) }
-                    Spacer(Modifier.height(22.dp))
+                    Spacer(Modifier.height(24.dp))
                     Text("← Desliza para ver cada momento →", style = PulseText.body.copy(fontSize = 12.sp), color = PulseColors.textSecondary)
                 }
             },
             IntroStep("Respira para cambiar tu estado", listOf("Algunos ritmos de respiración te calman y otros te activan. Practicarlos a menudo te ayuda a gestionar mejor los días intensos.")) {
-                BreathCircle(Modifier.align(Alignment.TopCenter).padding(top = 130.dp), "INHALA", "4", 1f)
+                BreathCircle(Modifier.align(Alignment.TopCenter).padding(top = 128.dp), "INHALA", "4", 1f)
             },
             IntroStep("Resumen cada noche", listOf("Al final del día te avisamos de cuánto tiempo has pasado en cada nivel, para que entiendas cómo te afecta el estrés y puedas compensarlo respirando."), textTop = 610.dp) {
                 Box(
                     Modifier.align(Alignment.TopCenter).padding(start = 24.dp, end = 24.dp, top = 140.dp).fillMaxWidth().clip(RoundedCornerShape(22.dp))
-                        .background(Brush.verticalGradient(listOf(PulseColors.overlay, PulseColors.divider))).padding(horizontal = 16.dp, vertical = 18.dp),
+                        .background(androidx.compose.ui.graphics.SolidColor(PulseColors.raised)).padding(horizontal = 16.dp, vertical = 16.dp),
                 ) { Canvas(Modifier.fillMaxWidth().height(120.dp)) { drawStressCurve(demoCurve(), 3.dp.toPx()) } }
                 Row(
-                    Modifier.align(Alignment.TopCenter).padding(start = 50.dp, end = 50.dp, top = 340.dp).fillMaxWidth().shadow(12.dp, RoundedCornerShape(PulseMetrics.cardRadius))
+                    Modifier.align(Alignment.TopCenter).padding(start = 48.dp, end = 48.dp, top = 340.dp).fillMaxWidth().shadow(12.dp, RoundedCornerShape(PulseMetrics.cardRadius))
                         .clip(RoundedCornerShape(PulseMetrics.cardRadius)).background(PulseColors.hairlineStrong).padding(12.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
@@ -180,23 +180,23 @@ fun PulseStressIntro(onClose: () -> Unit, onDone: () -> Unit) {
             },
             IntroStep(
                 "¡Vamos allá!", listOf("Ya conoces lo esencial. Entra y descubre cómo ha ido tu día."), textTop = 610.dp,
-                background = Brush.verticalGradient(listOf(PulseColors.overlay, PulseColors.base)),
+                background = androidx.compose.ui.graphics.SolidColor(PulseColors.raised),
             ) {
                 Column(
-                    Modifier.align(Alignment.TopCenter).padding(top = 110.dp).rotate(-8f).size(180.dp, 370.dp).shadow(30.dp, RoundedCornerShape(30.dp))
-                        .clip(RoundedCornerShape(30.dp)).background(PulseColors.base).border(6.dp, PulseColors.divider, RoundedCornerShape(30.dp)).padding(top = 22.dp),
+                    Modifier.align(Alignment.TopCenter).padding(top = 112.dp).rotate(-8f).size(180.dp, 370.dp).shadow(8.dp, RoundedCornerShape(30.dp))
+                        .clip(RoundedCornerShape(30.dp)).background(PulseColors.base).border(6.dp, PulseColors.divider, RoundedCornerShape(30.dp)).padding(top = 24.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
                     Text("NIVEL DE ESTRÉS", style = PulseText.overline.copy(fontSize = 6.5.sp), color = PulseColors.textSecondary)
-                    Spacer(Modifier.height(26.dp))
+                    Spacer(Modifier.height(24.dp))
                     Text("1.5", style = PulseText.bigNumber.copy(fontSize = 30.sp), color = PulseColors.text)
                     Text("MEDIO", style = PulseText.overline.copy(fontSize = 7.sp), color = PulseColors.accentHover)
-                    Box(Modifier.padding(start = 18.dp, end = 18.dp, top = 12.dp)) { StressGauge(1.5, thin = true) }
-                    Canvas(Modifier.padding(top = 26.dp).fillMaxWidth().height(90.dp)) { drawStressCurve(demoCurve(), 2.dp.toPx()) }
+                    Box(Modifier.padding(start = 16.dp, end = 16.dp, top = 12.dp)) { StressGauge(1.5, thin = true) }
+                    Canvas(Modifier.padding(top = 24.dp).fillMaxWidth().height(90.dp)) { drawStressCurve(demoCurve(), 2.dp.toPx()) }
                     Text(
                         "Tu cuerpo está tranquilo: el pulso está cerca de su valor de reposo.",
                         style = PulseText.body.copy(fontSize = 7.5.sp, lineHeight = 10.sp), color = PulseColors.textQuiet,
-                        modifier = Modifier.padding(start = 14.dp, end = 14.dp, top = 18.dp).clip(RoundedCornerShape(10.dp)).background(PulseColors.inset).padding(10.dp),
+                        modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp).clip(RoundedCornerShape(10.dp)).background(PulseColors.inset).padding(8.dp),
                     )
                 }
             },
@@ -209,7 +209,7 @@ fun PulseStressIntro(onClose: () -> Unit, onDone: () -> Unit) {
 private fun ScaleLine(label: String) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         Text(label, style = PulseText.small.copy(fontSize = 13.sp, fontWeight = FontWeight.Bold), color = PulseColors.textSecondary, modifier = Modifier.width(30.dp))
-        Spacer(Modifier.width(14.dp))
+        Spacer(Modifier.width(16.dp))
         Box(Modifier.weight(1f).height(1.dp).background(PulseColors.hairline))
     }
 }
@@ -242,13 +242,13 @@ private fun BreathCircle(modifier: Modifier, label: String, count: String, scale
         Box(Modifier.fillMaxSize().border(1.dp, PulseColors.accent.copy(alpha = 0.25f), RoundedCornerShape(150.dp)))
         Box(Modifier.padding(28.dp).fillMaxSize().border(1.dp, PulseColors.accent.copy(alpha = 0.4f), RoundedCornerShape(122.dp)))
         Box(
-            Modifier.padding(62.dp).fillMaxSize().scale(scale).clip(RoundedCornerShape(88.dp))
-                .background(Brush.radialGradient(listOf(PulseColors.overlay, PulseColors.hairlineStrong)))
+            Modifier.padding(64.dp).fillMaxSize().scale(scale).clip(RoundedCornerShape(88.dp))
+                .background(androidx.compose.ui.graphics.SolidColor(PulseColors.raised))
                 .border(1.5.dp, PulseColors.accent, RoundedCornerShape(88.dp)),
         )
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(label, style = PulseText.overline.copy(fontSize = 12.sp, letterSpacing = PulseText.tabTitle.letterSpacing), color = PulseColors.text)
-            Spacer(Modifier.height(6.dp))
+            Spacer(Modifier.height(8.dp))
             Text(count, style = PulseText.bigNumber.copy(fontSize = 34.sp), color = PulseColors.text)
         }
     }
@@ -281,14 +281,14 @@ fun PulseStressScreen(vm: AppViewModel, onBack: () -> Unit, onCoach: () -> Unit,
     Box(Modifier.fillMaxSize().background(PulseColors.raised)) {
         Column(
             Modifier.fillMaxSize().verticalScroll(rememberScrollState())
-                .background(Brush.verticalGradient(0f to PulseColors.divider, 0.3f to PulseColors.overlay, 1f to PulseColors.raised)).statusBarsPadding(),
+                .background(androidx.compose.ui.graphics.SolidColor(PulseColors.raised)).statusBarsPadding(),
         ) {
-            Row(Modifier.fillMaxWidth().padding(start = 10.dp, end = 10.dp, top = 18.dp), verticalAlignment = Alignment.CenterVertically) {
+            Row(Modifier.fillMaxWidth().padding(start = 8.dp, end = 8.dp, top = 16.dp), verticalAlignment = Alignment.CenterVertically) {
                 Box(Modifier.size(44.dp).pulseClick(onBack), contentAlignment = Alignment.Center) { Icon(Icons.AutoMirrored.Outlined.ArrowBack, "Volver", tint = PulseColors.text, modifier = Modifier.size(22.dp)) }
                 Text("NIVEL DE ESTRÉS", style = PulseText.tabTitle, color = PulseColors.text, textAlign = TextAlign.Center, modifier = Modifier.weight(1f))
                 Box(Modifier.size(44.dp).pulseClick(onSettings), contentAlignment = Alignment.Center) { Icon(Icons.Outlined.Settings, "Ajustes", tint = PulseColors.text, modifier = Modifier.size(23.dp)) }
             }
-            Row(Modifier.fillMaxWidth().padding(top = 18.dp), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
+            Row(Modifier.fillMaxWidth().padding(top = 16.dp), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
                 Box(Modifier.size(36.dp).pulseClick { offset-- }, contentAlignment = Alignment.Center) { Icon(Icons.Outlined.ChevronLeft, "Día anterior", tint = PulseColors.text, modifier = Modifier.size(18.dp)) }
                 Spacer(Modifier.width(56.dp))
                 Text(PulseData.dayLabel(offset), style = PulseText.overline.copy(fontSize = 11.sp), color = PulseColors.text)
@@ -297,14 +297,14 @@ fun PulseStressScreen(vm: AppViewModel, onBack: () -> Unit, onCoach: () -> Unit,
                     Icon(Icons.Outlined.ChevronRight, "Día siguiente", tint = if (offset < 0) PulseColors.text else PulseColors.textTertiary, modifier = Modifier.size(18.dp))
                 }
             }
-            Box(Modifier.padding(start = 40.dp, end = 40.dp, top = 26.dp).fillMaxWidth()) {
+            Box(Modifier.padding(start = 40.dp, end = 40.dp, top = 24.dp).fillMaxWidth()) {
                 Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(PulseData.oneDecimal(level), style = PulseText.bigNumber.copy(fontSize = 60.sp, lineHeight = 60.sp), color = PulseColors.text)
-                    Spacer(Modifier.height(10.dp))
+                    Spacer(Modifier.height(8.dp))
                     Text(PulseData.stressWord(level), style = PulseText.overline.copy(fontSize = 13.sp, letterSpacing = PulseText.tabTitle.letterSpacing * 0.875f), color = stressColor(level))
-                    Spacer(Modifier.height(6.dp))
+                    Spacer(Modifier.height(8.dp))
                     Text(shown?.let { "A las ${clock(it.ts)}" } ?: "Sin lecturas", style = PulseText.body.copy(fontSize = 12.sp), color = PulseColors.textSecondary)
-                    Spacer(Modifier.height(22.dp))
+                    Spacer(Modifier.height(24.dp))
                     StressGauge(level ?: 0.0, segmented = true)
                     Row(Modifier.fillMaxWidth().padding(top = 8.dp)) {
                         listOf("BAJO" to TextAlign.Start, "MEDIO" to TextAlign.Center, "ALTO" to TextAlign.End).forEach { (t, a) ->
@@ -318,7 +318,7 @@ fun PulseStressScreen(vm: AppViewModel, onBack: () -> Unit, onCoach: () -> Unit,
                 ) { Text("i", style = PulseText.ringNumber.copy(fontSize = 13.sp), color = PulseColors.textQuiet) }
             }
             // Day curve, tap/drag to scrub.
-            Row(Modifier.padding(start = 18.dp, end = 18.dp, top = 46.dp).fillMaxWidth().height(180.dp)) {
+            Row(Modifier.padding(start = 16.dp, end = 16.dp, top = 48.dp).fillMaxWidth().height(180.dp)) {
                 Column(Modifier.width(30.dp).fillMaxHeight(), verticalArrangement = Arrangement.SpaceBetween) {
                     listOf("3.0", "2.0", "1.0", "0.0").forEach { Text(it, style = PulseText.chartAxis.copy(fontSize = 9.5.sp, fontWeight = FontWeight.SemiBold), color = PulseColors.textSecondary) }
                 }
@@ -348,14 +348,14 @@ fun PulseStressScreen(vm: AppViewModel, onBack: () -> Unit, onCoach: () -> Unit,
                 }
             }
             if (valid.size >= 2) {
-                Row(Modifier.padding(start = 48.dp, end = 18.dp, top = 8.dp).fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                Row(Modifier.padding(start = 48.dp, end = 16.dp, top = 8.dp).fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                     val a = valid.first().ts; val b = valid.last().ts
                     listOf(0.0, 1 / 3.0, 2 / 3.0).forEach { f -> Text(clock(a + ((b - a) * f).toLong()), style = PulseText.chartAxis.copy(fontSize = 9.5.sp, fontWeight = FontWeight.SemiBold), color = PulseColors.textSecondary) }
                     Text(clock(b), style = PulseText.chartAxis.copy(fontSize = 9.5.sp, fontWeight = FontWeight.SemiBold), color = PulseColors.text)
                 }
             }
             if (nights < PulseData.recoverySeedNights) {
-                Column(Modifier.padding(start = 15.dp, end = 15.dp, top = 34.dp).fillMaxWidth().clip(RoundedCornerShape(PulseMetrics.cardRadius)).background(PulseColors.divider).padding(16.dp)) {
+                Column(Modifier.padding(start = 16.dp, end = 16.dp, top = 32.dp).fillMaxWidth().clip(RoundedCornerShape(PulseMetrics.cardRadius)).background(PulseColors.divider).padding(16.dp)) {
                     Text("Duerme con la pulsera ${PulseData.recoverySeedNights - nights} noches para ver tu historial completo.", style = PulseText.body, color = PulseColors.text)
                     Spacer(Modifier.height(12.dp))
                     Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -363,17 +363,17 @@ fun PulseStressScreen(vm: AppViewModel, onBack: () -> Unit, onCoach: () -> Unit,
                     }
                 }
             }
-            Text("RESPIRACIÓN GUIADA", style = PulseText.overlineLg, color = PulseColors.textSecondary, modifier = Modifier.padding(start = 15.dp, top = 34.dp, bottom = 12.dp))
-            Row(Modifier.horizontalScroll(rememberScrollState()).padding(start = 15.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                SessionCard("PARA RELAJARTE", "Respiración lenta", Brush.verticalGradient(listOf(PulseColors.textTertiary, PulseColors.overlay)), Icons.Outlined.Air) { onBreathe(true) }
-                SessionCard("PARA ACTIVARTE", "Respiración rápida", Brush.linearGradient(listOf(PulseColors.textTertiary, PulseColors.hairlineStrong)), Icons.Outlined.Bolt) { onBreathe(false) }
-                Spacer(Modifier.width(15.dp))
+            Text("RESPIRACIÓN GUIADA", style = PulseText.overlineLg, color = PulseColors.textSecondary, modifier = Modifier.padding(start = 16.dp, top = 32.dp, bottom = 12.dp))
+            Row(Modifier.horizontalScroll(rememberScrollState()).padding(start = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                SessionCard("PARA RELAJARTE", "Respiración lenta", androidx.compose.ui.graphics.SolidColor(PulseColors.raised), Icons.Outlined.Air) { onBreathe(true) }
+                SessionCard("PARA ACTIVARTE", "Respiración rápida", androidx.compose.ui.graphics.SolidColor(PulseColors.raised), Icons.Outlined.Bolt) { onBreathe(false) }
+                Spacer(Modifier.width(16.dp))
             }
             // Cómo funciona
-            Box(Modifier.padding(top = 34.dp).fillMaxWidth().background(PulseColors.base)) {
+            Box(Modifier.padding(top = 32.dp).fillMaxWidth().background(PulseColors.base)) {
                 Box(Modifier.align(Alignment.CenterStart).width(4.dp).height(if (showHow) 330.dp else 76.dp).background(Brush.verticalGradient(listOf(PulseColors.stressHigh, PulseColors.accent))))
-                Column(Modifier.padding(top = 22.dp, bottom = 26.dp)) {
-                    Row(Modifier.fillMaxWidth().padding(start = 18.dp, end = 16.dp), verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.padding(top = 24.dp, bottom = 24.dp)) {
+                    Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp), verticalAlignment = Alignment.CenterVertically) {
                         Text("CÓMO FUNCIONA", style = PulseText.overlineLg, color = PulseColors.accent, modifier = Modifier.weight(1f))
                         Row(Modifier.height(32.dp).pulseClick { showHow = !showHow }, verticalAlignment = Alignment.CenterVertically) {
                             Text(if (showHow) "OCULTAR" else "MOSTRAR", style = PulseText.overline, color = PulseColors.text)
@@ -382,7 +382,7 @@ fun PulseStressScreen(vm: AppViewModel, onBack: () -> Unit, onCoach: () -> Unit,
                         }
                     }
                     if (showHow) {
-                        Row(Modifier.padding(top = 14.dp).horizontalScroll(rememberScrollState()).padding(start = 16.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Row(Modifier.padding(top = 16.dp).horizontalScroll(rememberScrollState()).padding(start = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             HowCard("¿QUÉ ES EL ESTRÉS?", "Mide lo activado que está tu cuerpo. No siempre hay que evitarlo: bien usado, te ayuda a rendir.") {
                                 Box(Modifier.fillMaxSize().background(Brush.radialGradient(listOf(PulseColors.accent.copy(alpha = 0.45f), PulseColors.overlay))), contentAlignment = Alignment.Center) {
                                     Canvas(Modifier.size(120.dp, 70.dp)) { drawStressCurve(demoCurve(), 3.dp.toPx()) }
@@ -395,7 +395,7 @@ fun PulseStressScreen(vm: AppViewModel, onBack: () -> Unit, onCoach: () -> Unit,
                                             Box(Modifier.width(w.dp).height(12.dp).clip(RoundedCornerShape(6.dp)).background(c))
                                         }
                                     }
-                                    Spacer(Modifier.width(14.dp))
+                                    Spacer(Modifier.width(16.dp))
                                     Text("0–3", style = PulseText.bigNumber.copy(fontSize = 30.sp), color = PulseColors.text)
                                 }
                             }
@@ -404,7 +404,7 @@ fun PulseStressScreen(vm: AppViewModel, onBack: () -> Unit, onCoach: () -> Unit,
                     }
                 }
             }
-            Spacer(Modifier.height(110.dp))
+            Spacer(Modifier.height(112.dp))
             Spacer(Modifier.navigationBarsPadding())
         }
         val stressLine =             when {
@@ -438,7 +438,7 @@ private fun Modifier.pointerInputScrub(count: Int, widthPx: Float, onScrub: (Int
 private fun SessionCard(title: String, subtitle: String, art: Brush, icon: androidx.compose.ui.graphics.vector.ImageVector, onClick: () -> Unit) {
     Column(Modifier.width(160.dp).clip(RoundedCornerShape(PulseMetrics.cardRadius)).background(PulseColors.raised).pulseClick(onClick)) {
         Box(Modifier.fillMaxWidth().height(80.dp).background(art))
-        Column(Modifier.padding(start = 12.dp, end = 12.dp, top = 12.dp, bottom = 14.dp)) {
+        Column(Modifier.padding(start = 12.dp, end = 12.dp, top = 12.dp, bottom = 16.dp)) {
             Icon(icon, null, tint = PulseColors.textQuiet, modifier = Modifier.size(18.dp))
             Spacer(Modifier.height(8.dp))
             Text(title, style = PulseText.overline.copy(fontSize = 11.sp, lineHeight = 15.sp), color = PulseColors.text)
@@ -452,7 +452,7 @@ private fun SessionCard(title: String, subtitle: String, art: Brush, icon: andro
 private fun HowCard(title: String, body: String, art: @Composable BoxScope.() -> Unit) {
     Column(Modifier.width(236.dp).clip(RoundedCornerShape(PulseMetrics.cardRadius)).background(PulseColors.inset)) {
         Box(Modifier.fillMaxWidth().height(150.dp)) { art() }
-        Column(Modifier.padding(start = 14.dp, end = 14.dp, top = 14.dp, bottom = 18.dp)) {
+        Column(Modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 16.dp)) {
             Text(title, style = PulseText.overline.copy(fontSize = 11.sp), color = PulseColors.text)
             Spacer(Modifier.height(8.dp))
             Text(body, style = PulseText.body.copy(lineHeight = 18.sp), color = PulseColors.textSecondary)
@@ -464,13 +464,13 @@ private fun HowCard(title: String, body: String, art: @Composable BoxScope.() ->
 @Composable
 fun BoxScope.CoachBar(text: String, onClick: () -> Unit) {
     Row(
-        Modifier.align(Alignment.BottomCenter).navigationBarsPadding().padding(start = 12.dp, end = 12.dp, bottom = 18.dp)
-            .fillMaxWidth().height(66.dp).shadow(18.dp, RoundedCornerShape(24.dp)).clip(RoundedCornerShape(24.dp))
-            .background(Color(0xF21C2028)).border(1.dp, PulseColors.hairline, RoundedCornerShape(24.dp)).pulseClick(onClick).padding(horizontal = 16.dp),
+        Modifier.align(Alignment.BottomCenter).navigationBarsPadding().padding(start = 12.dp, end = 12.dp, bottom = 16.dp)
+            .fillMaxWidth().height(66.dp).shadow(8.dp, RoundedCornerShape(24.dp)).clip(RoundedCornerShape(24.dp))
+            .background(PulseColors.overlay.copy(alpha = 0.95f)).border(1.dp, PulseColors.hairline, RoundedCornerShape(24.dp)).pulseClick(onClick).padding(horizontal = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         CoachOrb(diameter = 40.dp)
-        Spacer(Modifier.width(14.dp))
+        Spacer(Modifier.width(16.dp))
         Text(text, style = PulseText.body.copy(fontSize = 13.5.sp, lineHeight = 18.sp), color = PulseColors.text, modifier = Modifier.weight(1f))
         Icon(Icons.AutoMirrored.Outlined.ArrowForward, null, tint = PulseColors.text, modifier = Modifier.size(16.dp))
     }
@@ -502,8 +502,8 @@ fun PulseBreatheScreen(relax: Boolean, onBack: () -> Unit) {
         }
         running = false
     }
-    Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(PulseColors.overlay, PulseColors.base))).statusBarsPadding().navigationBarsPadding()) {
-        Box(Modifier.padding(start = 12.dp, top = 18.dp).size(44.dp).pulseClick(onBack), contentAlignment = Alignment.Center) {
+    Box(Modifier.fillMaxSize().background(androidx.compose.ui.graphics.SolidColor(PulseColors.raised)).statusBarsPadding().navigationBarsPadding()) {
+        Box(Modifier.padding(start = 12.dp, top = 16.dp).size(44.dp).pulseClick(onBack), contentAlignment = Alignment.Center) {
             Icon(Icons.Outlined.Close, "Cerrar", tint = PulseColors.text, modifier = Modifier.size(22.dp))
         }
         Text(
@@ -511,12 +511,12 @@ fun PulseBreatheScreen(relax: Boolean, onBack: () -> Unit) {
             modifier = Modifier.align(Alignment.TopCenter).padding(top = 32.dp),
         )
         BreathCircle(Modifier.align(Alignment.Center).offset(y = (-40).dp), if (!running) "LISTO" else if (phaseIn) "INHALA" else "EXHALA", if (running) "$count" else "", scale.value)
-        Column(Modifier.align(Alignment.BottomCenter).padding(bottom = 60.dp, start = 30.dp, end = 30.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+        Column(Modifier.align(Alignment.BottomCenter).padding(bottom = 60.dp, start = 32.dp, end = 32.dp), horizontalAlignment = Alignment.CenterHorizontally) {
             Text(
                 if (relax) "Inspira $inhale segundos y exhala $exhale. La exhalación larga frena el corazón." else "Respira rápido y rítmico: $inhale segundos dentro, $exhale fuera. Para despejarte antes de entrenar.",
                 style = PulseText.bodyLg, color = PulseColors.textQuiet, textAlign = TextAlign.Center,
             )
-            Spacer(Modifier.height(10.dp))
+            Spacer(Modifier.height(8.dp))
             Text("Ciclo ${cycle.coerceAtMost(totalCycles)} de $totalCycles", style = PulseText.overline, color = PulseColors.textSecondary)
             Spacer(Modifier.height(24.dp))
             Box(

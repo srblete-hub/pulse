@@ -91,7 +91,7 @@ fun PulseImportScreen(vm: AppViewModel, onBack: () -> Unit) {
     Column(Modifier.fillMaxSize().background(PulseColors.screenBrush)) {
         PulseTopBar("Importar datos", onBack)
         Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = PulseMetrics.gutter).navigationBarsPadding()) {
-            Text("Trae tu historial de WHOOP para que Pulse tenga tu línea base desde el primer día.", style = PulseText.bodyLg, color = PulseColors.textSecondary, modifier = Modifier.padding(top = 8.dp, bottom = 18.dp))
+            Text("Trae tu historial de WHOOP para que Pulse tenga tu línea base desde el primer día.", style = PulseText.bodyLg, color = PulseColors.textSecondary, modifier = Modifier.padding(top = 8.dp, bottom = 16.dp))
             SourceCard(
                 Icons.Outlined.FolderZip, "Exportación de WHOOP",
                 "En la app de WHOOP: Más → Ajustes de la app → Exportar mis datos. Te llega un .zip por correo; ábrelo aquí tal cual.",
@@ -107,12 +107,12 @@ fun PulseImportScreen(vm: AppViewModel, onBack: () -> Unit) {
                 hcLauncher.launch(HealthConnectImporter.permissionsFor(hcCategories))
             }
             status?.let {
-                Spacer(Modifier.height(18.dp))
+                Spacer(Modifier.height(16.dp))
                 Text(it, style = PulseText.body, color = if (busy) PulseColors.accentHover else PulseColors.text)
             }
-            Spacer(Modifier.height(18.dp))
+            Spacer(Modifier.height(16.dp))
             Text("Todo se guarda solo en este teléfono.", style = PulseText.body.copy(fontSize = PulseText.chartAxis.fontSize), color = PulseColors.textTertiary)
-            Spacer(Modifier.height(30.dp))
+            Spacer(Modifier.height(32.dp))
         }
     }
 }
@@ -127,7 +127,7 @@ private fun SourceCard(icon: ImageVector, title: String, body: String, cta: Stri
         }
         Spacer(Modifier.height(8.dp))
         Text(body, style = PulseText.body, color = PulseColors.textSecondary)
-        Spacer(Modifier.height(14.dp))
+        Spacer(Modifier.height(16.dp))
         Box(
             Modifier.fillMaxWidth().height(44.dp).clip(RoundedCornerShape(10.dp))
                 .border(1.5.dp, if (enabled) PulseColors.text else PulseColors.hairlineStrong, RoundedCornerShape(10.dp))
@@ -152,10 +152,10 @@ fun StrapAdvancedPanel(vm: AppViewModel) {
     }
     val scan = rememberRequestScan { vm.connect() }
 
-    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 18.dp, vertical = 16.dp).navigationBarsPadding()) {
+    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 16.dp).navigationBarsPadding()) {
         Text("MODELO", style = PulseText.overline, color = PulseColors.textSecondary)
         Spacer(Modifier.height(8.dp))
-        Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(PulseColors.base).padding(3.dp)) {
+        Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(PulseColors.base).padding(4.dp)) {
             WhoopModel.entries.forEach { m ->
                 Box(
                     Modifier.weight(1f).height(38.dp).clip(RoundedCornerShape(8.dp)).background(if (m == model) PulseColors.overlay else Color.Transparent)
@@ -203,7 +203,7 @@ fun StrapAdvancedPanel(vm: AppViewModel) {
                 }
             }
         }
-        Spacer(Modifier.height(30.dp))
+        Spacer(Modifier.height(32.dp))
     }
 }
 
@@ -211,7 +211,7 @@ fun StrapAdvancedPanel(vm: AppViewModel) {
 private fun ActionRow(icon: ImageVector, label: String, onClick: () -> Unit) {
     Row(Modifier.fillMaxWidth().pulseClick(onClick).padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
         Icon(icon, null, tint = PulseColors.textQuiet, modifier = Modifier.size(20.dp))
-        Spacer(Modifier.width(14.dp))
+        Spacer(Modifier.width(16.dp))
         Text(label, style = PulseText.cardTitle.copy(fontWeight = FontWeight.Medium), color = PulseColors.text)
     }
 }

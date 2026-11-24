@@ -63,7 +63,7 @@ object PulseLivePref {
     fun set(c: Context, v: Boolean) = prefs(c).edit().putBoolean("show_live_hr", v).apply()
 }
 
-private val strapBg = Brush.verticalGradient(0f to PulseColors.divider, 0.4f to PulseColors.overlay, 1f to PulseColors.base)
+private val strapBg = androidx.compose.ui.graphics.SolidColor(PulseColors.raised)
 
 @Composable
 fun PulseStrapScreen(vm: AppViewModel, onClose: () -> Unit, onCharging: () -> Unit, onImport: () -> Unit, liveEnabled: Boolean, onLiveChange: (Boolean) -> Unit) {
@@ -84,7 +84,7 @@ fun PulseStrapScreen(vm: AppViewModel, onClose: () -> Unit, onCharging: () -> Un
 
     Box(Modifier.fillMaxSize().background(strapBg)) {
         Column(Modifier.fillMaxSize().statusBarsPadding()) {
-            Row(Modifier.fillMaxWidth().padding(start = 8.dp, end = 12.dp, top = 18.dp), verticalAlignment = Alignment.CenterVertically) {
+            Row(Modifier.fillMaxWidth().padding(start = 8.dp, end = 12.dp, top = 16.dp), verticalAlignment = Alignment.CenterVertically) {
                 Box(Modifier.size(44.dp).pulseClick(onClose), contentAlignment = Alignment.Center) { Icon(Icons.Outlined.Close, "Cerrar", tint = PulseColors.text, modifier = Modifier.size(20.dp)) }
                 Text("PULSERA", style = PulseText.tabTitle.copy(letterSpacing = PulseText.overline.letterSpacing * 1.16f), color = PulseColors.text, textAlign = TextAlign.Center, modifier = Modifier.weight(1f))
                 Box(
@@ -92,10 +92,10 @@ fun PulseStrapScreen(vm: AppViewModel, onClose: () -> Unit, onCharging: () -> Un
                     contentAlignment = Alignment.Center,
                 ) { Text("i", style = PulseText.ringNumber.copy(fontSize = 14.sp), color = PulseColors.text) }
             }
-            Row(Modifier.fillMaxWidth().padding(start = 22.dp, end = 20.dp, top = 24.dp)) {
+            Row(Modifier.fillMaxWidth().padding(start = 24.dp, end = 20.dp, top = 24.dp)) {
                 Column(Modifier.weight(1f)) {
                     Text(state, style = PulseText.overline.copy(letterSpacing = PulseText.tabTitle.letterSpacing * 0.875f), color = if (live.connected) PulseColors.accent else PulseColors.textSecondary)
-                    Spacer(Modifier.height(6.dp))
+                    Spacer(Modifier.height(8.dp))
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(if (tail.isNotEmpty()) "MI PULSERA · $tail" else "MI PULSERA", style = PulseText.small.copy(fontSize = 15.sp, fontWeight = FontWeight.Bold, letterSpacing = PulseText.overline.letterSpacing * 0.5f), color = PulseColors.text)
                         Spacer(Modifier.width(8.dp))
@@ -108,14 +108,14 @@ fun PulseStrapScreen(vm: AppViewModel, onClose: () -> Unit, onCharging: () -> Un
                         Spacer(Modifier.height(4.dp))
                         Text(sync, style = PulseText.small.copy(fontWeight = FontWeight.Bold), color = PulseColors.text)
                     }
-                    Spacer(Modifier.width(10.dp))
+                    Spacer(Modifier.width(8.dp))
                     Icon(
                         if (live.connected) Icons.Outlined.Sync else Icons.Outlined.Bluetooth, "Sincronizar", tint = PulseColors.text,
                         modifier = Modifier.size(26.dp).pulseClick { vm.connect() },
                     )
                 }
             }
-            Row(Modifier.padding(start = 22.dp, end = 22.dp, top = 26.dp), horizontalArrangement = Arrangement.spacedBy(30.dp)) {
+            Row(Modifier.padding(start = 24.dp, end = 24.dp, top = 24.dp), horizontalArrangement = Arrangement.spacedBy(32.dp)) {
                 listOf("ESTADO", "AVANZADO").forEachIndexed { i, t ->
                     Column(Modifier.pulseClick { tab = i }) {
                         Text(t, style = PulseText.overlineLg.copy(letterSpacing = PulseText.overline.letterSpacing * 0.66f), color = if (tab == i) PulseColors.text else PulseColors.textTertiary)
@@ -138,23 +138,23 @@ fun PulseStrapScreen(vm: AppViewModel, onClose: () -> Unit, onCharging: () -> Un
                             }
                             Text(if (model == WhoopModel.WHOOP4) "Modelo 4.0" else "Modelo 5.0 / MG", style = PulseText.body.copy(fontSize = 12.sp), color = PulseColors.textSecondary)
                         }
-                        Spacer(Modifier.width(14.dp))
+                        Spacer(Modifier.width(16.dp))
                         Box(Modifier.width(5.dp).height(100.dp).clip(RoundedCornerShape(3.dp)).background(PulseColors.overlay), contentAlignment = Alignment.BottomCenter) {
-                            Box(Modifier.fillMaxWidth().fillMaxHeight(((pct ?: 0.0) / 100).toFloat().coerceIn(0f, 1f)).clip(RoundedCornerShape(3.dp)).background(Brush.verticalGradient(listOf(PulseColors.accent, PulseColors.violet))))
+                            Box(Modifier.fillMaxWidth().fillMaxHeight(((pct ?: 0.0) / 100).toFloat().coerceIn(0f, 1f)).clip(RoundedCornerShape(3.dp)).background(androidx.compose.ui.graphics.SolidColor(PulseColors.accent)))
                         }
                     }
                     Row(
-                        Modifier.align(Alignment.BottomCenter).navigationBarsPadding().padding(start = 10.dp, end = 10.dp, bottom = 24.dp).fillMaxWidth()
+                        Modifier.align(Alignment.BottomCenter).navigationBarsPadding().padding(start = 8.dp, end = 8.dp, bottom = 24.dp).fillMaxWidth()
                             .clip(RoundedCornerShape(PulseMetrics.cardRadius)).background(PulseColors.raised).padding(16.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Box(Modifier.size(38.dp).clip(RoundedCornerShape(19.dp)).background(PulseColors.hairlineStrong), contentAlignment = Alignment.Center) {
                             Icon(Icons.Outlined.Favorite, null, tint = PulseColors.recoveryRed, modifier = Modifier.size(18.dp, 16.dp))
                         }
-                        Spacer(Modifier.width(14.dp))
+                        Spacer(Modifier.width(16.dp))
                         Column(Modifier.weight(1f)) {
                             Text("PULSO EN DIRECTO" + (if (liveEnabled) live.heartRate?.let { " · $it LPM" } ?: "" else ""), style = PulseText.overline.copy(fontSize = 11.sp, letterSpacing = PulseText.overline.letterSpacing * 0.83f), color = PulseColors.text)
-                            Spacer(Modifier.height(3.dp))
+                            Spacer(Modifier.height(4.dp))
                             Text("MOSTRARLO EN LA APP", style = PulseText.overline.copy(fontSize = 9.sp, letterSpacing = PulseText.overline.letterSpacing * 0.83f), color = PulseColors.textSecondary)
                         }
                         PulseSwitch(liveEnabled) { onLiveChange(it) }
@@ -165,19 +165,19 @@ fun PulseStrapScreen(vm: AppViewModel, onClose: () -> Unit, onCharging: () -> Un
         if (tip) {
             Box(Modifier.fillMaxSize().background(Color(0xD9060709)).pulseClick { }) {
                 Box(
-                    Modifier.align(Alignment.TopEnd).statusBarsPadding().padding(top = 12.dp, end = 6.dp).size(52.dp)
+                    Modifier.align(Alignment.TopEnd).statusBarsPadding().padding(top = 12.dp, end = 8.dp).size(52.dp)
                         .background(Brush.radialGradient(listOf(Color(0x59FFFFFF), Color.Transparent)), RoundedCornerShape(26.dp)),
                 )
-                Column(Modifier.align(Alignment.TopStart).statusBarsPadding().padding(start = 30.dp, end = 30.dp, top = 316.dp)) {
+                Column(Modifier.align(Alignment.TopStart).statusBarsPadding().padding(start = 32.dp, end = 32.dp, top = 316.dp)) {
                     Text("Que no se te acabe la batería", style = PulseText.headline.copy(fontSize = 22.sp, fontWeight = FontWeight.SemiBold), color = PulseColors.text)
-                    Spacer(Modifier.height(14.dp))
+                    Spacer(Modifier.height(16.dp))
                     Text("Cárgala cuando estés quieto un rato, por ejemplo en la ducha o en el sofá, para no perder datos ni de día ni de noche.", style = PulseText.bodyLg.copy(lineHeight = 21.sp), color = PulseColors.text)
                     Spacer(Modifier.height(12.dp))
                     Text("Toca la «i» de arriba para ver cómo cargarla.", style = PulseText.bodyLg.copy(lineHeight = 21.sp), color = PulseColors.text)
-                    Spacer(Modifier.height(22.dp))
+                    Spacer(Modifier.height(24.dp))
                     Box(
                         Modifier.height(42.dp).clip(RoundedCornerShape(21.dp)).border(2.dp, PulseColors.accentBrush, RoundedCornerShape(21.dp))
-                            .background(PulseColors.base).pulseClick { PulseTips.markSeen(context, "strap"); tip = false }.padding(horizontal = 30.dp),
+                            .background(PulseColors.base).pulseClick { PulseTips.markSeen(context, "strap"); tip = false }.padding(horizontal = 32.dp),
                         contentAlignment = Alignment.Center,
                     ) { Text("ENTENDIDO", style = PulseText.overline.copy(fontSize = 11.sp), color = PulseColors.accentHover) }
                 }

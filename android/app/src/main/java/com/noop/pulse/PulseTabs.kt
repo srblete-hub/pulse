@@ -55,9 +55,7 @@ import com.noop.ui.AppViewModel
 import java.util.Locale
 import kotlin.math.abs
 
-private val saludBrush = Brush.verticalGradient(
-    0f to PulseColors.divider, 0.35f to PulseColors.overlay, 1f to PulseColors.base,
-)
+private val saludBrush = androidx.compose.ui.graphics.SolidColor(PulseColors.raised)
 
 class HealthActions(
     val openAge: () -> Unit,
@@ -98,15 +96,15 @@ fun PulseHealthScreen(vm: AppViewModel, actions: HealthActions) {
         Column(
             Modifier.padding(start = PulseMetrics.gutter, end = PulseMetrics.gutter, top = 24.dp).fillMaxWidth()
                 .clip(RoundedCornerShape(PulseMetrics.cardRadius))
-                .border(1.5.dp, Brush.verticalGradient(0f to Color.Transparent, 0.4f to Color.Transparent, 1f to PulseColors.accent), RoundedCornerShape(PulseMetrics.cardRadius))
-                .background(Brush.verticalGradient(0f to Color.Transparent, 0.55f to PulseColors.divider, 1f to PulseColors.overlay))
+                .border(1.5.dp, androidx.compose.ui.graphics.SolidColor(Color.Transparent), RoundedCornerShape(PulseMetrics.cardRadius))
+                .background(androidx.compose.ui.graphics.SolidColor(PulseColors.raised))
                 .clickable(onClick = actions.openAge)
-                .padding(start = 16.dp, end = 16.dp, bottom = 18.dp),
+                .padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
         ) {
             Box(Modifier.fillMaxWidth().height(210.dp), contentAlignment = Alignment.Center) {
                 Box(
                     Modifier.size(150.dp).clip(RoundedCornerShape(75.dp))
-                        .background(Brush.radialGradient(listOf(PulseColors.hairlineStrong, PulseColors.divider))),
+                        .background(androidx.compose.ui.graphics.SolidColor(PulseColors.raised)),
                     contentAlignment = Alignment.Center,
                 ) {
                     if (age != null) {
@@ -120,13 +118,13 @@ fun PulseHealthScreen(vm: AppViewModel, actions: HealthActions) {
                 }
             }
             Overline("Tu edad fisiológica", large = true)
-            Spacer(Modifier.height(10.dp))
+            Spacer(Modifier.height(8.dp))
             Text(
                 if (age == null) com.noop.pulse.engine.PulseAge.waitText(days)
                 else String.format(Locale("es"), "%.1f años %s que tu edad real.", abs(age.yearsYounger), if (age.yearsYounger >= 0) "menos" else "más"),
                 style = PulseText.body, color = PulseColors.text,
             )
-            Spacer(Modifier.height(14.dp))
+            Spacer(Modifier.height(16.dp))
             Box(Modifier.fillMaxWidth().height(4.dp).clip(RoundedCornerShape(2.dp)).background(PulseColors.hairlineStrong)) {
                 Box(
                     Modifier.fillMaxWidth((PulseData.dataDays(days).toFloat() / PulseData.pulseAgeDays).coerceIn(0f, 1f)).height(4.dp)
@@ -135,7 +133,7 @@ fun PulseHealthScreen(vm: AppViewModel, actions: HealthActions) {
             }
         }
         // 90-day trends
-        AccentCard(Modifier.padding(start = PulseMetrics.gutter, end = PulseMetrics.gutter, top = 18.dp), onClick = actions.openTrends) {
+        AccentCard(Modifier.padding(start = PulseMetrics.gutter, end = PulseMetrics.gutter, top = 16.dp), onClick = actions.openTrends) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text("TENDENCIAS DE 90 DÍAS", style = PulseText.cardTitleLg, color = PulseColors.text, modifier = Modifier.weight(1f))
                 Icon(Icons.Outlined.ChevronRight, null, tint = PulseColors.textSecondary, modifier = Modifier.size(18.dp))
@@ -143,42 +141,42 @@ fun PulseHealthScreen(vm: AppViewModel, actions: HealthActions) {
             Row(Modifier.padding(top = 12.dp), verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
                     Text("Compara cómo evolucionan tu VFC, tu pulso en reposo y tu sueño mes a mes.", style = PulseText.body, color = PulseColors.textSecondary)
-                    Spacer(Modifier.height(6.dp))
+                    Spacer(Modifier.height(8.dp))
                     CtaLink("Ver tendencias", onClick = actions.openTrends)
                 }
-                Spacer(Modifier.width(10.dp))
+                Spacer(Modifier.width(8.dp))
                 MiniSparkline(listOf(20f, 16f, 28f, 24f, 36f, 32f, 44f), Modifier.size(78.dp, 60.dp))
             }
         }
         // Health monitor
-        PulseCard(Modifier.padding(start = PulseMetrics.gutter, end = PulseMetrics.gutter, top = 18.dp), onClick = actions.openMonitor) {
+        PulseCard(Modifier.padding(start = PulseMetrics.gutter, end = PulseMetrics.gutter, top = 16.dp), onClick = actions.openMonitor) {
             CardHeader("Monitor de salud")
             val d = today ?: days.lastOrNull()
             val ready = nights >= PulseData.calibrationNights
-            Row(Modifier.fillMaxWidth().padding(top = 18.dp)) {
+            Row(Modifier.fillMaxWidth().padding(top = 16.dp)) {
                 VitalCell("RESP", Icons.Outlined.Air, d?.respRateBpm?.let { String.format(Locale.US, "%.1f", it) }, ready, Modifier.weight(1f), first = true)
                 VitalCell("FCR", Icons.Outlined.Favorite, d?.restingHr?.toString(), ready, Modifier.weight(1f))
                 VitalCell("VFC", Icons.Outlined.MonitorHeart, d?.avgHrv?.let { "${it.toInt()}" }, ready, Modifier.weight(1f))
                 VitalCell("TEMP", Icons.Outlined.Thermostat, d?.skinTempDevC?.takeIf { abs(it) < 5 }?.let { String.format(Locale.US, "%+.1f", it) }, ready, Modifier.weight(1f))
             }
             if (!ready) {
-                Spacer(Modifier.height(18.dp))
+                Spacer(Modifier.height(16.dp))
                 UnlockPanel("Duerme con la pulsera ${PulseData.calibrationNights - nights} noches para desbloquearlo.", nights, PulseData.calibrationNights)
             }
         }
         // Stress
-        PulseCard(Modifier.padding(start = PulseMetrics.gutter, end = PulseMetrics.gutter, top = 18.dp), onClick = actions.openStress) {
+        PulseCard(Modifier.padding(start = PulseMetrics.gutter, end = PulseMetrics.gutter, top = 16.dp), onClick = actions.openStress) {
             CardHeader("Nivel de estrés")
             Spacer(Modifier.height(16.dp))
             Overline("Estrés alto hoy", color = PulseColors.textSecondary)
-            Spacer(Modifier.height(6.dp))
+            Spacer(Modifier.height(8.dp))
             Row(verticalAlignment = Alignment.Bottom) {
                 Text(highStressMin?.let { PulseActivity.mmss(it) } ?: "--:--", style = PulseText.ringNumberLg, color = PulseColors.text)
                 Spacer(Modifier.width(4.dp))
                 Text("h", style = PulseText.small, color = PulseColors.textSecondary)
             }
             if (nights < PulseData.recoverySeedNights) {
-                Spacer(Modifier.height(14.dp))
+                Spacer(Modifier.height(16.dp))
                 UnlockPanel("Duerme con la pulsera ${PulseData.recoverySeedNights - nights} noches para desbloquearlo.", nights, PulseData.recoverySeedNights)
             }
         }
@@ -223,12 +221,12 @@ fun PulseCommunityScreen() {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
                     Text("¿Entrenas en grupo?", style = PulseText.cardTitle, color = PulseColors.text)
-                    Spacer(Modifier.height(6.dp))
+                    Spacer(Modifier.height(8.dp))
                     Text("Pronto podrás crear grupos con tu equipo o tus amigos y comparar vuestra semana.", style = PulseText.body, color = PulseColors.textSecondary)
                     Spacer(Modifier.height(8.dp))
                     Text("VER GRUPOS", style = PulseText.overline, color = PulseColors.textTertiary)
                 }
-                Spacer(Modifier.width(10.dp))
+                Spacer(Modifier.width(8.dp))
                 Icon(Icons.Outlined.Groups, null, tint = PulseColors.textTertiary, modifier = Modifier.size(54.dp))
             }
         }
@@ -260,24 +258,24 @@ fun PulseSettingsScreen(vm: AppViewModel, groups: List<Pair<String?, List<Settin
         TabTitle("Ajustes")
         if (nights < PulseData.calibrationNights) {
             Row(
-                Modifier.padding(start = 18.dp, end = 18.dp, top = 20.dp).fillMaxWidth().clip(RoundedCornerShape(12.dp))
+                Modifier.padding(start = 16.dp, end = 16.dp, top = 20.dp).fillMaxWidth().clip(RoundedCornerShape(12.dp))
                     .border(1.5.dp, PulseColors.accentBrush, RoundedCornerShape(12.dp)).background(PulseColors.base)
                     .clickable(onClick = onCalibration).padding(16.dp),
             ) {
                 Icon(Icons.Outlined.CalendarMonth, null, tint = PulseColors.textQuiet, modifier = Modifier.padding(top = 2.dp).size(22.dp))
-                Spacer(Modifier.width(14.dp))
+                Spacer(Modifier.width(16.dp))
                 Column {
                     Text("TU PRIMERA SEMANA", style = PulseText.overline.copy(fontSize = 11.sp), color = PulseColors.text)
-                    Spacer(Modifier.height(6.dp))
+                    Spacer(Modifier.height(8.dp))
                     Text("Duerme con la pulsera cada noche y vuelve aquí para ver cómo se calibra tu línea base. (${nights}/${PulseData.calibrationNights})", style = PulseText.body, color = PulseColors.textSecondary)
                 }
             }
         }
         groups.forEach { (title, items) ->
             if (title != null) {
-                Text(title.uppercase(), style = PulseText.overline.copy(fontSize = 11.sp, letterSpacing = PulseText.tabTitle.letterSpacing * 0.875f), color = PulseColors.textTertiary, modifier = Modifier.padding(start = 18.dp, top = 30.dp, bottom = 12.dp))
+                Text(title.uppercase(), style = PulseText.overline.copy(fontSize = 11.sp, letterSpacing = PulseText.tabTitle.letterSpacing * 0.875f), color = PulseColors.textTertiary, modifier = Modifier.padding(start = 16.dp, top = 32.dp, bottom = 12.dp))
             }
-            Column(Modifier.padding(horizontal = 18.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 items.forEach { item ->
                     Row(
                         Modifier.fillMaxWidth().heightIn(min = 54.dp).clip(RoundedCornerShape(12.dp)).background(PulseColors.overlay)
@@ -286,7 +284,7 @@ fun PulseSettingsScreen(vm: AppViewModel, groups: List<Pair<String?, List<Settin
                     ) {
                         item.icon?.let {
                             Icon(it, null, tint = PulseColors.textQuiet, modifier = Modifier.size(22.dp))
-                            Spacer(Modifier.width(14.dp))
+                            Spacer(Modifier.width(16.dp))
                         }
                         Column(Modifier.weight(1f).padding(vertical = if (item.subtitle == null) 18.dp else 0.dp)) {
                             Text(item.label.uppercase(), style = PulseText.overline.copy(fontSize = 11.sp), color = PulseColors.text)
@@ -301,7 +299,7 @@ fun PulseSettingsScreen(vm: AppViewModel, groups: List<Pair<String?, List<Settin
             }
         }
         Box(
-            Modifier.align(Alignment.CenterHorizontally).padding(top = 34.dp).width(230.dp).height(46.dp).clip(RoundedCornerShape(23.dp))
+            Modifier.align(Alignment.CenterHorizontally).padding(top = 32.dp).width(230.dp).height(46.dp).clip(RoundedCornerShape(23.dp))
                 .border(1.5.dp, PulseColors.text, RoundedCornerShape(23.dp)).clickable(onClick = onBackup),
             contentAlignment = Alignment.Center,
         ) { Text("COPIA DE SEGURIDAD", style = PulseText.overline.copy(fontSize = 11.sp), color = PulseColors.text) }

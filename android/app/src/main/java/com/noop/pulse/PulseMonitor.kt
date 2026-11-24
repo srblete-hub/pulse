@@ -135,9 +135,9 @@ fun PulseMonitorScreen(vm: AppViewModel, onBack: () -> Unit, onCoach: () -> Unit
     val d = today ?: days.lastOrNull { it.day == PulseData.dayKey(0) }
     var info by remember { mutableStateOf<Vital?>(null) }
 
-    Box(Modifier.fillMaxSize().background(Brush.verticalGradient(0f to PulseColors.divider, 0.4f to PulseColors.overlay, 1f to PulseColors.base))) {
+    Box(Modifier.fillMaxSize().background(androidx.compose.ui.graphics.SolidColor(PulseColors.raised))) {
         Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).statusBarsPadding()) {
-            Row(Modifier.fillMaxWidth().padding(start = 10.dp, end = 10.dp, top = 18.dp), verticalAlignment = Alignment.CenterVertically) {
+            Row(Modifier.fillMaxWidth().padding(start = 8.dp, end = 8.dp, top = 16.dp), verticalAlignment = Alignment.CenterVertically) {
                 Box(Modifier.size(44.dp).pulseClick(onBack), contentAlignment = Alignment.Center) { Icon(Icons.AutoMirrored.Outlined.ArrowBack, "Volver", tint = PulseColors.text, modifier = Modifier.size(22.dp)) }
                 Text("MONITOR DE SALUD", style = PulseText.tabTitle, color = PulseColors.text, textAlign = TextAlign.Center, modifier = Modifier.weight(1f))
                 Spacer(Modifier.width(44.dp))
@@ -150,7 +150,7 @@ fun PulseMonitorScreen(vm: AppViewModel, onBack: () -> Unit, onCoach: () -> Unit
                     while (x < size.width) { drawLine(PulseColors.divider, Offset(x, 0f), Offset(x, size.height), 1f); x += step }
                     var y = 0f
                     while (y < size.height) { drawLine(PulseColors.divider, Offset(0f, y), Offset(size.width, y), 1f); y += step }
-                    drawRect(Brush.horizontalGradient(0f to Color(0xF21B1F23), 0.45f to Color(0x661B1F23), 1f to Color(0x1A1B1F23)))
+                    drawRect(Brush.horizontalGradient(0f to PulseColors.raised.copy(alpha = 0.95f), 0.45f to PulseColors.raised.copy(alpha = 0.40f), 1f to PulseColors.raised.copy(alpha = 0.10f)))
                     if (trace.size >= 2) {
                         val left = size.width - 300.dp.toPx() - 20.dp.toPx()
                         val w = 300.dp.toPx()
@@ -166,9 +166,9 @@ fun PulseMonitorScreen(vm: AppViewModel, onBack: () -> Unit, onCoach: () -> Unit
                         drawCircle(PulseColors.accent, 4.dp.toPx(), Offset(left + w, lastY))
                     }
                 }
-                Column(Modifier.padding(start = 20.dp, top = 10.dp)) {
+                Column(Modifier.padding(start = 20.dp, top = 8.dp)) {
                     Text("PULSO EN DIRECTO", style = PulseText.overline.copy(fontSize = 11.sp), color = PulseColors.text)
-                    Spacer(Modifier.height(10.dp))
+                    Spacer(Modifier.height(8.dp))
                     Icon(Icons.Outlined.Favorite, null, tint = PulseColors.recoveryRed, modifier = Modifier.size(22.dp, 20.dp))
                     Spacer(Modifier.height(4.dp))
                     Text(hr?.toString() ?: "--", style = PulseText.bigNumber.copy(fontSize = 34.sp, lineHeight = 34.sp), color = PulseColors.text)
@@ -183,14 +183,14 @@ fun PulseMonitorScreen(vm: AppViewModel, onBack: () -> Unit, onCoach: () -> Unit
                         },
                         style = PulseText.body, color = PulseColors.textQuiet,
                     )
-                    Spacer(Modifier.height(10.dp))
+                    Spacer(Modifier.height(8.dp))
                     Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
                         repeat(5) { i -> Box(Modifier.width(20.dp).height(2.dp).background(if (zone != null && i < zone) PulseColors.accent else PulseColors.hairlineStrong)) }
                     }
                 }
             }
             if (nights < PulseData.calibrationNights) {
-                Column(Modifier.padding(start = 15.dp, end = 15.dp, top = 24.dp).fillMaxWidth().clip(RoundedCornerShape(PulseMetrics.cardRadius)).background(PulseColors.divider).padding(16.dp)) {
+                Column(Modifier.padding(start = 16.dp, end = 16.dp, top = 24.dp).fillMaxWidth().clip(RoundedCornerShape(PulseMetrics.cardRadius)).background(PulseColors.divider).padding(16.dp)) {
                     Text("Duerme con la pulsera ${PulseData.calibrationNights - nights} noches más para calibrar tus rangos.", style = PulseText.body, color = PulseColors.text)
                     Spacer(Modifier.height(12.dp))
                     Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -198,7 +198,7 @@ fun PulseMonitorScreen(vm: AppViewModel, onBack: () -> Unit, onCoach: () -> Unit
                     }
                 }
             }
-            Column(Modifier.padding(start = 15.dp, end = 15.dp, top = 24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column(Modifier.padding(start = 16.dp, end = 16.dp, top = 24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 vitals.chunked(2).forEach { row ->
                     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                         row.forEach { v ->
@@ -211,12 +211,12 @@ fun PulseMonitorScreen(vm: AppViewModel, onBack: () -> Unit, onCoach: () -> Unit
                     }
                 }
             }
-            Spacer(Modifier.height(110.dp))
+            Spacer(Modifier.height(112.dp))
             Spacer(Modifier.navigationBarsPadding())
         }
         Box(
-            Modifier.align(Alignment.BottomEnd).navigationBarsPadding().padding(end = 10.dp, bottom = 18.dp).size(66.dp).shadow(18.dp, RoundedCornerShape(24.dp))
-                .clip(RoundedCornerShape(24.dp)).background(Color(0xF0282E34)).border(1.dp, PulseColors.hairline, RoundedCornerShape(24.dp)).pulseClick(onCoach),
+            Modifier.align(Alignment.BottomEnd).navigationBarsPadding().padding(end = 8.dp, bottom = 16.dp).size(66.dp).shadow(8.dp, RoundedCornerShape(24.dp))
+                .clip(RoundedCornerShape(24.dp)).background(PulseColors.overlay.copy(alpha = 0.94f)).border(1.dp, PulseColors.hairline, RoundedCornerShape(24.dp)).pulseClick(onCoach),
             contentAlignment = Alignment.Center,
         ) { CoachOrb(diameter = 40.dp) }
         info?.let { v ->
@@ -229,7 +229,7 @@ fun PulseMonitorScreen(vm: AppViewModel, onBack: () -> Unit, onCoach: () -> Unit
 
 @Composable
 private fun VitalCard(v: Vital, value: Double?, status: VitalStatus, modifier: Modifier, onClick: () -> Unit) {
-    Column(modifier.height(132.dp).clip(RoundedCornerShape(PulseMetrics.cardRadius)).background(PulseColors.divider).pulseClick(onClick).padding(14.dp)) {
+    Column(modifier.height(132.dp).clip(RoundedCornerShape(PulseMetrics.cardRadius)).background(PulseColors.divider).pulseClick(onClick).padding(16.dp)) {
         Row(verticalAlignment = Alignment.Top) {
             Icon(v.icon, null, tint = PulseColors.textSecondary, modifier = Modifier.size(17.dp))
             Spacer(Modifier.width(8.dp))
@@ -240,7 +240,7 @@ private fun VitalCard(v: Vital, value: Double?, status: VitalStatus, modifier: M
                 Text(value?.let(v.format) ?: "--", style = PulseText.bigNumber.copy(fontSize = 20.sp), color = PulseColors.text)
                 if (value != null) {
                     Spacer(Modifier.width(4.dp))
-                    Text(v.unit, style = PulseText.chartAxis.copy(fontSize = 10.sp), color = PulseColors.textSecondary, modifier = Modifier.padding(bottom = 3.dp))
+                    Text(v.unit, style = PulseText.chartAxis.copy(fontSize = 10.sp), color = PulseColors.textSecondary, modifier = Modifier.padding(bottom = 4.dp))
                 }
             }
         }
@@ -249,7 +249,7 @@ private fun VitalCard(v: Vital, value: Double?, status: VitalStatus, modifier: M
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Box(Modifier.size(6.dp).clip(RoundedCornerShape(3.dp)).background(status.color))
-            Spacer(Modifier.width(6.dp))
+            Spacer(Modifier.width(8.dp))
             Text(status.label, style = PulseText.body.copy(fontSize = 11.sp, fontWeight = FontWeight.SemiBold), color = PulseColors.text)
         }
     }
@@ -258,37 +258,37 @@ private fun VitalCard(v: Vital, value: Double?, status: VitalStatus, modifier: M
 @Composable
 private fun VitalInfoSheet(v: Vital, status: VitalStatus, history: List<Double>, onClose: () -> Unit) {
     var how by remember { mutableStateOf(false) }
-    Box(Modifier.fillMaxSize().background(Color(0x8C080A0C)).pulseClick(onClose)) {
+    Box(Modifier.fillMaxSize().background(PulseColors.base.copy(alpha = 0.55f)).pulseClick(onClose)) {
         Column(
-            Modifier.align(Alignment.Center).padding(horizontal = 20.dp).fillMaxWidth().shadow(30.dp, RoundedCornerShape(PulseMetrics.cardRadius)).clip(RoundedCornerShape(PulseMetrics.cardRadius))
-                .background(Brush.linearGradient(listOf(PulseColors.hairlineStrong, PulseColors.divider, PulseColors.overlay))).pulseClick { }
-                .padding(start = 24.dp, end = 24.dp, top = 26.dp, bottom = 28.dp),
+            Modifier.align(Alignment.Center).padding(horizontal = 20.dp).fillMaxWidth().shadow(8.dp, RoundedCornerShape(PulseMetrics.cardRadius)).clip(RoundedCornerShape(PulseMetrics.cardRadius))
+                .background(androidx.compose.ui.graphics.SolidColor(PulseColors.raised)).pulseClick { }
+                .padding(start = 24.dp, end = 24.dp, top = 24.dp, bottom = 28.dp),
         ) {
             Row {
                 Icon(v.icon, null, tint = PulseColors.textQuiet, modifier = Modifier.size(30.dp))
                 Spacer(Modifier.weight(1f))
                 Box(Modifier.size(40.dp).pulseClick(onClose), contentAlignment = Alignment.Center) { Icon(Icons.Outlined.Close, "Cerrar", tint = PulseColors.text, modifier = Modifier.size(16.dp)) }
             }
-            Spacer(Modifier.height(14.dp))
+            Spacer(Modifier.height(16.dp))
             Text("${v.title.substringBefore(" (")}\n${status.label.uppercase()}", style = PulseText.overline.copy(fontSize = 11.5.sp, lineHeight = 17.sp), color = PulseColors.text)
             Spacer(Modifier.height(16.dp))
             Text(v.info, style = PulseText.bodyLg.copy(lineHeight = 21.sp), color = PulseColors.text)
-            Spacer(Modifier.height(14.dp))
+            Spacer(Modifier.height(16.dp))
             Text(
                 if (status == VitalStatus.Calibrating) "Tras 7 noches con la pulsera, Pulse conocerá tu rango habitual y cada mañana te dirá si estás por debajo, dentro o por encima de él."
                 else history.takeIf { it.isNotEmpty() }?.let { "Tu media de los últimos 30 días es ${v.format(it.average())} ${v.unit}." } ?: "",
                 style = PulseText.bodyLg.copy(lineHeight = 21.sp), color = PulseColors.text,
             )
             if (how) {
-                Spacer(Modifier.height(14.dp))
+                Spacer(Modifier.height(16.dp))
                 Text(
                     "Pulse calcula la media y la variación de tus últimas 30 noches. Tu rango es la media ± 1,5 veces esa variación; un valor fuera de él se marca por encima o por debajo.",
                     style = PulseText.body, color = PulseColors.textSecondary,
                 )
             }
-            Spacer(Modifier.height(18.dp))
+            Spacer(Modifier.height(16.dp))
             Text("Pulse no es un dispositivo médico. Si tienes dudas sobre tu salud, consulta con un profesional sanitario.", style = PulseText.body.copy(fontSize = 11.sp, lineHeight = 16.sp), color = PulseColors.textSecondary)
-            Spacer(Modifier.height(22.dp))
+            Spacer(Modifier.height(24.dp))
             Box(
                 Modifier.fillMaxWidth().height(44.dp).clip(RoundedCornerShape(10.dp)).border(1.5.dp, PulseColors.textTertiary, RoundedCornerShape(10.dp)).pulseClick { how = !how },
                 contentAlignment = Alignment.Center,

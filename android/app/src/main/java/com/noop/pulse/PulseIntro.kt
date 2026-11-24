@@ -55,7 +55,7 @@ class IntroStep(
     val art: @Composable BoxScope.() -> Unit,
 )
 
-private val introBg = Brush.verticalGradient(0f to PulseColors.divider, 0.45f to PulseColors.overlay, 1f to PulseColors.raised)
+private val introBg = androidx.compose.ui.graphics.SolidColor(PulseColors.raised)
 
 /**
  * Multi-step introduction with the circular progress "next" button used by every Pulse intro
@@ -75,7 +75,7 @@ fun IntroFlow(
     BackHandler { if (i > 0) i-- else onClose() }
     Box(Modifier.fillMaxSize().background(step.background ?: introBg).statusBarsPadding().navigationBarsPadding()) {
         step.art(this)
-        Column(Modifier.align(Alignment.TopStart).padding(start = 30.dp, end = 30.dp, top = step.textTop - 24.dp)) {
+        Column(Modifier.align(Alignment.TopStart).padding(start = 32.dp, end = 32.dp, top = step.textTop - 24.dp)) {
             step.kicker?.let {
                 Text(it, style = PulseText.overlineLg, color = PulseColors.accent)
                 Spacer(Modifier.height(8.dp))
@@ -87,7 +87,7 @@ fun IntroFlow(
             }
         }
         Box(
-            Modifier.align(Alignment.TopStart).padding(start = 12.dp, top = 18.dp).size(44.dp).pulseClick { if (i > 0) i-- else onClose() },
+            Modifier.align(Alignment.TopStart).padding(start = 12.dp, top = 16.dp).size(44.dp).pulseClick { if (i > 0) i-- else onClose() },
             contentAlignment = Alignment.Center,
         ) {
             Icon(if (i == 0) Icons.Outlined.Close else Icons.AutoMirrored.Outlined.ArrowBack, if (i == 0) "Cerrar" else "Atrás", tint = PulseColors.text, modifier = Modifier.size(22.dp))

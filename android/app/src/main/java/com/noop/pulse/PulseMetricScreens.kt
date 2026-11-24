@@ -143,7 +143,7 @@ fun PulseEffortScreen(vm: AppViewModel, onBack: () -> Unit, onCoach: () -> Unit)
             )
             val (named, right) = remember(workouts) { PulseSports.accuracy(context) }
             if (named > 0) Text("Pulse acertó el deporte en $right de $named actividades que revisaste.",
-                style = PulseText.body, color = PulseColors.textSecondary, modifier = Modifier.padding(start = 18.dp, end = 18.dp, top = 8.dp))
+                style = PulseText.body, color = PulseColors.textSecondary, modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp))
         },
         rows = listOf(
             MetricRow(Icons.Outlined.FavoriteBorder, "ZONAS DE PULSO 1–3", PulseActivity.mmss(z?.first ?: 0.0), "media ${PulseActivity.mmss(zAvg.map { it.first }.takeIf { it.isNotEmpty() }?.average() ?: 0.0)}"),
@@ -248,9 +248,9 @@ fun PulseSleepScreen(vm: AppViewModel, onBack: () -> Unit, onCoach: () -> Unit) 
                     pushStyle(androidx.compose.ui.text.SpanStyle(color = PulseColors.text, fontWeight = FontWeight.SemiBold)); append("Hoy"); pop()
                     append(" frente a tus últimos 30 días")
                 },
-                style = PulseText.body, color = PulseColors.textSecondary, modifier = Modifier.padding(start = 20.dp, top = 4.dp, bottom = 14.dp),
+                style = PulseText.body, color = PulseColors.textSecondary, modifier = Modifier.padding(start = 20.dp, top = 4.dp, bottom = 16.dp),
             )
-            Column(Modifier.padding(horizontal = 15.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 NightCard("Horas dormidas", h(d?.totalSleepMin), avg30(days) { it.totalSleepMin }?.let { h(it) }, "Tiempo total dormido, sin contar los ratos despierto en la cama.")
                 NightCard("Horas vs. necesarias", vsNeed(d?.totalSleepMin), avg30(days) { it.totalSleepMin }?.let { vsNeed(it) }, "Lo que has dormido frente a lo que necesitas (${h(needMin)} h). Puedes ajustarlo diciéndoselo al coach.")
                 NightCard(
@@ -281,7 +281,7 @@ fun PulseSleepScreen(vm: AppViewModel, onBack: () -> Unit, onCoach: () -> Unit) 
 private fun OwnRecoveryCard(own: com.noop.pulse.engine.PulseRecoveryEngine.Result?) {
     val nights by com.noop.pulse.engine.PulseNights.state.collectAsStateWithLifecycle()
     androidx.compose.foundation.layout.Column(
-        Modifier.padding(start = 15.dp, end = 15.dp, top = 18.dp).fillMaxWidth()
+        Modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp).fillMaxWidth()
             .clip(androidx.compose.foundation.shape.RoundedCornerShape(PulseMetrics.cardRadius)).background(PulseColors.overlay).padding(16.dp),
     ) {
         Text("CÓMO SE HA CALCULADO", style = PulseText.overline, color = PulseColors.textSecondary)
@@ -297,7 +297,7 @@ private fun OwnRecoveryCard(own: com.noop.pulse.engine.PulseRecoveryEngine.Resul
                 val arrow = when { f.z >= 0.5 -> "▲ a favor"; f.z <= -0.5 -> "▼ en contra"; else -> "≈ normal" }
                 val fmt = { v: Double -> if (f.key == "resp") String.format(Locale.US, "%.1f", v) else "${v.roundToInt()}" }
                 Text("${names[f.key]}: ${fmt(f.value)}${units[f.key]} (media ${fmt(f.mean)}) · $arrow",
-                    style = PulseText.body, color = PulseColors.textSecondary, modifier = Modifier.padding(top = 6.dp))
+                    style = PulseText.body, color = PulseColors.textSecondary, modifier = Modifier.padding(top = 8.dp))
             }
         }
         nights.validation?.let { v ->
@@ -307,7 +307,7 @@ private fun OwnRecoveryCard(own: com.noop.pulse.engine.PulseRecoveryEngine.Resul
                 v.rhrMae?.let { String.format(Locale.US, "pulso en reposo ±%.1f lpm", it) },
             )
             if (parts.isNotEmpty()) Text("Frente a tu exportación de WHOOP (${v.days} días): " + parts.joinToString(", ") + " de diferencia media.",
-                style = PulseText.body, color = PulseColors.textSecondary, modifier = Modifier.padding(top = 10.dp))
+                style = PulseText.body, color = PulseColors.textSecondary, modifier = Modifier.padding(top = 8.dp))
         }
     }
 }

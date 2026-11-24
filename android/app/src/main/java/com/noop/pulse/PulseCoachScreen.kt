@@ -89,10 +89,8 @@ class PrefsCoachMemory(context: Context) : CoachMemory {
 
 private data class ChatLine(val fromUser: Boolean, val text: String, val reply: CoachReply? = null)
 
-private val sheetBrush = Brush.verticalGradient(
-    0f to PulseColors.overlay, 0.6f to PulseColors.base, 1f to PulseColors.base,
-)
-private val inputBorder = Brush.horizontalGradient(listOf(PulseColors.violet, PulseColors.stressLow))
+private val sheetBrush = androidx.compose.ui.graphics.SolidColor(PulseColors.raised)
+private val inputBorder = androidx.compose.ui.graphics.SolidColor(PulseColors.divider)
 
 fun buildCoachSnapshot(
     context: Context,
@@ -215,13 +213,13 @@ fun PulseCoachScreen(vm: AppViewModel, onBack: () -> Unit, onAction: (CoachActio
         Modifier.fillMaxSize().background(PulseColors.inset).statusBarsPadding()
             .windowInsetsPadding(WindowInsets.ime.union(WindowInsets.navigationBars).only(WindowInsetsSides.Bottom)),
     ) {
-        Row(Modifier.fillMaxWidth().padding(start = 14.dp, end = 14.dp, top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
             Box(Modifier.size(44.dp).pulseClick(onBack), contentAlignment = Alignment.Center) {
                 Icon(Icons.AutoMirrored.Outlined.ArrowBack, "Atrás", tint = PulseColors.text, modifier = Modifier.size(22.dp))
             }
             Spacer(Modifier.weight(1f))
             Row(
-                Modifier.clip(RoundedCornerShape(16.dp)).background(PulseColors.overlay).padding(horizontal = 14.dp, vertical = 7.dp),
+                Modifier.clip(RoundedCornerShape(16.dp)).background(PulseColors.overlay).padding(horizontal = 16.dp, vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Icon(Icons.Outlined.Lock, null, tint = PulseColors.textQuiet, modifier = Modifier.size(14.dp))
@@ -235,11 +233,11 @@ fun PulseCoachScreen(vm: AppViewModel, onBack: () -> Unit, onAction: (CoachActio
         }
         Column(
             Modifier.fillMaxWidth().weight(1f).padding(top = 12.dp)
-                .clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)).background(sheetBrush),
+                .clip(RoundedCornerShape(topStart = PulseMetrics.sheetRadius, topEnd = PulseMetrics.sheetRadius)).background(sheetBrush),
         ) {
-            Row(Modifier.padding(start = 14.dp, top = 14.dp)) {
+            Row(Modifier.padding(start = 16.dp, top = 16.dp)) {
                 Row(
-                    Modifier.clip(RoundedCornerShape(16.dp)).background(Color(0x0FFFFFFF)).padding(start = 3.dp, end = 12.dp, top = 3.dp, bottom = 3.dp),
+                    Modifier.clip(RoundedCornerShape(16.dp)).background(Color(0x0FFFFFFF)).padding(start = 4.dp, end = 12.dp, top = 4.dp, bottom = 4.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     CoachOrb(diameter = 26.dp)
@@ -248,14 +246,14 @@ fun PulseCoachScreen(vm: AppViewModel, onBack: () -> Unit, onAction: (CoachActio
                 }
             }
             if (!started) {
-                Column(Modifier.weight(1f).fillMaxWidth().padding(horizontal = 30.dp), verticalArrangement = Arrangement.Center) {
+                Column(Modifier.weight(1f).fillMaxWidth().padding(horizontal = 32.dp), verticalArrangement = Arrangement.Center) {
                     CoachOrb(diameter = 54.dp)
-                    Spacer(Modifier.height(22.dp))
+                    Spacer(Modifier.height(24.dp))
                     Text(
                         "Hola. Leo tu sueño, tu recuperación y tus entrenos para explicarte qué significan y ayudarte a mejorar día a día.",
                         style = PulseText.bodyLg.copy(fontSize = 16.sp, lineHeight = 24.sp, fontWeight = FontWeight.Medium), color = PulseColors.text,
                     )
-                    Spacer(Modifier.height(22.dp))
+                    Spacer(Modifier.height(24.dp))
                     Box(
                         Modifier.height(36.dp).clip(RoundedCornerShape(9.dp)).background(PulseColors.text).pulseClick { start() }.padding(horizontal = 44.dp),
                         contentAlignment = Alignment.Center,
@@ -266,7 +264,7 @@ fun PulseCoachScreen(vm: AppViewModel, onBack: () -> Unit, onAction: (CoachActio
                     Modifier.weight(1f).fillMaxWidth(),
                     state = listState,
                     contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 16.dp, vertical = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     items(lines) { line -> Bubble(line, onAction) }
                     if (thinking) item { TypingBubble() }
@@ -278,7 +276,7 @@ fun PulseCoachScreen(vm: AppViewModel, onBack: () -> Unit, onAction: (CoachActio
             ) {
                 chips.forEach { chip ->
                     Box(
-                        Modifier.height(32.dp).clip(RoundedCornerShape(8.dp)).background(PulseColors.text).pulseClick { send(chip) }.padding(horizontal = 14.dp),
+                        Modifier.height(32.dp).clip(RoundedCornerShape(8.dp)).background(PulseColors.text).pulseClick { send(chip) }.padding(horizontal = 16.dp),
                         contentAlignment = Alignment.Center,
                     ) { Text(chip, style = PulseText.body.copy(fontWeight = FontWeight.SemiBold), color = PulseColors.onAccent) }
                 }
@@ -286,7 +284,7 @@ fun PulseCoachScreen(vm: AppViewModel, onBack: () -> Unit, onAction: (CoachActio
             Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, bottom = 16.dp), verticalAlignment = Alignment.CenterVertically) {
                 Row(
                     Modifier.weight(1f).height(46.dp).clip(RoundedCornerShape(PulseMetrics.cardRadius)).border(1.5.dp, inputBorder, RoundedCornerShape(PulseMetrics.cardRadius))
-                        .background(PulseColors.raised).padding(start = 14.dp, end = 6.dp),
+                        .background(PulseColors.raised).padding(start = 16.dp, end = 8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Box(Modifier.weight(1f)) {
@@ -318,7 +316,7 @@ private fun Bubble(line: ChatLine, onAction: (CoachAction) -> Unit) {
             Modifier.widthIn(max = 300.dp)
                 .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp, bottomStart = if (line.fromUser) 16.dp else 4.dp, bottomEnd = if (line.fromUser) 4.dp else 16.dp))
                 .background(if (line.fromUser) PulseColors.accentFillTop else PulseColors.overlay)
-                .padding(horizontal = 14.dp, vertical = 11.dp),
+                .padding(horizontal = 16.dp, vertical = 12.dp),
         ) {
             Text(line.text, style = PulseText.bodyLg, color = PulseColors.text)
             line.reply?.action?.let { a ->
@@ -340,8 +338,8 @@ private fun TypingBubble() {
     Row(Modifier.fillMaxWidth()) {
         Row(
             Modifier.clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp, bottomStart = 4.dp, bottomEnd = 16.dp))
-                .background(PulseColors.overlay).padding(horizontal = 16.dp, vertical = 14.dp),
-            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                .background(PulseColors.overlay).padding(horizontal = 16.dp, vertical = 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             repeat(3) { i ->
                 val on = phase.toInt() == i
