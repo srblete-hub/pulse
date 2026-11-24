@@ -36,8 +36,6 @@ data class PulseDayView(
     val recovery: Double?,
     /** Day the recovery comes from when it is carried from a previous night, else null. */
     val recoveryFromDay: String?,
-    /** Pulse's own personal-baseline recovery behind [recovery], or null when it is noop's. */
-    val own: PulseRecoveryEngine.Result? = null,
 ) {
     val recoveryCaption: String? get() = recoveryFromDay?.let { "De la última noche medida · ${shortDate(it)}" }
 
@@ -84,11 +82,6 @@ fun pulseDayView(vm: AppViewModel, offset: Int = 0): PulseDayView {
     val effort = StrainScorer.effectiveEffort(live = if (offset == 0) live else null, stored = metric?.strain)
 
     val todayKey = maxOf(today?.day ?: "", LocalDate.now().toString())
-    val nights by PulseNights.state.collectAsStateWithLifecycle()
-    val key = metric?.day ?: PulseData.dayKey(offset)
-    val ownToday = nights.recovery[key]
-    val ownCarry = if (offset == 0 && ownToday == null && metric?.recovery == null)
-        nights.recovery.values.filter { it.day < key && it.day <= todayKey }.maxByOrNull { it.day } else null
     val carried = lastScoredRecoveryDay(
         days = days,
         selectedDayKey = metric?.day ?: PulseData.dayKey(offset),
@@ -100,13 +93,7 @@ fun pulseDayView(vm: AppViewModel, offset: Int = 0): PulseDayView {
     return PulseDayView(
         metric = metric,
         effort21 = effort?.let { it * 21.0 / 100.0 },
-        // Pulse's own recovery first; noop's when Pulse can't score (too few nights, no beat data).
-        recovery = ownToday?.recovery ?: metric?.recovery ?: ownCarry?.recovery ?: carried?.recovery,
-        recoveryFromDay = when {
-            ownToday != null || metric?.recovery != null -> null
-            ownCarry != null -> ownCarry.day
-            else -> carried?.day
-        },
-        own = ownToday ?: ownCarry.takeIf { metric?.recovery == null },
+        recovery = metric?.recovery ?: carried?.recovery,
+        recoveryFromDay = if (metric?.recovery == null) carried?.day else null,
     )
 }
