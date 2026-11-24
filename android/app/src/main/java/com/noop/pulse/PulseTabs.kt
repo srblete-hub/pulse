@@ -180,6 +180,9 @@ fun PulseHealthScreen(vm: AppViewModel, actions: HealthActions) {
                 UnlockPanel("Duerme con la pulsera ${PulseData.recoverySeedNights - nights} noches para desbloquearlo.", nights, PulseData.recoverySeedNights)
             }
         }
+        HealthAlertCard(vm)
+        TrainingLoadCardPulse(days)
+        RhythmCard(vm, days)
         Spacer(Modifier.height(PulseMetrics.barClearance))
     }
 }

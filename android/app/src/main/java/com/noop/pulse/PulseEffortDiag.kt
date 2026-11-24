@@ -163,6 +163,8 @@ fun ActivitiesCard(
     isAuto: (com.noop.data.WorkoutRow) -> Boolean,
     onDelete: (com.noop.data.WorkoutRow) -> Unit,
     onLabel: ((com.noop.data.WorkoutRow, String) -> Unit)? = null,
+    /** noop's post-exercise heart-rate recovery for a row (Cole et al., NEJM 1999), loaded lazily. */
+    hrrFor: (suspend (com.noop.data.WorkoutRow) -> com.noop.analytics.HeartRateRecovery.Result?)? = null,
 ) {
     val ctx = androidx.compose.ui.platform.LocalContext.current
     var picking by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<com.noop.data.WorkoutRow?>(null) }
@@ -182,6 +184,8 @@ fun ActivitiesCard(
             )
         }
         rows.forEach { w ->
+            var hrr by androidx.compose.runtime.remember(w.startTs, w.endTs) { androidx.compose.runtime.mutableStateOf<com.noop.analytics.HeartRateRecovery.Result?>(null) }
+            if (hrrFor != null) androidx.compose.runtime.LaunchedEffect(w.startTs, w.endTs) { hrr = runCatching { hrrFor(w) }.getOrNull() }
             val min = ((w.endTs - w.startTs) / 60).toInt()
             Row(Modifier.fillMaxWidth().padding(top = 12.dp), verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f).pulseClick { if (onLabel != null) picking = if (picking == w) null else w }) {
@@ -199,6 +203,7 @@ fun ActivitiesCard(
                             PulseSports.guessed(ctx, w)?.takeIf { tick >= 0 && !PulseSports.isConfirmed(ctx, w) && it.first != PulseAutoActivity.SPORT }
                                 ?.let { "nombre sugerido (${(it.second * 100).toInt()} %)" },
                             if (isAuto(w) && w.sport == PulseAutoActivity.SPORT && !PulseSports.isConfirmed(ctx, w)) "toca para decir qué fue" else null,
+                            hrr?.after1Minute?.let { "pulso tras parar −$it lpm en 1 min" },
                         ).joinToString(" · "),
                         style = PulseText.body.copy(fontSize = 12.sp), color = PulseColors.textSecondary,
                     )

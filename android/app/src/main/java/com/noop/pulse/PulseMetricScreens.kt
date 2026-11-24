@@ -141,6 +141,13 @@ fun PulseEffortScreen(vm: AppViewModel, onBack: () -> Unit, onCoach: () -> Unit)
                 isAuto = { PulseAutoActivity.isAuto(context, it) },
                 onDelete = { PulseAutoActivity.delete(context, vm, it) },
                 onLabel = { w, label -> scope.launch { PulseSports.confirm(context, vm, w, label); vm.loadWorkouts() } },
+                hrrFor = { w ->
+                    kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
+                        val hr = vm.repo.hrSamplesUnion(vm.activeStrapId, w.startTs - 300, w.endTs + 400, limit = 100_000)
+                        com.noop.analytics.HeartRateRecovery.calculate(hr, w.startTs, w.endTs, com.noop.ui.ProfileStore.from(context).hrMax.toDouble())
+                            ?.takeIf { it.hasMeasurement }
+                    }
+                },
             )
             val (named, right) = remember(workouts) { PulseSports.accuracy(context) }
             if (named > 0) Text("Pulse acertó el deporte en $right de $named actividades que revisaste.",
