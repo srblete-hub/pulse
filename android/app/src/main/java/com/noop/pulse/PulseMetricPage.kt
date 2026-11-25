@@ -140,19 +140,21 @@ fun MetricPage(
                     Text("i", style = PulseText.ringNumber.copy(fontSize = 16.sp), color = PulseColors.textQuiet)
                 }
                 if (sleepHero == null) {
-                    Box(Modifier.align(Alignment.Center).padding(top = 24.dp).size(280.dp), contentAlignment = Alignment.Center) {
+                    val animFrac by androidx.compose.animation.core.animateFloatAsState(heroFraction ?: 0f,
+                        androidx.compose.animation.core.tween(300, easing = androidx.compose.animation.core.FastOutSlowInEasing), label = "ring")
+                    Box(Modifier.align(Alignment.Center).padding(top = 24.dp).size(230.dp), contentAlignment = Alignment.Center) {
                         Canvas(Modifier.fillMaxSize()) {
-                            val sw = 18.dp.toPx()
+                            val sw = 16.dp.toPx()
                             val r = size.minDimension / 2 - sw
                             val tl = Offset(center.x - r, center.y - r)
                             drawArc(PulseColors.track, 0f, 360f, false, tl, Size(r * 2, r * 2), style = Stroke(sw))
-                            if (heroFraction != null && heroFraction > 0f) {
-                                drawArc(heroColor, -90f, (360f * heroFraction.coerceIn(0f, 1f)).coerceAtLeast(1f), false, tl, Size(r * 2, r * 2), style = Stroke(sw, cap = StrokeCap.Round))
+                            if (heroFraction != null && animFrac > 0f) {
+                                drawArc(heroColor, -90f, (360f * animFrac.coerceIn(0f, 1f)).coerceAtLeast(1f), false, tl, Size(r * 2, r * 2), style = Stroke(sw, cap = StrokeCap.Round))
                             }
                         }
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(heroLabel, style = PulseText.overlineLg.copy(fontSize = 15.sp, fontWeight = FontWeight.Bold), color = PulseColors.text, textAlign = TextAlign.Center)
-                            HeroNumber(heroValue, heroSuffix)
+                            Text(heroLabel, style = PulseText.overlineLg, color = if (heroFraction != null) heroColor else PulseColors.text, textAlign = TextAlign.Center)
+                            HeroNumber(heroValue, heroSuffix, if (heroFraction != null) heroColor else PulseColors.text)
                             ShareLink(shareText)
                         }
                     }
@@ -332,6 +334,7 @@ fun TrendCard(chart: TrendChart) {
     val keys = remember { (-6..0).map { PulseData.dayKey(it) } }
     val hasData = chart.values.any { it != null && it > 0 }
     Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(PulseMetrics.cardRadius)).background(chartCardBrush).padding(16.dp)) {
+        trendDescription(chart)?.let { Text(it, style = PulseText.body, color = PulseColors.textSecondary, modifier = Modifier.padding(bottom = 8.dp)) }
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(chart.title.uppercase(), style = PulseText.overlineLg, color = PulseColors.text, modifier = Modifier.weight(1f))
             Icon(Icons.Outlined.ChevronRight, null, tint = PulseColors.textSecondary, modifier = Modifier.size(16.dp))
@@ -478,11 +481,11 @@ fun HabitsCard(icon: ImageVector, onClick: () -> Unit) {
 
 
 @Composable
-private fun HeroNumber(value: String, suffix: String?) {
+private fun HeroNumber(value: String, suffix: String?, color: Color = PulseColors.text) {
     Text(androidx.compose.ui.text.buildAnnotatedString {
         append(value)
-        if (suffix != null && value != "--" && !value.endsWith(suffix)) withStyle(androidx.compose.ui.text.SpanStyle(fontSize = 34.sp)) { append(suffix) }
-    }, style = PulseText.metric.copy(fontSize = 84.sp, lineHeight = 90.sp), color = PulseColors.text)
+        if (suffix != null && value != "--" && !value.endsWith(suffix)) withStyle(androidx.compose.ui.text.SpanStyle(fontSize = 25.sp, baselineShift = androidx.compose.ui.text.style.BaselineShift(0.9f))) { append(suffix) }
+    }, style = PulseText.metric, color = color)
 }
 
 /** "COMPARTIR": shares the number as plain text through Android's share sheet. */
@@ -498,4 +501,17 @@ private fun ShareLink(text: String?) {
         Spacer(Modifier.width(8.dp))
         Text("COMPARTIR", style = PulseText.overlineLg.copy(fontWeight = FontWeight.Bold), color = PulseColors.text)
     }
+}
+
+
+/** One plain sentence under a weekly chart: today against the rest of the week. */
+fun trendDescription(c: TrendChart): String? {
+    if (c.locked != null) return null
+    val prior = c.values.dropLast(1).filterNotNull().filter { it > 0 }
+    val today = c.values.lastOrNull()?.takeIf { it > 0 } ?: return null
+    if (prior.size < 3) return null
+    val avg = prior.average()
+    val ch = (today - avg) / avg
+    val word = when { ch >= 0.1 -> "por encima de"; ch <= -0.1 -> "por debajo de"; else -> "en línea con" }
+    return "Hoy ${c.format(today)}, $word tu media de la semana (${c.format(avg)})."
 }

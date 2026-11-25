@@ -1,5 +1,13 @@
 package com.noop.pulse
 
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.ui.draw.clip
 import kotlinx.coroutines.launch
@@ -165,10 +173,10 @@ fun PulseEffortScreen(vm: AppViewModel, onBack: () -> Unit, onCoach: () -> Unit,
         coachLine = coach, onBack = onBack, onCoach = onCoach,
         charts = listOf(
             TrendChart("Esfuerzo", PulseColors.strain, 21.0, week(days) { PulseData.effort21(it) }.dropLast(1) + eff, { String.format(Locale.US, "%.1f", it) }),
-            TrendChart("Zonas 1–3", PulseColors.stressLow, 120.0, keys.map { diags[it]?.zones13 }, { PulseActivity.mmss(it) },
-                legend = listOf(LegendItem("ZONA 1", PulseColors.textSecondary), LegendItem("ZONA 2", PulseColors.stressLow), LegendItem("ZONA 3", PulseColors.recoveryGreen)), valueColor = PulseColors.text),
-            TrendChart("Zonas 4–5", PulseColors.stressHigh, 45.0, keys.map { diags[it]?.zones45 }, { PulseActivity.mmss(it) },
-                legend = listOf(LegendItem("ZONA 4", PulseColors.stressHigh), LegendItem("ZONA 5", PulseColors.recoveryRed)), valueColor = PulseColors.text),
+            TrendChart("Zonas 1–3", PulseColors.zones[1], 120.0, keys.map { diags[it]?.zones13 }, { PulseActivity.mmss(it) },
+                legend = listOf(LegendItem("ZONA 1", PulseColors.zones[0]), LegendItem("ZONA 2", PulseColors.zones[1]), LegendItem("ZONA 3", PulseColors.zones[2])), valueColor = PulseColors.text),
+            TrendChart("Zonas 4–5", PulseColors.zones[3], 45.0, keys.map { diags[it]?.zones45 }, { PulseActivity.mmss(it) },
+                legend = listOf(LegendItem("ZONA 4", PulseColors.zones[3]), LegendItem("ZONA 5", PulseColors.zones[4])), valueColor = PulseColors.text),
             TrendChart("Pasos", PulseColors.accent, 15000.0, week(days) { it.steps?.toDouble() }, { PulseData.int(it.roundToInt()) }),
             TrendChart("Calorías", PulseColors.accent, 4000.0, week(days) { it.activeKcalEst }, { PulseData.int(it.roundToInt()) }),
             TrendChart("Tiempo de fuerza", PulseColors.accent, 90.0, keys.map { PulseActivity.strengthMin(workouts, it).takeIf { m -> m > 0 } }, { PulseActivity.mmss(it) }, valueColor = PulseColors.text),
@@ -207,6 +215,8 @@ fun PulseRecoveryScreen(vm: AppViewModel, onBack: () -> Unit, onHabits: () -> Un
         coachLine = if (rec == null) "Cuando tengas tu primera recuperación, te ayudo a interpretarla." else "Recuperación del ${rec.roundToInt()} %. Te explico qué la ha movido.",
         onBack = onBack, onCoach = onCoach,
         middle = {
+            val baselines by vm.chargeBaselines.collectAsStateWithLifecycle()
+            FactorBars(com.noop.ui.recoveryChargeDrivers(baselines, d))
             HabitsCard(Icons.Outlined.CalendarMonth, onHabits)
         },
         charts = listOf(
@@ -261,6 +271,8 @@ fun PulseSleepScreen(vm: AppViewModel, onBack: () -> Unit, onCoach: () -> Unit, 
         coachLine = if (perf == null) "Mañana te cuento qué tal has dormido y cómo mejorar." else "Has dormido ${h(d?.totalSleepMin)} h. ¿Te doy consejos para esta noche?",
         onBack = onBack, onCoach = onCoach,
         middle = {
+            SleepStagesBar(d)
+            SleepTiles(d, days)
             Text("Tu última noche", style = PulseText.sectionTitle, color = PulseColors.text, modifier = Modifier.padding(start = 20.dp, top = 36.dp))
             Text(
                 androidx.compose.ui.text.buildAnnotatedString {
@@ -324,4 +336,92 @@ fun sleepInsight(perf: Double?): Pair<String, String> = when {
     perf >= 85 -> "Sueño óptimo" to "Has dormido casi todo lo que necesitabas. Sigue con tus buenos hábitos de sueño para rendir y recuperarte mejor."
     perf >= 70 -> "Sueño suficiente" to "Has dormido una parte importante de lo que necesitabas. Acostarte un poco antes te ayudará a llegar al 100 %."
     else -> "Sueño insuficiente" to "Has dormido bastante menos de lo que necesitabas. Intenta compensarlo esta noche acostándote antes."
+}
+
+
+/** "Qué la ha movido": noop's own recovery drivers, each as a bar of the points it added or took away. */
+@Composable
+fun FactorBars(drivers: List<com.noop.analytics.ChargeDriver>) {
+    if (drivers.isEmpty()) return
+    val name = mapOf(
+        com.noop.analytics.ChargeDriverLabel.HEART_RATE_VARIABILITY to "VFC",
+        com.noop.analytics.ChargeDriverLabel.RESTING_HEART_RATE to "Pulso en reposo",
+        com.noop.analytics.ChargeDriverLabel.SLEEP_QUALITY to "Sueño",
+        com.noop.analytics.ChargeDriverLabel.RESPIRATORY_RATE to "Respiración",
+        com.noop.analytics.ChargeDriverLabel.SKIN_TEMPERATURE to "Temperatura",
+    )
+    val maxAbs = drivers.maxOf { kotlin.math.abs(it.deltaPoints) }.coerceAtLeast(5)
+    Column(Modifier.padding(start = 16.dp, end = 16.dp, top = 24.dp).fillMaxWidth().clip(androidx.compose.foundation.shape.RoundedCornerShape(PulseMetrics.cardRadius))
+        .background(PulseColors.overlay).padding(16.dp)) {
+        Text("QUÉ LA HA MOVIDO", style = PulseText.overlineLg.copy(fontWeight = FontWeight.Bold), color = PulseColors.text)
+        drivers.sortedByDescending { kotlin.math.abs(it.deltaPoints) }.forEach { dr ->
+            Row(Modifier.fillMaxWidth().padding(top = 16.dp), verticalAlignment = Alignment.CenterVertically) {
+                Text(name[dr.label] ?: dr.label.name, style = PulseText.body, color = PulseColors.text, modifier = Modifier.width(120.dp))
+                androidx.compose.foundation.Canvas(Modifier.weight(1f).height(12.dp)) {
+                    val mid = size.width / 2
+                    drawLine(PulseColors.divider, androidx.compose.ui.geometry.Offset(mid, 0f), androidx.compose.ui.geometry.Offset(mid, size.height), 2.dp.toPx())
+                    val w = (kotlin.math.abs(dr.deltaPoints).toFloat() / maxAbs) * (mid - 2.dp.toPx())
+                    val c = if (dr.deltaPoints >= 0) PulseColors.statusHigh else PulseColors.stressHigh
+                    val x = if (dr.deltaPoints >= 0) mid else mid - w
+                    drawRoundRect(c, androidx.compose.ui.geometry.Offset(x, 0f), androidx.compose.ui.geometry.Size(w, size.height), androidx.compose.ui.geometry.CornerRadius(4.dp.toPx()))
+                }
+                Text("${if (dr.deltaPoints > 0) "+" else ""}${dr.deltaPoints}", style = PulseText.cardTitle, color = PulseColors.text, textAlign = TextAlign.End, modifier = Modifier.width(44.dp))
+            }
+        }
+        Text("Puntos que cada señal suma o resta frente a tu propia media (cálculo de NOOP).", style = PulseText.body, color = PulseColors.textTertiary, modifier = Modifier.padding(top = 12.dp))
+    }
+}
+
+/** Night composition: awake · light · deep · REM as one stacked bar with minutes and shares. */
+@Composable
+fun SleepStagesBar(d: DailyMetric?) {
+    val deep = d?.deepMin ?: 0.0; val rem = d?.remMin ?: 0.0; val light = d?.lightMin ?: 0.0
+    val asleep = d?.totalSleepMin ?: 0.0
+    val awake = ((d?.efficiency?.let { e -> val f = if (e > 1) e / 100 else e; if (f > 0) asleep / f - asleep else null }) ?: 0.0).coerceAtLeast(0.0)
+    val total = deep + rem + light + awake
+    if (total <= 0 || deep + rem <= 0) return
+    val parts = listOf(Triple("DESPIERTO", awake, PulseColors.textSecondary), Triple("LIGERO", light, PulseColors.sleep),
+        Triple("PROFUNDO", deep, PulseColors.sleepDeep), Triple("REM", rem, PulseColors.accent))
+    Column(Modifier.padding(start = 16.dp, end = 16.dp, top = 24.dp).fillMaxWidth().clip(androidx.compose.foundation.shape.RoundedCornerShape(PulseMetrics.cardRadius))
+        .background(PulseColors.overlay).padding(16.dp)) {
+        Text("FASES DEL SUEÑO", style = PulseText.overlineLg.copy(fontWeight = FontWeight.Bold), color = PulseColors.text)
+        Row(Modifier.padding(top = 12.dp).fillMaxWidth().height(14.dp).clip(androidx.compose.foundation.shape.RoundedCornerShape(7.dp))) {
+            parts.forEach { (_, m, c) -> if (m > 0) Box(Modifier.weight(m.toFloat()).fillMaxHeight().background(c)) }
+        }
+        parts.forEach { (l, m, c) ->
+            Row(Modifier.fillMaxWidth().padding(top = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+                Box(Modifier.size(10.dp).clip(androidx.compose.foundation.shape.RoundedCornerShape(3.dp)).background(c))
+                Spacer(Modifier.width(8.dp))
+                Text(l, style = PulseText.overline.copy(fontWeight = FontWeight.Bold), color = PulseColors.text, modifier = Modifier.weight(1f))
+                Text("${(m / total * 100).roundToInt()} %", style = PulseText.body, color = PulseColors.textSecondary, modifier = Modifier.padding(end = 16.dp))
+                Text(PulseData.hoursMinutes(m), style = PulseText.cardTitle, color = PulseColors.text)
+            }
+        }
+    }
+}
+
+/** Sleep sub-metrics as tiles: value tonight vs the 30-day average. */
+@Composable
+fun SleepTiles(d: DailyMetric?, days: List<DailyMetric>) {
+    fun effPct(x: DailyMetric?) = x?.efficiency?.let { if (it <= 1) it * 100 else it }
+    fun restor(x: DailyMetric?) = x?.let { ((it.deepMin ?: 0.0) + (it.remMin ?: 0.0)).takeIf { v -> v > 0 } }
+    val tiles = listOf(
+        Triple("EFICIENCIA", effPct(d)?.let { "${it.roundToInt()} %" } ?: "--", avg30(days) { effPct(it) }?.let { "media ${it.roundToInt()} %" }),
+        Triple("SUEÑO REPARADOR", restor(d)?.let { PulseData.hoursMinutes(it) } ?: "--", avg30(days) { restor(it) }?.let { "media ${PulseData.hoursMinutes(it)}" }),
+        Triple("DESPERTARES", d?.disturbances?.toString() ?: "--", avg30(days) { it.disturbances?.toDouble() }?.let { "media ${it.roundToInt()}" }),
+        Triple("RESPIRACIÓN", d?.respRateBpm?.let { String.format(Locale.US, "%.1f rpm", it) } ?: "--", avg30(days) { it.respRateBpm }?.let { String.format(Locale.US, "media %.1f", it) }),
+    )
+    Column(Modifier.padding(start = 16.dp, end = 16.dp, top = 12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        tiles.chunked(2).forEach { row ->
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                row.forEach { (l, v, b) ->
+                    Column(Modifier.weight(1f).clip(androidx.compose.foundation.shape.RoundedCornerShape(PulseMetrics.cardRadius)).background(PulseColors.overlay).padding(16.dp)) {
+                        Text(l, style = PulseText.overline.copy(fontWeight = FontWeight.Bold), color = PulseColors.textSecondary)
+                        Text(v, style = PulseText.metric.copy(fontSize = 28.sp, lineHeight = 32.sp), color = PulseColors.text, modifier = Modifier.padding(top = 8.dp))
+                        b?.let { Text(it, style = PulseText.body, color = PulseColors.textSecondary) }
+                    }
+                }
+            }
+        }
+    }
 }

@@ -81,6 +81,7 @@ import kotlin.math.sqrt
 /** Large Home ring: thick arc, big number with a small "%" suffix. */
 @Composable
 fun HomeRing(fraction: Float?, color: Color, value: String, suffix: String?, label: String, size: Dp = 100.dp, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val anim by androidx.compose.animation.core.animateFloatAsState(fraction ?: 0f, androidx.compose.animation.core.tween(300, easing = androidx.compose.animation.core.FastOutSlowInEasing), label = "ring")
     Column(modifier.pulseClick(onClick), horizontalAlignment = Alignment.CenterHorizontally) {
         Box(Modifier.size(size), contentAlignment = Alignment.Center) {
             Canvas(Modifier.size(size)) {
@@ -88,7 +89,7 @@ fun HomeRing(fraction: Float?, color: Color, value: String, suffix: String?, lab
                 val inset = sw / 2
                 val arc = Size(this.size.width - sw, this.size.height - sw)
                 drawArc(PulseColors.track, 0f, 360f, false, Offset(inset, inset), arc, style = Stroke(sw))
-                if (fraction != null && fraction > 0f) drawArc(color, -90f, 360f * fraction.coerceIn(0f, 1f), false, Offset(inset, inset), arc, style = Stroke(sw, cap = StrokeCap.Round))
+                if (fraction != null && anim > 0f) drawArc(color, -90f, 360f * anim.coerceIn(0f, 1f), false, Offset(inset, inset), arc, style = Stroke(sw, cap = StrokeCap.Round))
             }
             Text(buildAnnotatedString {
                 append(value)

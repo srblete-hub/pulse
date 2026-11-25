@@ -134,7 +134,7 @@ fun EffortDiagCard(d: EffortDiag?, dayLabel: String, onToggleDay: () -> Unit) {
         Spacer(Modifier.height(8.dp))
         Text("MINUTOS POR ZONA", style = PulseText.overline, color = PulseColors.textSecondary)
         val labels = listOf("Por debajo de zona 1", "Zona 1", "Zona 2", "Zona 3", "Zona 4", "Zona 5")
-        val colors = listOf(PulseColors.textTertiary, PulseColors.textSecondary, PulseColors.stressLow, PulseColors.recoveryGreen, PulseColors.stressHigh, PulseColors.recoveryRed)
+        val colors = listOf(PulseColors.textTertiary) + PulseColors.zones
         d.zoneMin.forEachIndexed { i, m ->
             val from = if (i == 0) "< ${d.zoneStartBpm[0]} lpm" else "desde ${d.zoneStartBpm[i - 1]} lpm"
             Row(Modifier.fillMaxWidth().padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
