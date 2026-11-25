@@ -168,6 +168,11 @@ fun PulseApp(vm: AppViewModel) {
                         openSteps = go(PulseRoute.effort),
                         openCalories = go(PulseRoute.effort),
                         openReport = go(PulseRoute.report),
+                        openCoach = go(PulseRoute.coach),
+                        openMonitor = go(PulseRoute.monitor),
+                        openAddActivity = go(PulseRoute.workouts),
+                        openJournal = go(PulseRoute.journal),
+                        openAge = go(PulseRoute.age),
                     ),
                 )
             }

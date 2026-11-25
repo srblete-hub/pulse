@@ -1,6 +1,10 @@
 package com.noop.pulse
 
 import androidx.compose.foundation.Canvas
+import com.noop.data.DailyMetric
+import androidx.compose.ui.draw.shadow
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -81,6 +85,11 @@ class HomeActions(
     val openSteps: () -> Unit,
     val openCalories: () -> Unit,
     val openReport: () -> Unit = {},
+    val openCoach: () -> Unit = {},
+    val openMonitor: () -> Unit = {},
+    val openAddActivity: () -> Unit = {},
+    val openJournal: () -> Unit = {},
+    val openAge: () -> Unit = {},
 )
 
 @Composable
@@ -100,9 +109,39 @@ fun PulseHomeScreen(vm: AppViewModel, showLiveHr: Boolean = false, actions: Home
         stress = runCatching { StressWidgetProducer.todayCurve(vm.repo, vm.activeStrapId)?.points }.getOrNull().orEmpty()
     }
 
-    Column(
-        Modifier.fillMaxSize().background(PulseColors.screenBrush).verticalScroll(rememberScrollState()).statusBarsPadding(),
-    ) {
+    val ctx = androidx.compose.ui.platform.LocalContext.current
+    val scroll = rememberScrollState()
+    val density = androidx.compose.ui.platform.LocalDensity.current
+    val view = com.noop.pulse.engine.pulseDayView(vm, offset)
+    val sleep = view.sleep
+    val rec = view.recovery
+    val eff = view.effort21
+    val signals by vm.v5Signals.collectAsStateWithLifecycle()
+    val workoutsAll by vm.workouts.collectAsStateWithLifecycle()
+    LaunchedEffect(Unit) { runCatching { vm.loadWorkouts() } }
+    val dayKey = PulseData.dayKey(offset)
+
+    // Last night's main sleep, for the activities card.
+    var lastSleep by remember { mutableStateOf<SleepItem?>(null) }
+    LaunchedEffect(days.size, offset) {
+        val zone = ZoneId.systemDefault()
+        val d = java.time.LocalDate.now().plusDays(offset.toLong())
+        val from = d.minusDays(1).atTime(12, 0).atZone(zone).toEpochSecond(); val to = d.atTime(14, 0).atZone(zone).toEpochSecond()
+        lastSleep = runCatching { vm.repo.sleepSessionsUnion(vm.activeStrapId, from, to).filter { it.endTs - it.startTs >= 2 * 3600 }.maxByOrNull { it.endTs - it.startTs } }
+            .getOrNull()?.let { SleepItem(it.effectiveStartTs, it.endTs) }
+    }
+    // Weekly heart-rate zone minutes and VO2 max for the dashboard.
+    var zonesWeek by remember { mutableStateOf<Pair<Double, Double>?>(null) }
+    var vo2 by remember { mutableStateOf<Double?>(null) }
+    LaunchedEffect(days.size) {
+        zonesWeek = runCatching {
+            (0..6).map { k -> EffortDiagnostics.forDay(ctx, vm, java.time.LocalDate.now().minusDays(k.toLong())) }.let { l -> l.sumOf { it.zones13 } to l.sumOf { it.zones45 } }
+        }.getOrNull()
+        vo2 = runCatching { vm.repo.latestMetricComputedUnion(vm.activeStrapId, "vo2max_est")?.value }.getOrNull()
+    }
+
+    Box(Modifier.fillMaxSize().background(PulseColors.screenBrush)) {
+    Column(Modifier.fillMaxSize().verticalScroll(scroll).statusBarsPadding()) {
         HomeHeader(
             streak = streaks.current,
             dayLabel = PulseData.dayLabel(offset),
@@ -115,124 +154,138 @@ fun PulseHomeScreen(vm: AppViewModel, showLiveHr: Boolean = false, actions: Home
             onProfile = actions.openProfile,
             onBattery = actions.openStrap,
         )
-        Row(
-            Modifier.fillMaxWidth().padding(top = 24.dp),
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            PulseMark(size = 17.dp)
+        Row(Modifier.fillMaxWidth().padding(top = 24.dp), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
+            PulseMark(size = 18.dp)
             Spacer(Modifier.width(8.dp))
-            Text("PULSE", style = PulseText.wordmark, color = PulseColors.text)
+            Text("PULSE", style = PulseText.wordmark.copy(fontSize = 20.sp), color = PulseColors.text)
+        }
+        Row(Modifier.fillMaxWidth().padding(start = 12.dp, end = 12.dp, top = 24.dp), horizontalArrangement = Arrangement.SpaceEvenly) {
+            HomeRing(sleep?.let { (it / 100).toFloat() }, PulseColors.sleep, sleep?.roundToInt()?.toString() ?: "--", "%", "SUEÑO", onClick = actions.openSleep)
+            HomeRing(rec?.let { (it / 100).toFloat() }, PulseColors.recovery(rec), rec?.roundToInt()?.toString() ?: "--", "%", "RECUPERACIÓN", onClick = actions.openRecovery)
+            HomeRing(eff?.let { (it / 21).toFloat() }, PulseColors.strain, PulseData.oneDecimal(eff ?: 0.0), null, "ESFUERZO", onClick = actions.openEffort)
         }
 
-        // Rings: Sueño · Recuperación · Esfuerzo
-        val view = com.noop.pulse.engine.pulseDayView(vm, offset)
-        val sleep = view.sleep
-        val rec = view.recovery
-        val eff = view.effort21
-        Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 24.dp)) {
-            RingTile("SUEÑO", sleep?.let { (it / 100).toFloat() }, PulseColors.sleep, PulseData.pct(sleep), Modifier.weight(1f), actions.openSleep, confidence = view.sleepConfidence)
-            RingTile("RECUPERACIÓN", rec?.let { (it / 100).toFloat() }, PulseColors.recovery(rec), PulseData.pct(rec), Modifier.weight(1f), actions.openRecovery, confidence = view.recoveryConfidence)
-            RingTile("ESFUERZO", eff?.let { (it / 21).toFloat() }, PulseColors.strain, PulseData.oneDecimal(eff ?: 0.0), Modifier.weight(1f), actions.openEffort, large = true, confidence = view.effortConfidence)
-        }
-
-        val ctx = androidx.compose.ui.platform.LocalContext.current
-        // Re-read on every return to Home so a step opened elsewhere, or a schedule just saved, shows at once.
-        var stepsTick by remember { mutableStateOf(0) }
+        // Insights: beginner steps, calibration, the day's recovery read with today's Effort target, notable vitals.
         val hasSchedule = SleepSchedules.load(ctx).isNotEmpty()
-        // Tonight's need = personal base + debt repayment + extra for today's Effort (PulsePlanEngine).
-        val need = rememberTonightNeed(vm, days, if (offset == 0) view.effort21 else null)
-        val tonight = SleepSchedules.tonight(ctx, need?.totalMin)
-        if (offset == 0 && tonight != null) {
-            TonightCard(tonight, Modifier.padding(start = PulseMetrics.gutter, end = PulseMetrics.gutter, top = 24.dp), actions.openSleepSchedule)
-            need?.let { NeedBreakdown(it, Modifier.padding(start = PulseMetrics.gutter, end = PulseMetrics.gutter, top = 8.dp)) }
-        } else if (offset == 0 && need != null) {
-            SleepPlanCard(vm, need, Modifier.padding(start = PulseMetrics.gutter, end = PulseMetrics.gutter, top = 24.dp), actions.openSleepSchedule)
-        }
-        fun open(key: String, go: () -> Unit) = { PulseTips.markSeen(ctx, "step_$key"); stepsTick++; go() }
-        // Getting started is for brand-new users: it goes once the strap has sent ~2 h of data or after the first night.
         val firstSync = PulseProfile.firstSyncAt(ctx)
         LaunchedEffect(live.lastSyncAt) { if (live.lastSyncAt != null && firstSync == null) PulseProfile.markFirstSync(ctx) }
         val beginner = nights == 0 && (firstSync == null || System.currentTimeMillis() - firstSync < 2 * 3600_000L)
         val steps = if (!beginner) emptyList() else listOfNotNull(
-            Triple("goals", "Define tus objetivos", actions.openGoals).takeIf { !PulseTips.seen(ctx, "step_goals") },
-            Triple("charging", "Cómo cargar la pulsera", actions.openCharging).takeIf { !PulseTips.seen(ctx, "step_charging") },
-            Triple("schedule", "Configura tu horario de sueño", actions.openSleepSchedule).takeIf { !PulseTips.seen(ctx, "step_schedule") && !hasSchedule },
+            Insight("step_goals", "Define tus objetivos", "Responde unas preguntas y adaptamos los consejos diarios a lo que quieres mejorar.", actions.openGoals),
+            Insight("step_charging", "Cómo cargar la pulsera", "Llega con batería suficiente para registrar tu primer día y tu primera noche.", actions.openCharging),
+            Insight("step_schedule", "Configura tu horario de sueño", "Te avisamos para desconectar y la pulsera te despierta con vibración suave.", actions.openSleepSchedule).takeIf { !hasSchedule },
         )
-        @Suppress("UNUSED_EXPRESSION") stepsTick
-        if (steps.isNotEmpty()) {
-            SectionTitle("Primeros pasos", trailing = {
-                Box(
-                    Modifier.size(34.dp).clip(RoundedCornerShape(9.dp)).background(PulseColors.text).pulseClick(actions.openStartActivity),
-                    contentAlignment = Alignment.Center,
-                ) { Icon(Icons.Outlined.Add, "Iniciar actividad", tint = PulseColors.onAccent, modifier = Modifier.size(18.dp)) }
-            })
-            Column(Modifier.padding(horizontal = PulseMetrics.gutter), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                steps.forEachIndexed { idx, (key, _, go) ->
-                    when (key) {
-                        "goals" -> StepCard(
-                            "Define tus objetivos",
-                            "Responde unas preguntas y adaptamos los consejos diarios a lo que quieres mejorar.",
-                            "Empezar", Icons.Outlined.TrackChanges, highlighted = idx == 0, onClick = open(key, go),
-                        )
-                        "charging" -> StepCard(
-                            "Cómo cargar la pulsera",
-                            "Llega con batería suficiente para registrar tu primer día y tu primera noche.",
-                            "Ver consejos", Icons.Outlined.Battery5Bar, highlighted = idx == 0, onClick = open(key, go),
-                        )
-                        else -> StepCard(
-                            "Configura tu horario de sueño",
-                            "Te avisamos para desconectar y la pulsera te despierta con vibración suave.",
-                            "Crear horario", Icons.Outlined.Bedtime, highlighted = idx == 0, onClick = open(key, go),
-                        )
-                    }
-                }
+        val need = rememberTonightNeed(vm, days, if (offset == 0) view.effort21 else null)
+        val insights = buildInsights(days, metric, rec, nights, if (offset == 0) effortTargetFor(days, rec) else null, need?.debtMin?.times(3) ?: 0.0,
+            signals?.illness, steps)
+        InsightStack(insights, dayKey, Modifier.padding(start = PulseMetrics.gutter, end = PulseMetrics.gutter, top = 32.dp))
+
+        // Health + stress monitors.
+        val valid = stress.filter { it.level != null }
+        val lastStress = valid.lastOrNull()
+        Row(Modifier.fillMaxWidth().padding(start = PulseMetrics.gutter, end = PulseMetrics.gutter, top = 24.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            MonitorTile("MONITOR DE SALUD", Modifier.weight(1f), actions.openMonitor) { HealthMonitorBody(healthMonitorStatus(days, metric, nights)) }
+            MonitorTile("MONITOR DE ESTRÉS", Modifier.weight(1f), actions.openStress) {
+                StressMonitorBody(lastStress?.level, lastStress?.let { Instant.ofEpochSecond(it.ts).atZone(ZoneId.systemDefault()).toLocalTime().let { t -> "%d:%02d".format(t.hour, t.minute) } })
             }
         }
 
-        if (nights < PulseData.calibrationNights) {
-            SectionTitle("Lo que viene")
-            PulseCard(Modifier.padding(horizontal = PulseMetrics.gutter), onClick = actions.openCalibration) {
-                CardHeader("Calibración")
-                Row(Modifier.padding(top = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        "Duerme con la pulsera cada noche y vuelve aquí para ver tu línea base personal.",
-                        style = PulseText.body, color = PulseColors.textSecondary, modifier = Modifier.weight(1f),
-                    )
-                    Spacer(Modifier.width(16.dp))
-                    DashedProgressRing(nights.coerceAtMost(PulseData.calibrationNights), PulseData.calibrationNights)
-                }
-            }
-        }
-
-        SectionTitle("Mi panel")
+        // My day.
+        Text("Mi día", style = PulseText.headline, color = PulseColors.text, modifier = Modifier.padding(start = 20.dp, top = 32.dp, bottom = 12.dp))
         Column(Modifier.padding(horizontal = PulseMetrics.gutter), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            CoachOutlookRow(onCoach = actions.openCoach, onOutlook = {
+                CoachLaunch.offer("Tu resumen del día", "¿Cómo estoy hoy?"); actions.openCoach()
+            })
+            TodayActivitiesCard(
+                sleep = lastSleep,
+                workouts = workoutsAll.filter { PulseActivity.dayOf(it) == dayKey }.sortedBy { it.startTs },
+                onSleep = actions.openSleep, onWorkout = actions.openEffort,
+                onAdd = actions.openAddActivity, onStart = actions.openStartActivity, onExpand = actions.openEffort,
+            )
+            if (offset == 0 && need != null) {
+                val tonight = SleepSchedules.tonight(ctx, need.totalMin)
+                var habitualWake by remember { mutableStateOf<Int?>(null) }
+                LaunchedEffect(Unit) {
+                    val zone = ZoneId.systemDefault(); val now = System.currentTimeMillis() / 1000
+                    habitualWake = runCatching {
+                        com.noop.pulse.engine.PulsePlanEngine.habitualWake(vm.repo.sleepSessionsUnion(vm.activeStrapId, now - 14 * 86_400L, now)
+                            .filter { it.endTs - it.startTs >= 3 * 3600 }.map { Instant.ofEpochSecond(it.endTs).atZone(zone).let { t -> t.hour * 60 + t.minute } })
+                    }.getOrNull()
+                }
+                when {
+                    tonight != null -> TonightSleepCard(Math.floorMod(tonight.bedMin, 1440), tonight.wakeMin, tonight.on && tonight.mode != WakeMode.None, actions.openSleepSchedule)
+                    habitualWake != null -> TonightSleepCard(com.noop.pulse.engine.PulsePlanEngine.bedtime(habitualWake!!, need.totalMin), habitualWake!!, false, actions.openSleepSchedule)
+                }
+                NeedBreakdown(need, Modifier.padding(horizontal = 4.dp))
+            }
+        }
+
+        // My plan.
+        Text("Mi plan", style = PulseText.headline, color = PulseColors.text, modifier = Modifier.padding(start = 20.dp, top = 32.dp, bottom = 12.dp))
+        Column(Modifier.padding(horizontal = PulseMetrics.gutter), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            MyPlanCard(actions.openGoals)
             if (nights >= 3) PulseCard(onClick = actions.openReport) {
                 CardHeader("Tu semana")
                 Text(PulseReportData.headline(PulseReportData.build(days, 7)), style = PulseText.body, color = PulseColors.textSecondary, modifier = Modifier.padding(top = 8.dp))
             }
-            if (nights < 5) {
-                Row(
-                    Modifier.fillMaxWidth().clip(RoundedCornerShape(PulseMetrics.cardRadius))
-                        .border(1.dp, PulseColors.hairline, RoundedCornerShape(PulseMetrics.cardRadius)).padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Column(Modifier.weight(1f)) {
-                        Text("Aprendiendo de ti", style = PulseText.cardTitle, color = PulseColors.text)
-                        Spacer(Modifier.height(8.dp))
-                        Text("Con cada día de datos, aquí aparecerán tus tendencias.", style = PulseText.body, color = PulseColors.textSecondary)
-                    }
-                    MiniSparkline(listOf(10f, 18f, 14f, 26f, 22f, 34f), Modifier.size(80.dp, 48.dp))
-                }
-            }
-            NavRow("VFC", Icons.Outlined.MonitorHeart, value = metric?.avgHrv?.let { "${it.roundToInt()} ms" }, onClick = actions.openHrv)
-            NavRow("Rendimiento del sueño", Icons.Outlined.Bedtime, value = sleep?.let { PulseData.pct(it) }, onClick = actions.openSleep)
-            NavRow("Pasos", Icons.Outlined.DirectionsWalk, value = metric?.steps?.let { PulseData.int(it) }, onClick = actions.openSteps)
-            NavRow("Calorías", Icons.Outlined.LocalFireDepartment, value = metric?.activeKcalEst?.let { PulseData.int(it.roundToInt()) }, onClick = actions.openCalories)
+        }
+
+        // My dashboard: today's value with the 30-day average under it.
+        var customize by remember { mutableStateOf(false) }
+        var dashTick by remember { mutableStateOf(0) }
+        DashboardHeader { customize = true }
+        if (customize) CustomizeDashboardDialog { customize = false; dashTick++ }
+        @Suppress("UNUSED_EXPRESSION") dashTick
+        val shown = PulseDashboardPrefs.shown(ctx)
+        val last30 = days.filter { it.day != metric?.day }.takeLast(30)
+        fun avg(f: (DailyMetric) -> Double?) = last30.mapNotNull(f).takeIf { it.isNotEmpty() }?.average()
+        fun up(v: Double?, b: Double?) = if (v == null || b == null || v == b) null else v > b
+        val rows = listOfNotNull(
+            DashMetric("hrv", "Variabilidad (VFC)", DashIcons.hrv, metric?.avgHrv?.roundToInt()?.toString() ?: "--", avg { it.avgHrv }?.roundToInt()?.toString(), up(metric?.avgHrv, avg { it.avgHrv }), actions.openHrv),
+            DashMetric("rhr", "Pulso en reposo", DashIcons.rhr, metric?.restingHr?.toString() ?: "--", avg { it.restingHr?.toDouble() }?.roundToInt()?.toString(), up(metric?.restingHr?.toDouble(), avg { it.restingHr?.toDouble() }), actions.openRecovery),
+            DashMetric("steps", "Pasos", DashIcons.steps, metric?.steps?.let { PulseData.int(it) } ?: "--", avg { it.steps?.toDouble() }?.let { PulseData.int(it.roundToInt()) }, up(metric?.steps?.toDouble(), avg { it.steps?.toDouble() }), actions.openSteps),
+            DashMetric("z13", "Zonas 1–3 (semana)", DashIcons.zones, zonesWeek?.first?.let { PulseActivity.mmss(it) } ?: "--", null, null, actions.openEffort),
+            DashMetric("z45", "Zonas 4–5 (semana)", DashIcons.zones, zonesWeek?.second?.let { PulseActivity.mmss(it) } ?: "--", null, null, actions.openEffort),
+            DashMetric("vo2", "VO₂ máx.", DashIcons.vo2, vo2?.roundToInt()?.toString() ?: "--", null, null, actions.openAge),
+            DashMetric("kcal", "Calorías", DashIcons.kcal, metric?.activeKcalEst?.let { PulseData.int(it.roundToInt()) } ?: "--", avg { it.activeKcalEst }?.let { PulseData.int(it.roundToInt()) }, up(metric?.activeKcalEst, avg { it.activeKcalEst }), actions.openCalories),
+            DashMetric("resp", "Respiración", DashIcons.hrv, metric?.respRateBpm?.let { String.format(java.util.Locale.US, "%.1f", it) } ?: "--", avg { it.respRateBpm }?.let { String.format(java.util.Locale.US, "%.1f", it) }, up(metric?.respRateBpm, avg { it.respRateBpm }), actions.openRecovery),
+        ).filter { it.key in shown }
+        Column(Modifier.padding(horizontal = PulseMetrics.gutter), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            rows.forEach { DashRow(it) }
             StressCard(stress, nights, actions.openStress)
         }
-        EffortRecoveryChart(days, Modifier.padding(start = PulseMetrics.gutter, end = PulseMetrics.gutter, top = 12.dp))
-        Spacer(Modifier.height(PulseMetrics.barClearance))
+        Spacer(Modifier.height(PulseMetrics.barClearance + 40.dp))
+    }
+
+    // Sticky compact rings once the big ones have scrolled away.
+    val threshold = with(density) { 330.dp.toPx() }
+    if (scroll.value > threshold) {
+        Column(Modifier.fillMaxWidth().background(PulseColors.base).statusBarsPadding()) {
+            HomeHeader(
+                streak = streaks.current, dayLabel = PulseData.dayLabel(offset), canGoForward = offset < 0,
+                battery = live.batteryPct, connected = live.connected, heartRate = if (showLiveHr) live.heartRate else null,
+                onPrev = { offset -= 1 }, onNext = { if (offset < 0) offset += 1 }, onProfile = actions.openProfile, onBattery = actions.openStrap,
+            )
+            Row(Modifier.fillMaxWidth().padding(top = 16.dp, bottom = 12.dp), horizontalArrangement = Arrangement.SpaceEvenly) {
+                MiniRing(sleep?.let { (it / 100).toFloat() }, PulseColors.sleep, "SUEÑO", actions.openSleep)
+                MiniRing(rec?.let { (it / 100).toFloat() }, PulseColors.recovery(rec), "RECUPERACIÓN", actions.openRecovery)
+                MiniRing(eff?.let { (it / 21).toFloat() }, PulseColors.strain, "ESFUERZO", actions.openEffort)
+            }
+        }
+    }
+
+    // Floating "+" (start / add an activity, open the journal).
+    var plusMenu by remember { mutableStateOf(false) }
+    Box(Modifier.align(Alignment.BottomEnd).navigationBarsPadding().padding(end = 16.dp, bottom = 104.dp)) {
+        Box(Modifier.size(56.dp).shadow(8.dp, CircleShape).clip(CircleShape).background(PulseColors.text).pulseClick { plusMenu = true }, contentAlignment = Alignment.Center) {
+            Icon(Icons.Outlined.Add, "Añadir", tint = PulseColors.base, modifier = Modifier.size(28.dp))
+        }
+        androidx.compose.material3.DropdownMenu(plusMenu, { plusMenu = false }, Modifier.background(PulseColors.overlay)) {
+            listOf("Iniciar actividad" to actions.openStartActivity, "Añadir actividad" to actions.openAddActivity, "Escribir en el diario" to actions.openJournal).forEach { (l, go) ->
+                androidx.compose.material3.DropdownMenuItem(text = { Text(l, style = PulseText.bodyLg, color = PulseColors.text) }, onClick = { plusMenu = false; go() })
+            }
+        }
+    }
     }
 }
 
