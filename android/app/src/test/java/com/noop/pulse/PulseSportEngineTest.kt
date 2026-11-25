@@ -27,7 +27,7 @@ class PulseSportEngineTest {
         return PulseSportEngine.features(hr, rest, max, steps, 1.0, grav, weekday, hour)!!
     }
 
-    private fun run(seed: Int = 1) = session(40, 160.0, 2.0, 600.0, 170.0, 2, 0.5, seed)
+    private fun run(seed: Int = 1) = session(40, 160.0, 2.0, 600.0, 170.0, 2, 3.5, seed)
     private fun walk(seed: Int = 1) = session(45, 100.0, 2.0, 600.0, 110.0, 1, 0.5, seed)
     private fun bike(seed: Int = 1) = session(60, 145.0, 2.0, 900.0, null, 0, 0.5, seed)
     private fun gym(seed: Int = 1) = session(50, 115.0, 15.0, 150.0, 5.0, 0, 12.0, seed)
@@ -56,5 +56,32 @@ class PulseSportEngineTest {
             (1..4).map { Confirmed("Pádel", football(seed = 10 + it, weekday = 6, hour = 10)) }
         assertEquals("Fútbol", PulseSportEngine.guess(football(seed = 30, weekday = 2, hour = 20), history).label)
         assertEquals("Pádel", PulseSportEngine.guess(football(seed = 31, weekday = 6, hour = 11), history).label)
+    }
+
+    @Test fun aRaisedHeartRateWhileSittingIsNotExercise() {
+        // Hot room / stress: heart rate 95 (≈ 30 % HRR), no steps, wrist still, no surges.
+        val sitting = session(40, 95.0, 2.0, 600.0, 2.0, 0, 0.3)
+        assertTrue(!PulseSportEngine.isExercise(sitting))
+        // A short spike of 8 minutes never counts, however hard.
+        assertTrue(!PulseSportEngine.isExercise(session(8, 160.0, 2.0, 600.0, 170.0, 2, 0.5)))
+        // Real sessions still pass.
+        listOf(run(), walk(seed = 2).copy(hrr = 0.35), bike(), gym(), football()).forEach { assertTrue("$it", PulseSportEngine.isExercise(it)) }
+    }
+
+    @Test fun whenNothingFitsItStaysUnnamed() {
+        // Moderate HR, a few steps, little wrist movement: not clearly any sport.
+        val vague = session(30, 125.0, 6.0, 300.0, 60.0, 1, 2.0)
+        assertEquals(PulseSportEngine.NONE_LABEL, PulseSportEngine.guess(vague, emptyList()).label)
+    }
+
+    @Test fun aLabelNeedsTheSlicesToBackItUp() {
+        val g = PulseSportEngine.guess(run(), emptyList())
+        assertEquals("Correr", g.label)
+        val runSlice = { k: Int -> session(6, 160.0, 2.0, 600.0, 170.0, 2, 3.5, seed = k) }
+        val walkSlice = { k: Int -> session(6, 100.0, 2.0, 600.0, 110.0, 1, 0.5, seed = k) }
+        // Mostly running slices: the label stands.
+        assertEquals("Correr", PulseSportEngine.sustain(g, run(), listOf(runSlice(1), runSlice(2), runSlice(3), walkSlice(4)), emptyList()).label)
+        // Mostly walking slices: not enough evidence for "Correr" → unnamed.
+        assertEquals(PulseSportEngine.NONE_LABEL, PulseSportEngine.sustain(g, run(), listOf(walkSlice(1), walkSlice(2), walkSlice(3), runSlice(4)), emptyList()).label)
     }
 }

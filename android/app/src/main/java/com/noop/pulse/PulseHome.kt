@@ -98,6 +98,10 @@ fun PulseHomeScreen(vm: AppViewModel, showLiveHr: Boolean = false, actions: Home
     val days by com.noop.pulse.engine.pulseDays(vm)
     val live by vm.live.collectAsStateWithLifecycle()
     val streaks by vm.streaks.collectAsStateWithLifecycle()
+    // Days in a row the app was opened; re-checked whenever Home comes back (the date may have changed).
+    val streakCtx = androidx.compose.ui.platform.LocalContext.current
+    var appStreak by remember { mutableStateOf(PulseStreak.visit(streakCtx)) }
+    androidx.lifecycle.compose.LifecycleResumeEffect(Unit) { appStreak = PulseStreak.visit(streakCtx); onPauseOrDispose { } }
     var offset by rememberSaveable { mutableStateOf(0) }
     val metric = PulseData.metricFor(days, today, offset)
     val nights = PulseData.nightsWithSleep(days)
@@ -143,7 +147,7 @@ fun PulseHomeScreen(vm: AppViewModel, showLiveHr: Boolean = false, actions: Home
     Box(Modifier.fillMaxSize().background(PulseColors.screenBrush)) {
     Column(Modifier.fillMaxSize().verticalScroll(scroll).statusBarsPadding()) {
         HomeHeader(
-            streak = streaks.current,
+            streak = appStreak,
             dayLabel = PulseData.dayLabel(offset),
             canGoForward = offset < 0,
             battery = live.batteryPct,
@@ -268,7 +272,7 @@ fun PulseHomeScreen(vm: AppViewModel, showLiveHr: Boolean = false, actions: Home
     if (scroll.value > threshold) {
         Column(Modifier.fillMaxWidth().background(PulseColors.base).statusBarsPadding()) {
             HomeHeader(
-                streak = streaks.current, dayLabel = PulseData.dayLabel(offset), canGoForward = offset < 0,
+                streak = appStreak, dayLabel = PulseData.dayLabel(offset), canGoForward = offset < 0,
                 battery = live.batteryPct, connected = live.connected, heartRate = if (showLiveHr) live.heartRate else null,
                 onPrev = { offset -= 1 }, onNext = { if (offset < 0) offset += 1 }, onProfile = actions.openProfile, onBattery = actions.openStrap,
             )

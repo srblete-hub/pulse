@@ -62,18 +62,37 @@ object PulseAutoActivity {
                 // Already logged by Pulse (the save may still be in flight from a previous run).
                 .filterNot { "${it.startSec}:${it.endSec}" in autoTokens(context) }
                 .mapNotNull { w ->
-                    // Name the sport (Pulse's own recogniser); stays "Actividad" when unsure.
-                    val sport = runCatching { PulseSports.guess(context, vm, w.startSec, w.endSec)?.label }.getOrNull() ?: SPORT
+                    // Only real exercise is logged: a raised heart rate while sitting (heat, stress, coffee) is not.
+                    val fw = runCatching { PulseSports.featuresWithWindows(context, vm, w.startSec, w.endSec) }.getOrNull()
+                    val f = fw?.first
+                    if (f != null && !com.noop.pulse.engine.PulseSportEngine.isExercise(f)) return@mapNotNull null
+                    // Name the sport (Pulse's own recogniser); stays "Actividad" when nothing fits well enough
+                    // or when the 6-minute slices don't agree on it.
+                    val sport = fw?.let { runCatching { PulseSports.guessFrom(context, it.first, w.startSec, w.endSec, it.second).label }.getOrNull() } ?: SPORT
                     WorkoutEditing.buildManualRowFromSpan(
                         deviceId = vm.deviceId, startSeconds = w.startSec, endSeconds = w.endSec,
                         sport = sport, avgHr = w.avgBpm, energyKcal = null,
                     )?.copy(notes = NOTE)
                 }
         }
+        cleanUp(context, vm)
         if (toSave.isEmpty()) return@withLock
         val tokens = autoTokens(context) + toSave.map { "${it.startTs}:${it.endTs}" }
         prefs(context).edit().putStringSet("logged", tokens).apply()
         toSave.forEach { vm.saveManualWorkout(it) }
+    }
+
+    /**
+     * Activities Pulse logged by itself in the last week that the user never confirmed, and that fail the
+     * exercise check, are removed (and never re-added). Confirmed or hand-labelled ones are left alone.
+     */
+    private suspend fun cleanUp(context: Context, vm: AppViewModel) {
+        val since = System.currentTimeMillis() / 1000 - 7 * 86_400L
+        val suspects = vm.workouts.value.filter { it.startTs >= since && isAuto(context, it) && !PulseSports.isConfirmed(context, it) }
+        for (w in suspects) {
+            val f = withContext(Dispatchers.Default) { runCatching { PulseSports.features(context, vm, w.startTs, w.endTs) }.getOrNull() } ?: continue
+            if (!com.noop.pulse.engine.PulseSportEngine.isExercise(f)) delete(context, vm, w)
+        }
     }
 
     /** Delete an activity and make sure the detector never logs that span again. */

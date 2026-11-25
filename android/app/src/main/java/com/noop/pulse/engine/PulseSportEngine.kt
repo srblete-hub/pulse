@@ -26,7 +26,29 @@ import kotlin.math.sqrt
  */
 object PulseSportEngine {
     const val SURGE_BPM = 6.0
-    const val MIN_CONFIDENCE = 0.45
+    const val MIN_CONFIDENCE = 0.55
+    /** The winner must beat the runner-up by this much, or the activity stays unnamed. */
+    const val MIN_MARGIN = 0.15
+    /** Raw signal score of the "nothing fits" class: a sport must match better than this to be named. */
+    const val NONE_RAW = 0.15
+    const val NONE_LABEL = "Actividad"
+
+    /**
+     * Is this really exercise, or just a raised heart rate (heat, stress, coffee, sitting)? It needs real
+     * intensity (≥ 30 % of heart-rate reserve) AND movement that fits it: steps, a turning wrist, the
+     * surge pattern of a gym session, or — with no steps and a still wrist — the high, steady load of
+     * cycling. With no motion data at all, only a clearly high intensity counts.
+     */
+    fun isExercise(f: Features): Boolean {
+        if (f.durationMin < 12 || f.hrr < 0.30) return false
+        val noMotion = f.cadence == null && f.wristTurn == null && f.runShare == null
+        if (noMotion) return f.hrr >= 0.40
+        val stepping = (f.cadence ?: 0.0) >= 40 || (f.runShare ?: 0.0) >= 0.3
+        val arms = (f.wristTurn ?: 0.0) >= 4.0
+        val gym = f.surges >= 2.0 && (f.wristTurn ?: 0.0) >= 2.0
+        val cycling = (f.cadence ?: 0.0) < 20 && f.hrr >= 0.45 && f.surges < 1.5
+        return stepping || arms || gym || cycling
+    }
 
     enum class Kind(val label: String) {
         WALK("Caminar"), RUN("Correr"), CYCLE("Ciclismo"), STRENGTH("Fuerza"), INTERMITTENT("Deporte intermitente")
@@ -110,7 +132,7 @@ object PulseSportEngine {
         val surgy = band(f.surges, 2.0, 20.0, 0.8)
         val raw = mapOf(
             Kind.WALK to band(c, 85.0, 135.0, 15.0) * band(f.hrr, 0.1, 0.5, 0.1) * steady * band(run, 0.0, 0.3, 0.2),
-            Kind.RUN to band(c, 140.0, 200.0, 15.0) * band(f.hrr, 0.45, 1.0, 0.1) * band(f.surges, 0.0, 2.0, 1.0) * band(run, 0.5, 1.0, 0.2),
+            Kind.RUN to band(c, 140.0, 200.0, 15.0) * band(f.hrr, 0.45, 1.0, 0.1) * band(f.surges, 0.0, 2.0, 1.0) * band(run, 0.5, 1.0, 0.2) * band(w, 2.5, 60.0, 2.0),
             Kind.CYCLE to band(c, 0.0, 20.0, 15.0) * band(f.hrr, 0.3, 1.0, 0.1) * steady * band(w, 0.0, 4.0, 3.0),
             Kind.STRENGTH to band(c, 0.0, 35.0, 15.0) * band(f.hrr, 0.15, 0.6, 0.1) * surgy * band(w, 5.0, 60.0, 3.0),
             Kind.INTERMITTENT to band(c, 40.0, 140.0, 20.0) * band(f.hrr, 0.4, 1.0, 0.1) * surgy * band(run, 0.1, 0.9, 0.2),
@@ -127,6 +149,8 @@ object PulseSportEngine {
         val labels = history.groupBy { it.label }
         val k = Kind.values().size + labels.size
         gen.forEach { (kind, s) -> scores[kind.label] = s * (1.0 / (total + k)) }
+        // "Nothing fits": competes like any class, so a weak match loses instead of being forced into a sport.
+        scores[NONE_LABEL] = NONE_RAW * (1.0 / (total + k))
         labels.forEach { (label, rows) ->
             val sims = rows.map { similarity(f, it.f) }.sortedDescending().take(3)
             val sim = sims.average()
@@ -141,10 +165,12 @@ object PulseSportEngine {
             if (cat.label != label) scores.remove(cat.label)
         }
         val sum = scores.values.sum()
-        if (sum <= 0) return Guess("Actividad", 0.0, emptyMap())
+        if (sum <= 0) return Guess(NONE_LABEL, 0.0, emptyMap())
         val norm = scores.mapValues { it.value / sum }
-        val best = norm.maxByOrNull { it.value }!!
-        return if (best.value >= MIN_CONFIDENCE) Guess(best.key, best.value, norm) else Guess("Actividad", best.value, norm)
+        val ranked = norm.entries.sortedByDescending { it.value }
+        val best = ranked.first(); val second = ranked.getOrNull(1)?.value ?: 0.0
+        return if (best.key != NONE_LABEL && best.value >= MIN_CONFIDENCE && best.value - second >= MIN_MARGIN) Guess(best.key, best.value, norm)
+        else Guess(NONE_LABEL, best.value, norm)
     }
 
     internal fun similarity(a: Features, b: Features): Double {
@@ -170,5 +196,39 @@ object PulseSportEngine {
         if (na < 1e-6 || nb < 1e-6) return 0.0
         val c = ((a.first * b.first + a.second * b.second + a.third * b.third) / (na * nb)).coerceIn(-1.0, 1.0)
         return Math.toDegrees(acos(c))
+    }
+
+    // ---- sustained evidence ----
+
+    /** Smoothing of the per-slice scores (exponential moving average). */
+    const val EMA_ALPHA = 0.4
+    /** Share of slices whose smoothed vote must agree with the session's label. */
+    const val MIN_AGREEMENT = 0.6
+    const val MIN_WINDOWS = 2
+
+    /** Which generic category a label stands for (itself, or the category its confirmed sessions are made of). */
+    fun categoryOf(label: String, history: List<Confirmed>): Kind? =
+        Kind.values().firstOrNull { it.label == label }
+            ?: history.filter { it.label == label }.map { generic(it.f).maxByOrNull { e -> e.value }!!.key }
+                .groupingBy { it }.eachCount().maxByOrNull { it.value }?.key
+
+    /**
+     * Keep [g] only if the activity's slices back it up: each slice is scored (generic categories + the
+     * "nothing" class), the scores are smoothed across slices, and the smoothed winner must match the label's
+     * category in at least [MIN_AGREEMENT] of the slices (and in at least [MIN_WINDOWS] of them).
+     */
+    fun sustain(g: Guess, whole: Features, windows: List<Features>, history: List<Confirmed>): Guess {
+        if (g.label == NONE_LABEL || windows.size < MIN_WINDOWS) return g
+        val kind = categoryOf(g.label, history) ?: return g
+        var ema: Map<String, Double>? = null
+        var agree = 0
+        for (w in windows) {
+            val raw = generic(w).mapKeys { it.key.label } + (NONE_LABEL to NONE_RAW)
+            val sum = raw.values.sum().takeIf { it > 0 } ?: continue
+            val p = raw.mapValues { it.value / sum }
+            ema = ema?.let { prev -> p.mapValues { (k, v) -> EMA_ALPHA * v + (1 - EMA_ALPHA) * (prev[k] ?: 0.0) } } ?: p
+            if (ema.maxByOrNull { it.value }?.key == kind.label) agree++
+        }
+        return if (agree >= MIN_WINDOWS && agree.toDouble() / windows.size >= MIN_AGREEMENT) g else Guess(NONE_LABEL, g.confidence, g.scores)
     }
 }

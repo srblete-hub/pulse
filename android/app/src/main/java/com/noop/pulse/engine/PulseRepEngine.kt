@@ -36,8 +36,8 @@ object PulseRepEngine {
     const val MIN_SET_S = 6
     const val MIN_PERIOD_S = 0.7
     const val MAX_PERIOD_S = 7.0
-    const val MIN_REPS = 2
-    const val MIN_RHYTHM = 0.30
+    const val MIN_REPS = 3
+    const val MIN_RHYTHM = 0.40
 
     /** One second of samples: six planar columns of [HZ] values each (ax, ay, az, gx, gy, gz). */
     class Second(val ts: Long, val ax: DoubleArray, val ay: DoubleArray, val az: DoubleArray,

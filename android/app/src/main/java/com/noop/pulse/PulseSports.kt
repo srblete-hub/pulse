@@ -27,25 +27,38 @@ object PulseSports {
         return (own + base).distinct()
     }
 
-    suspend fun features(c: Context, vm: AppViewModel, startTs: Long, endTs: Long): PulseSportEngine.Features? = withContext(Dispatchers.Default) {
-        runCatching {
-            val repo = vm.repo; val strap = vm.activeStrapId
-            val hr = repo.hrSamplesUnion(strap, startTs, endTs, limit = 100_000).map { it.ts to it.bpm }
-            val steps = runCatching { repo.stepSamples(strap, startTs, endTs) }.getOrDefault(emptyList())
-                .map { Triple(it.ts, it.counter, it.activityClass) }
-            val grav = runCatching { repo.gravitySamplesUnion(strap, startTs, endTs, limit = 100_000) }.getOrDefault(emptyList())
-                .sortedBy { it.ts }.map { Triple(it.x, it.y, it.z) }
-            val profile = ProfileStore.from(c)
-            val rest = vm.recentDays.value.lastOrNull { it.restingHr != null }?.restingHr?.toDouble() ?: 60.0
-            val at = Instant.ofEpochSecond(startTs).atZone(ZoneId.systemDefault())
-            PulseSportEngine.features(hr, rest, profile.hrMax.toDouble(), steps, profile.stepTicksPerStep, grav,
-                at.dayOfWeek.value, at.hour)
-        }.getOrNull()
-    }
+    suspend fun features(c: Context, vm: AppViewModel, startTs: Long, endTs: Long): PulseSportEngine.Features? =
+        featuresWithWindows(c, vm, startTs, endTs)?.first
 
-    suspend fun guess(c: Context, vm: AppViewModel, startTs: Long, endTs: Long): PulseSportEngine.Guess? {
-        val f = features(c, vm, startTs, endTs) ?: return null
-        val g = PulseSportEngine.guess(f, history(c))
+    /** Whole-session features plus the same features for each [WINDOW_S]-second slice (for sustained evidence). */
+    suspend fun featuresWithWindows(c: Context, vm: AppViewModel, startTs: Long, endTs: Long): Pair<PulseSportEngine.Features, List<PulseSportEngine.Features>>? =
+        withContext(Dispatchers.Default) {
+            runCatching {
+                val repo = vm.repo; val strap = vm.activeStrapId
+                val hr = repo.hrSamplesUnion(strap, startTs, endTs, limit = 100_000).map { it.ts to it.bpm }
+                val steps = runCatching { repo.stepSamples(strap, startTs, endTs) }.getOrDefault(emptyList())
+                    .map { Triple(it.ts, it.counter, it.activityClass) }
+                val grav = runCatching { repo.gravitySamplesUnion(strap, startTs, endTs, limit = 100_000) }.getOrDefault(emptyList()).sortedBy { it.ts }
+                val profile = ProfileStore.from(c)
+                val rest = vm.recentDays.value.lastOrNull { it.restingHr != null }?.restingHr?.toDouble() ?: 60.0
+                val at = Instant.ofEpochSecond(startTs).atZone(ZoneId.systemDefault())
+                fun f(a: Long, b: Long) = PulseSportEngine.features(
+                    hr.filter { it.first in a..b }, rest, profile.hrMax.toDouble(), steps.filter { it.first in a..b }, profile.stepTicksPerStep,
+                    grav.filter { it.ts in a..b }.map { Triple(it.x, it.y, it.z) }, at.dayOfWeek.value, at.hour)
+                val whole = f(startTs, endTs) ?: return@runCatching null
+                val windows = generateSequence(startTs) { it + WINDOW_S }.takeWhile { it + WINDOW_S <= endTs + 60 }
+                    .mapNotNull { f(it, it + WINDOW_S) }.toList()
+                whole to windows
+            }.getOrNull()
+        }
+
+    const val WINDOW_S = 360L
+
+    suspend fun guess(c: Context, vm: AppViewModel, startTs: Long, endTs: Long): PulseSportEngine.Guess? =
+        features(c, vm, startTs, endTs)?.let { guessFrom(c, it, startTs, endTs) }
+
+    fun guessFrom(c: Context, f: PulseSportEngine.Features, startTs: Long, endTs: Long, windows: List<PulseSportEngine.Features> = emptyList()): PulseSportEngine.Guess {
+        val g = PulseSportEngine.sustain(PulseSportEngine.guess(f, history(c)), f, windows, history(c))
         prefs(c).edit().putString("g.$startTs.$endTs", JSONObject().put("l", g.label).put("c", g.confidence).toString()).apply()
         return g
     }
