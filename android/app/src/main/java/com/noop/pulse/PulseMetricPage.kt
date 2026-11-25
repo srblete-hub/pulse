@@ -53,6 +53,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.text.withStyle
 import androidx.compose.material.icons.outlined.IosShare
 import com.noop.ui.CoachOrb
@@ -142,19 +143,25 @@ fun MetricPage(
                 if (sleepHero == null) {
                     val animFrac by androidx.compose.animation.core.animateFloatAsState(heroFraction ?: 0f,
                         androidx.compose.animation.core.tween(300, easing = androidx.compose.animation.core.FastOutSlowInEasing), label = "ring")
-                    Box(Modifier.align(Alignment.Center).padding(top = 24.dp).size(230.dp), contentAlignment = Alignment.Center) {
+                    Box(Modifier.align(Alignment.Center).padding(top = 24.dp).size(290.dp), contentAlignment = Alignment.Center) {
                         Canvas(Modifier.fillMaxSize()) {
-                            val sw = 16.dp.toPx()
+                            val sw = 18.dp.toPx()
                             val r = size.minDimension / 2 - sw
                             val tl = Offset(center.x - r, center.y - r)
                             drawArc(PulseColors.track, 0f, 360f, false, tl, Size(r * 2, r * 2), style = Stroke(sw))
                             if (heroFraction != null && animFrac > 0f) {
-                                drawArc(heroColor, -90f, (360f * animFrac.coerceIn(0f, 1f)).coerceAtLeast(1f), false, tl, Size(r * 2, r * 2), style = Stroke(sw, cap = StrokeCap.Round))
+                                // Effort's arc runs from deep blue at the top to bright cyan, as in the reference screens.
+                                val brush = if (heroColor == PulseColors.strain)
+                                    Brush.sweepGradient(0f to Color(0xFF0D3B78), 0.5f to PulseColors.strain, 1f to Color(0xFF00D8FF), center = center)
+                                else androidx.compose.ui.graphics.SolidColor(heroColor)
+                                rotate(-90f) {
+                                    drawArc(brush, 0f, (360f * animFrac.coerceIn(0f, 1f)).coerceAtLeast(1f), false, tl, Size(r * 2, r * 2), style = Stroke(sw, cap = StrokeCap.Round))
+                                }
                             }
                         }
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(heroLabel, style = PulseText.overlineLg, color = if (heroFraction != null) heroColor else PulseColors.text, textAlign = TextAlign.Center)
-                            HeroNumber(heroValue, heroSuffix, if (heroFraction != null) heroColor else PulseColors.text)
+                            Text(heroLabel, style = PulseText.overlineLg.copy(fontSize = 15.sp, fontWeight = FontWeight.Bold), color = PulseColors.text, textAlign = TextAlign.Center)
+                            HeroNumber(heroValue, heroSuffix)
                             ShareLink(shareText)
                         }
                     }
@@ -484,8 +491,8 @@ fun HabitsCard(icon: ImageVector, onClick: () -> Unit) {
 private fun HeroNumber(value: String, suffix: String?, color: Color = PulseColors.text) {
     Text(androidx.compose.ui.text.buildAnnotatedString {
         append(value)
-        if (suffix != null && value != "--" && !value.endsWith(suffix)) withStyle(androidx.compose.ui.text.SpanStyle(fontSize = 25.sp, baselineShift = androidx.compose.ui.text.style.BaselineShift(0.9f))) { append(suffix) }
-    }, style = PulseText.metric, color = color)
+        if (suffix != null && value != "--" && !value.endsWith(suffix)) withStyle(androidx.compose.ui.text.SpanStyle(fontSize = 34.sp)) { append(suffix) }
+    }, style = PulseText.metric.copy(fontSize = 84.sp, lineHeight = 90.sp), color = color)
 }
 
 /** "COMPARTIR": shares the number as plain text through Android's share sheet. */

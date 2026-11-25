@@ -1,0 +1,58 @@
+:root{
+  /* Surfaces (dark) */
+  --color-surface-base:#0A0A0C;
+  --color-surface-raised:#15151A;
+  --color-surface-overlay:#1F1F24;
+  --color-surface-sunken:#070709;
+  --color-divider:#26262C;
+  --color-border:#20202A;
+
+  /* Text */
+  --color-text-1:#FFFFFF;
+  --color-text-2:#9A9AA2;
+  --color-text-3:#5E5E66;
+
+  /* Semantic metric colors — NO decorativos */
+  --color-status-high:#16EC06;
+  --color-status-mid:#FFDE00;
+  --color-status-low:#FF2D55;
+  --color-load:#0093E7;
+  --color-sleep:#7B9CFF;
+  --color-accent:#00E0C6;
+
+  /* HR zones */
+  --zone-1:#2F80ED; --zone-2:#17A2B8; --zone-3:#16EC06; --zone-4:#FFDE00; --zone-5:#FF2D55;
+
+  /* Typography */
+  --font-display:'Inter',-apple-system,'Segoe UI',Roboto,sans-serif;
+  --text-metric:62px; --text-metric-sm:30px; --text-title:22px;
+  --text-tile-title:18px; --text-body:15px; --text-label:12px; --text-caption:10px;
+  --fw-regular:400; --fw-medium:500; --fw-semibold:600; --fw-bold:700;
+
+  /* Spacing (4px base) */
+  --space-4:4px; --space-8:8px; --space-12:12px; --space-16:16px;
+  --space-20:20px; --space-24:24px; --space-32:32px; --space-40:40px; --space-48:48px;
+
+  /* Radius */
+  --radius-card:16px; --radius-sheet:20px; --radius-button:8px;
+  --radius-input:12px; --radius-pill:999px; --radius-phone:40px;
+
+  /* Layout */
+  --screen-pad-x:20px; --section-pad-x:24px; --tile-gap:12px; --max-width-web:420px;
+
+  /* Motion */
+  --motion-fast:150ms; --motion-base:300ms; --motion-slow:500ms;
+  --easing-standard:cubic-bezier(0.4,0,0.2,1);
+  --easing-decelerate:cubic-bezier(0,0,0.2,1);
+
+  /* Elevation */
+  --shadow-overlay:0 8px 24px rgba(0,0,0,.5);
+
+  /* Ring */
+  --ring-stroke:16px; --ring-track:#1e1e24;
+}
+
+/* helpers de estado */
+.status-high{color:var(--color-status-high);}
+.status-mid{color:var(--color-status-mid);}
+.status-low{color:var(--color-status-low);}

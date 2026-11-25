@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PULSE — mockups de pantallas</title>
+<style>
+  :root{
+    --surface-base:#0A0A0C; --surface-raised:#15151A; --surface-overlay:#1F1F24; --divider:#26262C;
+    --status-high:#16EC06; --status-mid:#FFDE00; --status-low:#FF2D55;
+    --load:#0093E7; --sleep:#7B9CFF; --accent:#00E0C6;
+    --text-1:#FFFFFF; --text-2:#9A9AA2; --text-3:#5E5E66;
+    --r-card:16px; --font:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;font-family:var(--font);}
+  body{background:#060608;color:var(--text-1);padding:28px;}
+  .headline{max-width:1200px;margin:0 auto 20px;}
+  .headline h1{font-size:22px;font-weight:700;display:flex;align-items:center;gap:10px;}
+  .headline p{color:var(--text-2);font-size:13px;margin-top:6px;}
+  .gallery{display:flex;gap:28px;flex-wrap:wrap;justify-content:center;max-width:1400px;margin:0 auto;}
+  .frame{display:flex;flex-direction:column;align-items:center;gap:10px;}
+  .frame .cap{font-size:12px;font-weight:600;letter-spacing:.08em;color:var(--text-2);text-transform:uppercase;}
+  .phone{width:340px;background:var(--surface-base);border-radius:36px;overflow:hidden;
+    box-shadow:0 24px 60px rgba(0,0,0,.6);border:1px solid #1a1a20;}
+  .screen{height:720px;overflow:hidden;padding-bottom:16px;position:relative;}
+  /* brand header */
+  .brand{display:flex;align-items:center;justify-content:space-between;padding:18px 20px 8px;}
+  .logo{display:flex;align-items:center;gap:9px;}
+  .logo .mark{width:30px;height:30px;position:relative;}
+  .logo .wm{font-size:17px;font-weight:800;letter-spacing:.14em;}
+  .logo .wm span{color:var(--accent);}
+  .avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#2a2a33,#15151a);
+    border:1px solid #33333c;display:flex;align-items:center;justify-content:center;color:var(--text-2);font-weight:700;font-size:13px;}
+  .date{font-size:11px;font-weight:600;letter-spacing:.1em;color:var(--text-2);text-transform:uppercase;padding:0 20px 2px;}
+  h2.title{font-size:20px;font-weight:700;padding:0 20px 2px;}
+  /* ring */
+  .ring-wrap{display:flex;flex-direction:column;align-items:center;padding:12px 0 2px;}
+  .ring{position:relative;}
+  .ring svg{transform:rotate(-90deg);}
+  .ring .center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+  .ring .val{font-weight:700;line-height:1;letter-spacing:-.02em;}
+  .ring .val span{font-size:22px;vertical-align:top;}
+  .ring .lab{font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;margin-top:5px;}
+  .ring .sub{font-size:11px;color:var(--text-2);margin-top:2px;}
+  /* pillars/tiles */
+  .pillars{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:12px 16px 2px;}
+  .pillar{background:var(--surface-raised);border-radius:var(--r-card);padding:14px;}
+  .pillar .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+  .pname{font-size:10px;font-weight:600;letter-spacing:.12em;color:var(--text-2);text-transform:uppercase;}
+  .pval{font-size:28px;font-weight:700;letter-spacing:-.02em;}
+  .pval small{font-size:13px;color:var(--text-2);font-weight:500;}
+  .bar{height:6px;border-radius:999px;background:#26262c;overflow:hidden;margin-top:8px;}
+  .bar i{display:block;height:100%;border-radius:999px;}
+  .dot{width:8px;height:8px;border-radius:50%;}
+  .section-t{font-size:11px;font-weight:600;letter-spacing:.12em;color:var(--text-2);text-transform:uppercase;padding:14px 20px 6px;}
+  .tiles{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;padding:0 16px;}
+  .tile{background:var(--surface-raised);border-radius:var(--r-card);padding:12px 10px;}
+  .tl{font-size:9px;font-weight:600;letter-spacing:.08em;color:var(--text-3);text-transform:uppercase;}
+  .tv{font-size:19px;font-weight:700;margin-top:6px;letter-spacing:-.02em;}
+  .tu{font-size:10px;color:var(--text-2);font-weight:500;}
+  /* factor rows */
+  .factors{padding:6px 20px 0;}
+  .frow{display:flex;align-items:center;gap:10px;margin-top:11px;}
+  .frow .fn{font-size:12px;color:var(--text-2);width:96px;}
+  .frow .fbar{flex:1;height:8px;border-radius:999px;background:#1e1e24;overflow:hidden;}
+  .frow .fbar i{display:block;height:100%;border-radius:999px;}
+  .frow .fv{font-size:12px;font-weight:600;width:56px;text-align:right;}
+  /* stages */
+  .stages{display:flex;height:60px;gap:3px;padding:10px 20px 0;align-items:flex-end;}
+  .stages .st{flex:1;border-radius:4px 4px 2px 2px;}
+  .stlabels{display:flex;justify-content:space-between;padding:6px 20px 0;font-size:9px;color:var(--text-3);font-weight:600;}
+  /* coach */
+  .coach{margin:12px 16px 0;background:linear-gradient(135deg,#0c1a18,#15151a);border:1px solid #163;
+    border-radius:var(--r-card);padding:14px;display:flex;gap:11px;align-items:flex-start;}
+  .coach .ci{width:30px;height:30px;border-radius:50%;flex:none;background:radial-gradient(circle at 30% 30%,var(--accent),#077);display:flex;align-items:center;justify-content:center;font-weight:800;color:#04120e;font-size:14px;}
+  .ct{font-size:10px;font-weight:600;letter-spacing:.1em;color:var(--accent);text-transform:uppercase;}
+  .cb{font-size:12px;color:#d6d6db;margin-top:3px;line-height:1.45;}
+  .nav{position:absolute;bottom:0;left:0;right:0;height:62px;background:rgba(14,14,17,.94);
+    border-top:1px solid var(--divider);display:flex;padding:8px 6px;}
+  .nav a{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--text-3);font-size:9px;font-weight:600;}
+  .nav a.on{color:var(--text-1);}
+  .nav svg{width:20px;height:20px;}
+</style>
+</head>
+<body>
+<div class="headline">
+  <h1>
+    <svg width="30" height="30" viewBox="0 0 40 40"><circle cx="20" cy="20" r="16" fill="none" stroke="#00E0C6" stroke-width="4" stroke-linecap="round" stroke-dasharray="100" stroke-dashoffset="22" transform="rotate(-90 20 20)"/><text x="20" y="26" text-anchor="middle" font-size="18" font-weight="800" fill="#fff" font-family="Inter,sans-serif">P</text></svg>
+    PULSE — set de pantallas (mockups originales)
+  </h1>
+  <p>Diseño propio en estilo dashboard oscuro. Marca PULSE con monograma "P". No es material de ninguna otra app.</p>
+</div>
+
+<div class="gallery">
+
+  <!-- ===== 1. OVERVIEW ===== -->
+  <div class="frame"><span class="cap">Overview</span><div class="phone"><div class="screen">
+    <div class="brand">
+      <div class="logo">
+        <div class="mark"><svg width="30" height="30" viewBox="0 0 40 40"><circle cx="20" cy="20" r="16" fill="none" stroke="#00E0C6" stroke-width="4" stroke-linecap="round" stroke-dasharray="100" stroke-dashoffset="22" transform="rotate(-90 20 20)"/><text x="20" y="26.5" text-anchor="middle" font-size="18" font-weight="800" fill="#fff">P</text></svg></div>
+        <div class="wm">PULSE</div>
+      </div>
+      <div class="avatar">PE</div>
+    </div>
+    <div class="date">Martes · 25 Nov</div>
+    <div class="ring-wrap"><div class="ring">
+      <svg width="200" height="200" viewBox="0 0 200 200"><circle cx="100" cy="100" r="86" stroke="#1e1e24" stroke-width="15" fill="none"/><circle cx="100" cy="100" r="86" stroke="var(--status-high)" stroke-width="15" fill="none" stroke-linecap="round" stroke-dasharray="540" stroke-dashoffset="173"/></svg>
+      <div class="center"><div class="val" style="font-size:54px;color:var(--status-high)">68<span>%</span></div><div class="lab" style="color:var(--status-high)">Recuperación</div><div class="sub">Tu cuerpo está listo</div></div>
+    </div></div>
+    <div class="pillars">
+      <div class="pillar"><div class="top"><span class="pname">Strain</span><span class="dot" style="background:var(--load)"></span></div><div class="pval">12,4</div><div class="bar"><i style="width:59%;background:var(--load)"></i></div></div>
+      <div class="pillar"><div class="top"><span class="pname">Sueño</span><span class="dot" style="background:var(--sleep)"></span></div><div class="pval">84<small>%</small></div><div class="bar"><i style="width:84%;background:var(--sleep)"></i></div></div>
+    </div>
+    <div class="section-t">Métricas de hoy</div>
+    <div class="tiles">
+      <div class="tile"><div class="tl">HRV</div><div class="tv">72<span class="tu"> ms</span></div></div>
+      <div class="tile"><div class="tl">FC reposo</div><div class="tv">54<span class="tu"> bpm</span></div></div>
+      <div class="tile"><div class="tl">Calorías</div><div class="tv">2.180</div></div>
+    </div>
+    <div class="nav">
+      <a class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.5"/></svg>Overview</a>
+      <a><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 17l5-6 4 3 5-8 4 5"/></svg>Strain</a>
+      <a><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 14a8 8 0 1 1-9-8 6 6 0 0 0 9 8z"/></svg>Sueño</a>
+      <a><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a9 9 0 0 0-9 9v5a2 2 0 0 0 2 2h2v-6H5"/></svg>Coach</a>
+    </div>
+  </div></div></div>
+
+  <!-- ===== 2. RECOVERY ===== -->
+  <div class="frame"><span class="cap">Recuperación</span><div class="phone"><div class="screen">
+    <div class="brand">
+      <div class="logo"><div class="mark"><svg width="30" height="30" viewBox="0 0 40 40"><circle cx="20" cy="20" r="16" fill="none" stroke="#00E0C6" stroke-width="4" stroke-linecap="round" stroke-dasharray="100" stroke-dashoffset="22" transform="rotate(-90 20 20)"/><text x="20" y="26.5" text-anchor="middle" font-size="18" font-weight="800" fill="#fff">P</text></svg></div><div class="wm">PULSE</div></div>
+      <div class="avatar">PE</div>
+    </div>
+    <h2 class="title">Recuperación</h2>
+    <div class="date" style="padding-top:2px">Basada en tu sueño de anoche</div>
+    <div class="ring-wrap"><div class="ring">
+      <svg width="180" height="180" viewBox="0 0 200 200"><circle cx="100" cy="100" r="86" stroke="#1e1e24" stroke-width="15" fill="none"/><circle cx="100" cy="100" r="86" stroke="var(--status-high)" stroke-width="15" fill="none" stroke-linecap="round" stroke-dasharray="540" stroke-dashoffset="173"/></svg>
+      <div class="center"><div class="val" style="font-size:50px;color:var(--status-high)">68<span>%</span></div><div class="lab" style="color:var(--status-high)">Verde</div></div>
+    </div></div>
+    <div class="section-t">Qué lo explica</div>
+    <div class="factors">
+      <div class="frow"><span class="fn">HRV</span><span class="fbar"><i style="width:78%;background:var(--status-high)"></i></span><span class="fv">72 ms</span></div>
+      <div class="frow"><span class="fn">FC en reposo</span><span class="fbar"><i style="width:70%;background:var(--status-high)"></i></span><span class="fv">54 bpm</span></div>
+      <div class="frow"><span class="fn">Rend. de sueño</span><span class="fbar"><i style="width:84%;background:var(--sleep)"></i></span><span class="fv">84 %</span></div>
+      <div class="frow"><span class="fn">Respiración</span><span class="fbar"><i style="width:60%;background:var(--status-mid)"></i></span><span class="fv">14,2 rpm</span></div>
+    </div>
+    <div class="coach"><div class="ci">P</div><div><div class="ct">Coach</div><div class="cb">Recuperación sólida. Un strain de <b>13–15</b> hoy es un buen objetivo.</div></div></div>
+  </div></div></div>
+
+  <!-- ===== 3. STRAIN ===== -->
+  <div class="frame"><span class="cap">Strain</span><div class="phone"><div class="screen">
+    <div class="brand">
+      <div class="logo"><div class="mark"><svg width="30" height="30" viewBox="0 0 40 40"><circle cx="20" cy="20" r="16" fill="none" stroke="#00E0C6" stroke-width="4" stroke-linecap="round" stroke-dasharray="100" stroke-dashoffset="22" transform="rotate(-90 20 20)"/><text x="20" y="26.5" text-anchor="middle" font-size="18" font-weight="800" fill="#fff">P</text></svg></div><div class="wm">PULSE</div></div>
+      <div class="avatar">PE</div>
+    </div>
+    <h2 class="title">Strain del día</h2>
+    <div class="ring-wrap"><div class="ring">
+      <svg width="180" height="180" viewBox="0 0 200 200"><circle cx="100" cy="100" r="86" stroke="#1e1e24" stroke-width="15" fill="none"/><circle cx="100" cy="100" r="86" stroke="var(--load)" stroke-width="15" fill="none" stroke-linecap="round" stroke-dasharray="540" stroke-dashoffset="221"/></svg>
+      <div class="center"><div class="val" style="font-size:52px;color:var(--load)">12,4</div><div class="lab" style="color:var(--load)">de 21</div></div>
+    </div></div>
+    <div class="section-t">Tiempo en zonas de FC</div>
+    <div class="factors">
+      <div class="frow"><span class="fn">Z5 90%+</span><span class="fbar"><i style="width:15%;background:var(--status-low)"></i></span><span class="fv">4 min</span></div>
+      <div class="frow"><span class="fn">Z4 80–90%</span><span class="fbar"><i style="width:30%;background:var(--status-mid)"></i></span><span class="fv">10 min</span></div>
+      <div class="frow"><span class="fn">Z3 70–80%</span><span class="fbar"><i style="width:52%;background:var(--status-high)"></i></span><span class="fv">18 min</span></div>
+      <div class="frow"><span class="fn">Z2 60–70%</span><span class="fbar"><i style="width:70%;background:#17a2b8"></i></span><span class="fv">25 min</span></div>
+      <div class="frow"><span class="fn">Z1 50–60%</span><span class="fbar"><i style="width:100%;background:#2f80ed"></i></span><span class="fv">40 min</span></div>
+    </div>
+    <div class="section-t">Actividad</div>
+    <div class="tiles"><div class="tile" style="grid-column:span 3"><div class="tl">Carrera · 42 min</div><div class="tv">8,6 <span class="tu">strain · 118 bpm medio</span></div></div></div>
+  </div></div></div>
+
+  <!-- ===== 4. SLEEP ===== -->
+  <div class="frame"><span class="cap">Sueño</span><div class="phone"><div class="screen">
+    <div class="brand">
+      <div class="logo"><div class="mark"><svg width="30" height="30" viewBox="0 0 40 40"><circle cx="20" cy="20" r="16" fill="none" stroke="#00E0C6" stroke-width="4" stroke-linecap="round" stroke-dasharray="100" stroke-dashoffset="22" transform="rotate(-90 20 20)"/><text x="20" y="26.5" text-anchor="middle" font-size="18" font-weight="800" fill="#fff">P</text></svg></div><div class="wm">PULSE</div></div>
+      <div class="avatar">PE</div>
+    </div>
+    <h2 class="title">Sueño</h2>
+    <div class="ring-wrap"><div class="ring">
+      <svg width="180" height="180" viewBox="0 0 200 200"><circle cx="100" cy="100" r="86" stroke="#1e1e24" stroke-width="15" fill="none"/><circle cx="100" cy="100" r="86" stroke="var(--sleep)" stroke-width="15" fill="none" stroke-linecap="round" stroke-dasharray="540" stroke-dashoffset="86"/></svg>
+      <div class="center"><div class="val" style="font-size:50px;color:var(--sleep)">84<span>%</span></div><div class="lab" style="color:var(--sleep)">Rendimiento</div><div class="sub">7h 32m / 8h 58m</div></div>
+    </div></div>
+    <div class="section-t">Fases</div>
+    <div class="stages">
+      <div class="st" style="height:30%;background:#3a3a46"></div><div class="st" style="height:70%;background:#5566aa"></div><div class="st" style="height:95%;background:#7B9CFF"></div><div class="st" style="height:45%;background:#3a3a46"></div><div class="st" style="height:80%;background:#5566aa"></div><div class="st" style="height:60%;background:#9db0ff"></div><div class="st" style="height:90%;background:#7B9CFF"></div><div class="st" style="height:40%;background:#5566aa"></div>
+    </div>
+    <div class="stlabels"><span>23:10</span><span>Despertares: 3</span><span>07:05</span></div>
+    <div class="section-t">Detalle</div>
+    <div class="tiles">
+      <div class="tile"><div class="tl">Profundo</div><div class="tv">1h 48m</div></div>
+      <div class="tile"><div class="tl">REM</div><div class="tv">2h 02m</div></div>
+      <div class="tile"><div class="tl">Eficiencia</div><div class="tv">91<span class="tu"> %</span></div></div>
+    </div>
+  </div></div></div>
+
+</div>
+</body>
+</html>

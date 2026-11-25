@@ -1,0 +1,33 @@
+{
+  "color": {
+    "surface": { "base": "#0A0A0C", "raised": "#15151A", "overlay": "#1F1F24", "sunken": "#070709" },
+    "divider": "#26262C",
+    "border": "#20202A",
+    "text": { "primary": "#FFFFFF", "secondary": "#9A9AA2", "tertiary": "#5E5E66" },
+    "status": { "high": "#16EC06", "mid": "#FFDE00", "low": "#FF2D55" },
+    "load": "#0093E7",
+    "sleep": "#7B9CFF",
+    "accent": "#00E0C6",
+    "zones": ["#2F80ED", "#17A2B8", "#16EC06", "#FFDE00", "#FF2D55"]
+  },
+  "type": {
+    "family": "Inter, -apple-system, 'Segoe UI', Roboto, sans-serif",
+    "metric":    { "weight": 700, "size": 62, "lineHeight": 1.0, "tracking": "-0.02em" },
+    "metricSm":  { "weight": 700, "size": 30, "lineHeight": 1.0, "tracking": "-0.02em" },
+    "title":     { "weight": 700, "size": 22, "lineHeight": 1.2, "tracking": "-0.01em" },
+    "tileTitle": { "weight": 600, "size": 18, "lineHeight": 1.3 },
+    "body":      { "weight": 400, "size": 15, "lineHeight": 1.5 },
+    "label":     { "weight": 600, "size": 12, "lineHeight": 1.3, "tracking": "0.10em", "uppercase": true },
+    "caption":   { "weight": 600, "size": 10, "lineHeight": 1.3, "tracking": "0.08em", "uppercase": true }
+  },
+  "spacing": [4, 8, 12, 16, 20, 24, 32, 40, 48],
+  "radius": { "card": 16, "sheet": 20, "button": 8, "input": 12, "pill": 999, "phone": 40 },
+  "layout": { "viewport": [390, 844], "screenPadX": 20, "sectionPadX": 24, "tileGap": 12, "pillarGap": 12, "tileCols": 3, "pillarCols": 2, "maxWidthWeb": 420 },
+  "motion": { "fast": 150, "base": 300, "slow": 500, "easingStandard": "cubic-bezier(0.4,0,0.2,1)", "easingDecelerate": "cubic-bezier(0,0,0.2,1)" },
+  "elevation": { "overlayShadow": "0 8px 24px rgba(0,0,0,0.5)" },
+  "ring": { "diameter": [230, 200, 180], "stroke": 16, "strokeMedium": 15, "cap": "round", "rotate": -90, "track": "#1e1e24" },
+  "nav": { "height": 72, "icon": 22, "iconStroke": 2, "blur": 12, "bg": "rgba(14,14,17,0.92)" },
+  "button": { "height": 46, "padX": 24, "padY": 12, "radius": 8, "textWeight": 600, "textSize": 14 },
+  "statusThresholds": { "high": 67, "mid": 34, "low": 0 },
+  "hrZones": { "cuts": [0.6, 0.7, 0.8, 0.9], "count": 5 }
+}
