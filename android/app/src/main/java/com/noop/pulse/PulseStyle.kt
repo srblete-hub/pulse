@@ -60,10 +60,9 @@ import com.noop.ui.NoopType
 object PulseColors {
     // Surfaces
     val base = Color(0xFF0A0A0C)
-    val raised = Color(0xFF15151A)
-    val sunken = Color(0xFF070709)
+    val raised = Color(0xFF16161A)
     val overlay = Color(0xFF1F1F24)
-    val divider = Color(0xFF26262C)
+    val divider = Color(0xFF2A2A30)
     val bgTop = base
     val bgMid = base
     val inset = Color(0xFF111114)
@@ -81,15 +80,15 @@ object PulseColors {
     // Semantic — metric state only, never decoration
     val statusHigh = Color(0xFF16EC06)
     val statusMid = Color(0xFFFFDE00)
-    val statusLow = Color(0xFFFF2D55)
+    val statusLow = Color(0xFFFF0026)
     val load = Color(0xFF0093E7)
-    val sleep = Color(0xFF7B9CFF)
+    val sleep = Color(0xFF7BA0FF)
     val sleepDeep = Color(0xFF4F72E0)
     val accent = Color(0xFF00E0C6)
     val accentHover = Color(0xFF5CF0DE)
-    val onAccent = Color(0xFF04120E)
-    /** Heart-rate zones 1–5. */
-    val zones = listOf(Color(0xFF2F80ED), Color(0xFF17A2B8), Color(0xFF16EC06), Color(0xFFFFDE00), Color(0xFFFF2D55))
+    val onAccent = Color(0xFF0A0A0C)
+    /** Heart-rate zones 1–5 (the colours the zone cards used before). */
+    val zones get() = listOf(textSecondary, stressLow, recoveryGreen, stressHigh, recoveryRed)
 
     // Aliases kept so every screen resolves through the tokens above.
     val recoveryGreen = statusHigh
@@ -131,13 +130,13 @@ object PulseType {
 }
 
 object PulseText {
-    private fun label(size: TextUnit, weight: FontWeight = FontWeight.SemiBold, tracking: Float = 0.10f) =
+    private fun label(size: TextUnit, weight: FontWeight = FontWeight.Medium, tracking: Float = 0.08f) =
         TextStyle(fontFamily = PulseType.sans, fontWeight = weight, fontSize = size, lineHeight = (size.value * 1.3f).sp, letterSpacing = tracking.em)
     private fun num(size: TextUnit, weight: FontWeight = FontWeight.Bold) =
         TextStyle(fontFamily = PulseType.display, fontWeight = weight, fontSize = size, lineHeight = size, letterSpacing = (-0.02f).em)
 
     /** label — uppercase metadata, ring captions, CTA links (12 sp, 500, +0.08 em). */
-    val overline = label(10.sp, tracking = 0.08f)
+    val overline = label(11.sp)
     val overlineLg = label(12.sp)
     val tabTitle = label(12.sp, FontWeight.SemiBold)
     val chartAxis = label(10.sp, tracking = 0.02f)
@@ -150,19 +149,18 @@ object PulseText {
     val bigNumber = num(18.sp)
     val heroNumber = num(48.sp)
     /** metric-display (64 sp) — the one number at the centre of a detail screen's ring. */
-    val metric = num(62.sp)
-    val metricSm = num(30.sp)
+    val metric = num(64.sp)
 
-    val headline = TextStyle(fontFamily = PulseType.sans, fontWeight = FontWeight.Bold, fontSize = 22.sp, lineHeight = 26.sp, letterSpacing = (-0.01f).em)
+    val headline = TextStyle(fontFamily = PulseType.sans, fontWeight = FontWeight.SemiBold, fontSize = 24.sp, lineHeight = 29.sp, letterSpacing = (-0.01f).em)
     val sectionTitle = TextStyle(fontFamily = PulseType.sans, fontWeight = FontWeight.SemiBold, fontSize = 20.sp, lineHeight = 24.sp)
     val cardTitleLg = TextStyle(fontFamily = PulseType.sans, fontWeight = FontWeight.SemiBold, fontSize = 18.sp, lineHeight = 23.sp)
     val cardTitle = TextStyle(fontFamily = PulseType.sans, fontWeight = FontWeight.SemiBold, fontSize = 15.sp, lineHeight = 20.sp)
-    val body = TextStyle(fontFamily = PulseType.sans, fontWeight = FontWeight.Normal, fontSize = 15.sp, lineHeight = 22.sp)
+    val body = TextStyle(fontFamily = PulseType.sans, fontWeight = FontWeight.Normal, fontSize = 16.sp, lineHeight = 24.sp)
     val bodyLg = TextStyle(fontFamily = PulseType.sans, fontWeight = FontWeight.Normal, fontSize = 16.sp, lineHeight = 24.sp)
 }
 
 object PulseMetrics {
-    val gutter = 20.dp
+    val gutter = 16.dp
     val cardRadius = 16.dp
     val sheetRadius = 20.dp
     val buttonRadius = 8.dp
