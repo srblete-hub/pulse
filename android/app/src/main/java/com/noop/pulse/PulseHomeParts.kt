@@ -21,6 +21,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.DirectionsRun
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Alarm
+import androidx.compose.material.icons.outlined.Air
 import androidx.compose.material.icons.outlined.Bedtime
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.ChevronRight
@@ -388,24 +389,24 @@ fun MyPlanCard(onClick: () -> Unit) {
 
 // ------------------------------------------------------------------ dashboard
 
-data class DashMetric(val key: String, val label: String, val icon: ImageVector, val value: String, val baseline: String?, val trendUp: Boolean?, val onClick: () -> Unit)
+data class DashMetric(val key: String, val label: String, val icon: ImageVector, val value: String, val baseline: String?, val trendUp: Boolean?, val onClick: () -> Unit, val goodUp: Boolean = true)
 
 object PulseDashboardPrefs {
-    val all = listOf("hrv" to "Variabilidad (VFC)", "rhr" to "Pulso en reposo", "steps" to "Pasos", "z13" to "Zonas 1–3 (semana)", "z45" to "Zonas 4–5 (semana)", "vo2" to "VO₂ máx.", "kcal" to "Calorías", "resp" to "Respiración")
+    val all = listOf("hrv" to "Variabilidad (VFC)", "rhr" to "Pulso en reposo", "steps" to "Pasos", "kcal" to "Calorías", "hours" to "Horas de sueño", "restor" to "Sueño reparador",
+        "eff" to "Eficiencia del sueño", "z13" to "Zonas 1–3 (semana)", "z45" to "Zonas 4–5 (semana)", "vo2" to "VO₂ máx.", "resp" to "Respiración")
     private fun prefs(c: Context) = c.getSharedPreferences("pulse_dashboard", Context.MODE_PRIVATE)
-    fun shown(c: Context): Set<String> = prefs(c).getStringSet("shown", null) ?: all.map { it.first }.filter { it != "resp" }.toSet()
+    fun shown(c: Context): Set<String> = prefs(c).getStringSet("shown", null) ?: all.map { it.first }.toSet()
     fun set(c: Context, keys: Set<String>) = prefs(c).edit().putStringSet("shown", keys).apply()
 }
 
 @Composable
 fun DashboardHeader(onCustomize: () -> Unit) {
     Row(Modifier.fillMaxWidth().padding(start = 20.dp, end = 20.dp, top = 32.dp, bottom = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-        Text("Mi panel", style = PulseText.headline, color = PulseColors.text)
-        Spacer(Modifier.width(12.dp))
-        Row(Modifier.clip(RoundedCornerShape(6.dp)).background(PulseColors.accent).pulseClick(onCustomize).padding(horizontal = 8.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text("PERSONALIZAR", style = PulseText.overline.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.Bold), color = PulseColors.onAccent)
-            Spacer(Modifier.width(4.dp))
-            Icon(Icons.Outlined.Edit, null, tint = PulseColors.onAccent, modifier = Modifier.size(12.dp))
+        Text("Mi panel", style = PulseText.headline, color = PulseColors.text, modifier = Modifier.weight(1f))
+        Row(Modifier.pulseClick(onCustomize).padding(4.dp), verticalAlignment = Alignment.CenterVertically) {
+            Text("PERSONALIZAR", style = PulseText.overlineLg.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.Bold), color = PulseColors.textSecondary)
+            Spacer(Modifier.width(8.dp))
+            Icon(Icons.Outlined.Edit, null, tint = PulseColors.textSecondary, modifier = Modifier.size(18.dp))
         }
     }
 }
@@ -420,7 +421,7 @@ fun DashRow(m: DashMetric) {
         Column(horizontalAlignment = Alignment.End) {
             Row(verticalAlignment = Alignment.Top) {
                 Text(m.value, style = PulseText.metric.copy(fontSize = 30.sp, lineHeight = 32.sp), color = PulseColors.text)
-                m.trendUp?.let { Text(if (it) "▴" else "▾", style = PulseText.small, color = PulseColors.textSecondary, modifier = Modifier.padding(start = 2.dp)) }
+                m.trendUp?.let { Text(if (it) "▴" else "▾", style = PulseText.small.copy(fontSize = 16.sp), color = if (it == m.goodUp) PulseColors.statusHigh else PulseColors.stressHigh, modifier = Modifier.padding(start = 4.dp)) }
             }
             m.baseline?.let { Text(it, style = PulseText.body, color = PulseColors.textSecondary) }
         }
@@ -453,6 +454,8 @@ object DashIcons {
     val zones = Icons.Outlined.MonitorHeart
     val vo2 = Icons.Outlined.Speed
     val kcal = Icons.Outlined.LocalFireDepartment
+    val sleep = Icons.Outlined.Bedtime
+    val resp = Icons.Outlined.Air
 }
 
 @Suppress("unused") private val unusedDate = LocalDate.MIN

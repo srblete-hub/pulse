@@ -91,7 +91,7 @@ private fun calibrationNotice(nights: Int, text: (Int) -> String): Pair<String, 
     if (nights >= PulseData.recoverySeedNights) null else text(PulseData.recoverySeedNights - nights) to PulseData.recoverySeedNights
 
 @Composable
-fun PulseEffortScreen(vm: AppViewModel, onBack: () -> Unit, onCoach: () -> Unit) {
+fun PulseEffortScreen(vm: AppViewModel, onBack: () -> Unit, onCoach: () -> Unit, onTab: (String) -> Unit = {}) {
     val today by com.noop.pulse.engine.pulseToday(vm)
     val days by com.noop.pulse.engine.pulseDays(vm)
     val workouts by vm.workouts.collectAsStateWithLifecycle()
@@ -133,6 +133,8 @@ fun PulseEffortScreen(vm: AppViewModel, onBack: () -> Unit, onCoach: () -> Unit)
         heroFraction = eff?.let { (it / 21).toFloat() }, heroValue = PulseData.oneDecimal(eff ?: 0.0), heroValueSize = 52, heroLabel = "ESFUERZO",
         notice = null,
         confidence = view.effortConfidence, confidenceMetric = "El esfuerzo",
+        tab = "effort", onTab = onTab, shareText = eff?.let { "Mi esfuerzo de hoy: ${PulseData.oneDecimal(it)} / 21 (Pulse)" },
+        insightTitle = effortBand(eff).first, insightBody = effortBand(eff).second, statsTitle = "ESTADÍSTICAS DE ESFUERZO",
         heroCaption = effortTargetFor(days, view.recovery)?.let { "Objetivo de hoy: ${targetText(it)}. ${targetAdvice(it)}" },
         middle = {
             EffortDiagCard(diags[PulseData.dayKey(diagOffset)], if (diagOffset == 0) "HOY ›" else "‹ AYER", onToggleDay = { diagOffset = if (diagOffset == 0) -1 else 0 })
@@ -175,7 +177,7 @@ fun PulseEffortScreen(vm: AppViewModel, onBack: () -> Unit, onCoach: () -> Unit)
 }
 
 @Composable
-fun PulseRecoveryScreen(vm: AppViewModel, onBack: () -> Unit, onHabits: () -> Unit, onCoach: () -> Unit) {
+fun PulseRecoveryScreen(vm: AppViewModel, onBack: () -> Unit, onHabits: () -> Unit, onCoach: () -> Unit, onTab: (String) -> Unit = {}) {
     val today by com.noop.pulse.engine.pulseToday(vm)
     val days by com.noop.pulse.engine.pulseDays(vm)
     val view = com.noop.pulse.engine.pulseDayView(vm, 0)
@@ -189,10 +191,13 @@ fun PulseRecoveryScreen(vm: AppViewModel, onBack: () -> Unit, onHabits: () -> Un
         tipTitle = "Recuperación",
         tipBody = "Te dice cada mañana cómo de preparado está tu cuerpo. Se calcula como en NOOP: tu VFC (lo que más pesa), tu pulso en reposo, tu sueño, tu respiración y tu temperatura, comparados con tus propias medias.",
         heroIcon = Icons.Outlined.FavoriteBorder, heroColor = PulseColors.recovery(rec).takeIf { rec != null } ?: PulseColors.recoveryGreen,
-        heroFraction = rec?.let { (it / 100).toFloat() }, heroValue = PulseData.pct(rec), heroValueSize = 46, heroLabel = "RECUPERACIÓN",
+        heroFraction = rec?.let { (it / 100).toFloat() }, heroValue = rec?.roundToInt()?.toString() ?: "--", heroValueSize = 46, heroLabel = "RECUPERACIÓN",
         notice = if (rec != null) null else calibrationNotice(nights) { "Duerme con la pulsera $it noches para calibrar del todo tu recuperación." },
         heroCaption = view.recoveryCaption,
         confidence = view.recoveryConfidence, confidenceMetric = "La recuperación",
+        tab = "recovery", onTab = onTab, heroSuffix = "%", shareText = rec?.let { "Mi recuperación de hoy: ${it.roundToInt()} % (Pulse)" },
+        insightTitle = recoveryInsight(rec, d?.avgHrv, avg30(days) { it.avgHrv }).first, insightBody = recoveryInsight(rec, d?.avgHrv, avg30(days) { it.avgHrv }).second,
+        statsTitle = "ESTADÍSTICAS DE RECUPERACIÓN",
         rows = listOf(
             MetricRow(Icons.Outlined.ShowChart, "VFC", avgS(d?.avgHrv, " ms"), "media ${avgS(avg30(days) { it.avgHrv }, " ms")}"),
             MetricRow(Icons.Outlined.FavoriteBorder, "PULSO EN REPOSO", avgS(d?.restingHr?.toDouble(), " lpm"), "media ${avgS(avg30(days) { it.restingHr?.toDouble() }, " lpm")}"),
@@ -215,7 +220,7 @@ fun PulseRecoveryScreen(vm: AppViewModel, onBack: () -> Unit, onHabits: () -> Un
 }
 
 @Composable
-fun PulseSleepScreen(vm: AppViewModel, onBack: () -> Unit, onCoach: () -> Unit) {
+fun PulseSleepScreen(vm: AppViewModel, onBack: () -> Unit, onCoach: () -> Unit, onTab: (String) -> Unit = {}) {
     val today by com.noop.pulse.engine.pulseToday(vm)
     val days by com.noop.pulse.engine.pulseDays(vm)
     val context = androidx.compose.ui.platform.LocalContext.current
@@ -237,11 +242,14 @@ fun PulseSleepScreen(vm: AppViewModel, onBack: () -> Unit, onCoach: () -> Unit) 
     val debtByDay = com.noop.analytics.SleepDebt.debtSeries(days.map { it.day to it.totalSleepMin }, needHours = needMin / 60.0).toMap()
     MetricPage(
         confidence = sleepView.sleepConfidence, confidenceMetric = "El sueño",
+        tab = "sleep", onTab = onTab, heroSuffix = "%", shareText = perf?.let { "Mi sueño de anoche: ${it.roundToInt()} % (Pulse)" },
+        sleepHero = h(d?.totalSleepMin) to PulseData.hoursMinutes(needMin),
+        insightTitle = sleepInsight(perf).first, insightBody = sleepInsight(perf).second, statsTitle = "ESTADÍSTICAS DE SUEÑO",
         tipKey = "sleep",
         tipTitle = "Rendimiento del sueño",
         tipBody = "Una sola nota que resume tu noche, calculada como en NOOP: 50 % horas dormidas frente a las que necesitas, 20 % eficiencia, 20 % sueño reparador (profundo + REM) y 10 % regularidad.",
         heroIcon = Icons.Outlined.Bedtime, heroColor = PulseColors.sleep,
-        heroFraction = perf?.let { (it / 100).toFloat() }, heroValue = PulseData.pct(perf), heroValueSize = 40, heroLabel = "RENDIMIENTO\nDEL SUEÑO",
+        heroFraction = perf?.let { (it / 100).toFloat() }, heroValue = perf?.roundToInt()?.toString() ?: "--", heroValueSize = 40, heroLabel = "RENDIMIENTO\nDEL SUEÑO",
         notice = if (perf == null) "Duerme esta noche con la pulsera y mañana verás qué tal has descansado." to 1 else null,
         rows = listOf(
             MetricRow(Icons.Outlined.Timer, "HORAS VS. NECESARIAS", vsNeed(d?.totalSleepMin), "necesitas ${h(needMin)} h"),
@@ -285,4 +293,35 @@ fun PulseSleepScreen(vm: AppViewModel, onBack: () -> Unit, onCoach: () -> Unit) 
             TrendChart("Deuda de sueño", PulseColors.stressHigh, 180.0, (-6..0).map { debtByDay[PulseData.dayKey(it)] }, { PulseData.hoursMinutes(it) }),
         ),
     )
+}
+
+
+/** Own wording for the day's Effort band (0–21 scale). */
+fun effortBand(e: Double?): Pair<String, String> = when {
+    e == null -> "Sin esfuerzo todavía" to "En cuanto la pulsera registre tu pulso de hoy, verás aquí cuánto ha trabajado tu corazón."
+    e < 10 -> "Esfuerzo ligero" to "Un esfuerzo por debajo de 10 es ligero: un día de actividad suave que ayuda a recuperarte."
+    e < 14 -> "Esfuerzo moderado" to "Entre 10 y 13,9 tu corazón ha trabajado de forma notable, sin llegar a ser exigente."
+    e < 18 -> "Esfuerzo intenso" to "Entre 14 y 17,9 es un día exigente: tu sistema cardiovascular ha trabajado duro."
+    else -> "Esfuerzo máximo" to "Por encima de 18 es un esfuerzo extremo. Dale prioridad al descanso y al sueño esta noche."
+}
+
+fun recoveryInsight(rec: Double?, hrv: Double?, hrvAvg: Double?): Pair<String, String> {
+    if (rec == null) return "Calibrando" to "Duerme con la pulsera unas noches más y tendrás tu primera recuperación."
+    if (hrv != null && hrvAvg != null && hrvAvg > 0) {
+        val ch = (hrv - hrvAvg) / hrvAvg
+        if (ch >= 0.10) return "VFC elevada" to "Tu VFC está un ${(ch * 100).roundToInt()} % por encima de lo habitual: tu sistema nervioso está en equilibrio y preparado para asumir esfuerzo."
+        if (ch <= -0.10) return "VFC baja" to "Tu VFC está un ${(-ch * 100).roundToInt()} % por debajo de lo habitual: tu cuerpo sigue gestionando estrés o fatiga."
+    }
+    return when {
+        rec >= 67 -> "Recuperación alta" to "Tu cuerpo está preparado para rendir hoy."
+        rec >= 34 -> "Recuperación media" to "Tu cuerpo se está adaptando: mantén una carga moderada."
+        else -> "Recuperación baja" to "Tu cuerpo necesita descanso: prioriza actividades suaves y dormir bien."
+    }
+}
+
+fun sleepInsight(perf: Double?): Pair<String, String> = when {
+    perf == null -> "Sin datos de sueño" to "Duerme esta noche con la pulsera y mañana verás qué tal has descansado."
+    perf >= 85 -> "Sueño óptimo" to "Has dormido casi todo lo que necesitabas. Sigue con tus buenos hábitos de sueño para rendir y recuperarte mejor."
+    perf >= 70 -> "Sueño suficiente" to "Has dormido una parte importante de lo que necesitabas. Acostarte un poco antes te ayudará a llegar al 100 %."
+    else -> "Sueño insuficiente" to "Has dormido bastante menos de lo que necesitabas. Intenta compensarlo esta noche acostándote antes."
 }

@@ -123,6 +123,11 @@ fun PulseApp(vm: AppViewModel) {
     val route = entry?.destination?.route ?: PulseRoute.home
     val back: () -> Unit = { nav.popBackStack() }
     fun go(r: String): () -> Unit = { nav.navigate(r) { launchSingleTop = true } }
+    // Switching between the Sueño / Recuperación / Esfuerzo tabs replaces the current detail page.
+    val tabSwitch: (String) -> Unit = { r ->
+        val cur = nav.currentDestination?.route
+        nav.navigate(r) { launchSingleTop = true; if (cur != null) popUpTo(cur) { inclusive = true } }
+    }
     val ctx = androidx.compose.ui.platform.LocalContext.current
     var communityIntro by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(!PulseTips.seen(ctx, "community_intro")) }
     // Automatic activity logging after every strap sync (and once at start).
@@ -197,9 +202,9 @@ fun PulseApp(vm: AppViewModel) {
                 PulseSettingsScreen(vm, settingsGroups(::go), onCalibration = go(PulseRoute.calibration), onBackup = go(PulseRoute.backup))
             }
 
-            composable(PulseRoute.sleep) { PulseSleepScreen(vm, back, onCoach = go(PulseRoute.coach)) }
-            composable(PulseRoute.recovery) { PulseRecoveryScreen(vm, back, onHabits = go(PulseRoute.habits), onCoach = go(PulseRoute.coach)) }
-            composable(PulseRoute.effort) { PulseEffortScreen(vm, back, onCoach = go(PulseRoute.coach)) }
+            composable(PulseRoute.sleep) { PulseSleepScreen(vm, back, onCoach = go(PulseRoute.coach), onTab = tabSwitch) }
+            composable(PulseRoute.recovery) { PulseRecoveryScreen(vm, back, onHabits = go(PulseRoute.habits), onCoach = go(PulseRoute.coach), onTab = tabSwitch) }
+            composable(PulseRoute.effort) { PulseEffortScreen(vm, back, onCoach = go(PulseRoute.coach), onTab = tabSwitch) }
             composable(PulseRoute.age) { PulseAgeScreenV2(vm, back, onCoach = go(PulseRoute.coach)) }
             composable(PulseRoute.profile) {
                 PulseProfileScreen(

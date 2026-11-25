@@ -242,13 +242,19 @@ fun PulseHomeScreen(vm: AppViewModel, showLiveHr: Boolean = false, actions: Home
         fun up(v: Double?, b: Double?) = if (v == null || b == null || v == b) null else v > b
         val rows = listOfNotNull(
             DashMetric("hrv", "Variabilidad (VFC)", DashIcons.hrv, metric?.avgHrv?.roundToInt()?.toString() ?: "--", avg { it.avgHrv }?.roundToInt()?.toString(), up(metric?.avgHrv, avg { it.avgHrv }), actions.openHrv),
-            DashMetric("rhr", "Pulso en reposo", DashIcons.rhr, metric?.restingHr?.toString() ?: "--", avg { it.restingHr?.toDouble() }?.roundToInt()?.toString(), up(metric?.restingHr?.toDouble(), avg { it.restingHr?.toDouble() }), actions.openRecovery),
+            DashMetric("rhr", "Pulso en reposo", DashIcons.rhr, metric?.restingHr?.toString() ?: "--", avg { it.restingHr?.toDouble() }?.roundToInt()?.toString(), up(metric?.restingHr?.toDouble(), avg { it.restingHr?.toDouble() }), actions.openRecovery, goodUp = false),
             DashMetric("steps", "Pasos", DashIcons.steps, metric?.steps?.let { PulseData.int(it) } ?: "--", avg { it.steps?.toDouble() }?.let { PulseData.int(it.roundToInt()) }, up(metric?.steps?.toDouble(), avg { it.steps?.toDouble() }), actions.openSteps),
+            DashMetric("hours", "Horas de sueño", DashIcons.sleep, metric?.totalSleepMin?.takeIf { it > 0 }?.let { PulseData.hoursMinutes(it) } ?: "--",
+                avg { it.totalSleepMin?.takeIf { m -> m > 0 } }?.let { PulseData.hoursMinutes(it) }, up(metric?.totalSleepMin, avg { it.totalSleepMin?.takeIf { m -> m > 0 } }), actions.openSleep),
+            DashMetric("restor", "Sueño reparador", DashIcons.sleep, restor(metric)?.let { PulseData.hoursMinutes(it) } ?: "--",
+                avg { restor(it) }?.let { PulseData.hoursMinutes(it) }, up(restor(metric), avg { restor(it) }), actions.openSleep),
+            DashMetric("eff", "Eficiencia del sueño", DashIcons.sleep, effPct(metric)?.let { "${it.roundToInt()}%" } ?: "--",
+                avg { effPct(it) }?.let { "${it.roundToInt()}%" }, up(effPct(metric), avg { effPct(it) }), actions.openSleep),
             DashMetric("z13", "Zonas 1–3 (semana)", DashIcons.zones, zonesWeek?.first?.let { PulseActivity.mmss(it) } ?: "--", null, null, actions.openEffort),
             DashMetric("z45", "Zonas 4–5 (semana)", DashIcons.zones, zonesWeek?.second?.let { PulseActivity.mmss(it) } ?: "--", null, null, actions.openEffort),
             DashMetric("vo2", "VO₂ máx.", DashIcons.vo2, vo2?.roundToInt()?.toString() ?: "--", null, null, actions.openAge),
             DashMetric("kcal", "Calorías", DashIcons.kcal, metric?.activeKcalEst?.let { PulseData.int(it.roundToInt()) } ?: "--", avg { it.activeKcalEst }?.let { PulseData.int(it.roundToInt()) }, up(metric?.activeKcalEst, avg { it.activeKcalEst }), actions.openCalories),
-            DashMetric("resp", "Respiración", DashIcons.hrv, metric?.respRateBpm?.let { String.format(java.util.Locale.US, "%.1f", it) } ?: "--", avg { it.respRateBpm }?.let { String.format(java.util.Locale.US, "%.1f", it) }, up(metric?.respRateBpm, avg { it.respRateBpm }), actions.openRecovery),
+            DashMetric("resp", "Respiración", DashIcons.resp, metric?.respRateBpm?.let { String.format(java.util.Locale.US, "%.1f", it) } ?: "--", avg { it.respRateBpm }?.let { String.format(java.util.Locale.US, "%.1f", it) }, up(metric?.respRateBpm, avg { it.respRateBpm }), actions.openRecovery, goodUp = false),
         ).filter { it.key in shown }
         Column(Modifier.padding(horizontal = PulseMetrics.gutter), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             rows.forEach { DashRow(it) }
@@ -634,3 +640,6 @@ private fun TonightCard(t: SleepSchedules.Tonight, modifier: Modifier, onEdit: (
         }
     }
 }
+
+private fun restor(d: DailyMetric?): Double? = d?.let { ((it.deepMin ?: 0.0) + (it.remMin ?: 0.0)).takeIf { v -> v > 0 } }
+private fun effPct(d: DailyMetric?): Double? = d?.efficiency?.let { if (it <= 1.0) it * 100 else it }
